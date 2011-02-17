@@ -1,0 +1,12 @@
+[submodule "deps/buster-util"]
+	path = deps/buster-util
+	url = git@git.shortcut.no:buster-js/buster-util.git
+[submodule "deps/buster-event-emitter"]
+	path = deps/buster-event-emitter
+	url = git@git.shortcut.no:buster-js/buster-event-emitter.git
+[submodule "deps/buster-assert"]
+	path = deps/buster-assert
+	url = git@git.shortcut.no:buster-js/buster-assert.git
+[submodule "deps/buster-object-format"]
+	path = deps/buster-object-format
+	url = git@git.shortcut.no:buster-js/buster-object-format.git
