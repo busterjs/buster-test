@@ -10,3 +10,6 @@
 [submodule "deps/buster-object-format"]
 	path = deps/buster-object-format
 	url = git@git.shortcut.no:buster-js/buster-object-format.git
+[submodule "deps/sinon-js"]
+	path = deps/sinon-js
+	url = git@github.com:cjohansen/Sinon.JS.git
