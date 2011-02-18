@@ -311,5 +311,15 @@ testCase("SpecContextContextsTest", {
 
         buster.assert.equals(1, tests.length);
         buster.assert.equals("do it", tests[0].name);
+    },
+
+    "should give contexts different testCase instances": function () {
+        var spec = buster.spec("Name", function (should) {
+            this.context("someContext", function (should) {});
+        });
+
+        var contexts = spec.contexts();
+
+        buster.assert.notEquals(spec.testCase, contexts[0].testCase);
     }
 });

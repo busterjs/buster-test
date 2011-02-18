@@ -254,6 +254,16 @@ testCase("TestContextContextsTest", {
 
         buster.assert.equals(1, tests.length);
         buster.assert.equals("test", tests[0].name);
+    },
+
+    "should give contexts unique test case objects": function () {
+        var context = buster.testCase("Name", {
+            someContext: { test: function () {} }
+        });
+
+        var contexts = context.contexts();
+
+        buster.assert.notSame(context.testCase, contexts[0].testCase);
     }
 });
 
