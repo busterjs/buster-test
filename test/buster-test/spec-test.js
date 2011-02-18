@@ -321,5 +321,16 @@ testCase("SpecContextContextsTest", {
         var contexts = spec.contexts();
 
         buster.assert.notEquals(spec.testCase, contexts[0].testCase);
+    },
+
+    "should return the same context instance each time": function () {
+        var context = buster.spec("Name", function (should) {
+            this.context("someContext", function () {});
+        });
+
+        var contexts = context.contexts();
+        var contexts2 = context.contexts();
+
+        buster.assert.same(contexts, contexts2);
     }
 });

@@ -264,6 +264,17 @@ testCase("TestContextContextsTest", {
         var contexts = context.contexts();
 
         buster.assert.notSame(context.testCase, contexts[0].testCase);
+    },
+
+    "should return the same context instance each time": function () {
+        var context = buster.testCase("Name", {
+            someContext: { test: function () {} }
+        });
+
+        var contexts = context.contexts();
+        var contexts2 = context.contexts();
+
+        buster.assert.same(contexts, contexts2);
     }
 });
 
