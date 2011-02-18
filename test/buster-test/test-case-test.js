@@ -50,20 +50,21 @@ testCase("BusterTestCaseTest", {
         });
     },
 
-    "should return object": function () {
-        var testCase = buster.testCase("Some test", {});
-
-        buster.assert.isObject(testCase);
-    },
-
-    "returned object should have name and tests properties": function () {
+    "should return context object": function () {
+        var setUp = function () {};
         var test = function () {};
+
         var testCase = buster.testCase("Some test", {
-            "should keep it": test
+            setUp: setUp,
+            testSomething: test
         });
 
+        buster.assert.isObject(testCase);
         buster.assert.equals("Some test", testCase.name);
-        buster.assert.equals({ "should keep it": test }, testCase.tests);
+        buster.assert.equals(1, testCase.tests().length);
+        buster.assert.equals("testSomething", testCase.tests()[0].name);
+        buster.assert.equals(test, testCase.tests()[0].func);
+        buster.assert.equals(setUp, testCase.getSetUp());
     },
 
     "should emit create event when a test case is created": function () {
