@@ -207,6 +207,16 @@ testCase("TestContextTestsTest", {
         context.contextTearDownName = "afterContext";
 
         buster.assert.equals(0, context.tests().length);
+    },
+
+    "should keep reference to parent context": function () {
+        var context = buster.testCase("Name", {
+            testIt: function () {}
+        });
+
+        var tests = context.tests();
+
+        buster.assert.equals(context, tests[0].context);
     }
 });
 

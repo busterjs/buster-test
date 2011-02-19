@@ -262,7 +262,7 @@ testCase("SpecContextTestsTest", {
 
         var tests = spec.tests();
 
-        buster.assert.equals(spec, tests[0].parent);
+        buster.assert.equals(spec, tests[0].context);
     }
 });
 
