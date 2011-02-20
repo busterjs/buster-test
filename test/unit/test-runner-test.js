@@ -677,7 +677,7 @@ testCase("TestRunnerAssertionCountTest", {
 
         this.runner.run(this.context);
 
-        buster.assert(!this.listener.calledOnce);
+        buster.assert(!this.listener.called);
     },
 
     "should configure to not fail test if 0 assertions": function () {
@@ -686,6 +686,58 @@ testCase("TestRunnerAssertionCountTest", {
         this.runner.failOnNoAssertions = false;
         this.runner.run(this.context);
 
-        buster.assert(!this.listener.calledOnce);
+        buster.assert(!this.listener.called);
+    },
+
+    "should fail for unexpected number of assertions": function () {
+        sinon.stub(this.runner, "assertionCount").returns(3);
+
+        var context = buster.testCase("Test Assertions", {
+            test1: function () {
+                this.expectedAssertions = 2;
+            }
+        });
+
+        this.runner.run(context);
+
+        buster.assert(this.listener.calledOnce);
+        buster.assert.equals("Expected 2 assertions, ran 3",
+                             this.listener.args[0][0].error.message);
+    },
+
+    "should only check expected assertions for tests that explicitly define it": function () {
+        sinon.stub(this.runner, "assertionCount").returns(3);
+
+        var context = buster.testCase("Test Assertions", {
+            test1: function () {
+                this.expectedAssertions = 2;
+            },
+
+            test2: function () {}
+        });
+
+        this.runner.run(context);
+
+        buster.assert(this.listener.calledOnce);
+        buster.assert.equals("test1", this.listener.args[0][0].name);
+    },
+
+    "should clear expected assertions when test fails for other reasons": function () {
+        sinon.stub(this.runner, "assertionCount").returns(3);
+        this.runner.on("test:error", this.listener);
+
+        var context = buster.testCase("Test Assertions", {
+            test1: function () {
+                this.expectedAssertions = 2;
+                throw new Error();
+            },
+
+            test2: function () {}
+        });
+
+        this.runner.run(context);
+
+        buster.assert(this.listener.calledOnce);
+        buster.assert.equals("test1", this.listener.args[0][0].name);
     }
 });
