@@ -30,7 +30,4 @@ var spec2 = buster.spec("Another test", function (should) {
 
 var runner = buster.util.create(buster.testRunner);
 var reporter = buster.consoleReporter.create(runner, { color: true });
-
-runner.run(spec);
-runner.run(spec2);
-reporter.printStats();
+runner.runSuite([spec, spec2]);
