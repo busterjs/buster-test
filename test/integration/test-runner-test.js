@@ -40,12 +40,12 @@ if (typeof require != "undefined") {
             events.push("start: " + contexts.join(" ") + " " + test.name);
         });
 
-        runner.on("test:error", function (error, test) {
-            events.push("error: " + contexts.join(" ") + " " + test.name);
+        runner.on("test:error", function (result) {
+            events.push("error: " + contexts.join(" ") + " " + result.name);
         });
 
-        runner.on("test:fail", function (error, test) {
-            events.push("failed: " + contexts.join(" ") + " " + test.name);
+        runner.on("test:fail", function (result) {
+            events.push("failed: " + contexts.join(" ") + " " + result.name);
         });
 
         runner.on("test:success", function (test) {
