@@ -13,21 +13,29 @@ if (typeof require != "undefined") {
 
 testCase("ConsoleReporterEventMappingTest", sinon.testCase({
     setUp: function () {
-        this.stub(buster.consoleReporter, "printStats");
+        this.stub(buster.consoleReporter, "reset");
+        this.stub(buster.consoleReporter, "printDetails");
         this.stub(buster.consoleReporter, "startContext");
         this.stub(buster.consoleReporter, "endContext");
         this.stub(buster.consoleReporter, "testSuccess");
-        this.stub(buster.consoleReporter, "testFail");
+        this.stub(buster.consoleReporter, "testFailure");
         this.stub(buster.consoleReporter, "testError");
 
         this.runner = buster.util.create(buster.eventEmitter);
         this.reporter = buster.consoleReporter.create(this.runner);
     },
 
-    "should map suite:end to printStats": function () {
+    "should map suite:start to reset": function () {
+        this.runner.emit("suite:start");
+
+        // reset is also called by the create method
+        buster.assert(this.reporter.reset.calledTwice);
+    },
+
+    "should map suite:end to printDetails": function () {
         this.runner.emit("suite:end");
 
-        buster.assert(this.reporter.printStats.calledOnce);
+        buster.assert(this.reporter.printDetails.calledOnce);
     },
 
     "should map context:start to startContext": function () {
@@ -48,10 +56,10 @@ testCase("ConsoleReporterEventMappingTest", sinon.testCase({
         buster.assert(this.reporter.testError.calledOnce);
     },
 
-    "should map test:fail to testFail": function () {
+    "should map test:fail to testFailure": function () {
         this.runner.emit("test:fail");
 
-        buster.assert(this.reporter.testFail.calledOnce);
+        buster.assert(this.reporter.testFailure.calledOnce);
     }
 }, "should"));
 
@@ -87,7 +95,7 @@ testCase("ConsoleReporterTestsRunningTest", {
     },
 
     "should print capital F when test fails": function () {
-        this.reporter.testFail({ name: "Stuff" });
+        this.reporter.testFailure({ name: "Stuff" });
 
         buster.assert.equals("F", this.io.toString());
     },
@@ -164,7 +172,7 @@ testCase("ConsoleReporterStatsTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.startContext({ name: "Other" });
         this.reporter.testSuccess({ name: "test3", assertions: 4 });
-        this.reporter.testFail({ name: "test4" });
+        this.reporter.testFailure({ name: "test4" });
         this.reporter.endContext({ name: "Other" });
         this.reporter.printStats();
 
@@ -205,6 +213,94 @@ testCase("ConsoleReporterStatsTest", {
         this.reporter.printStats();
 
         buster.assert.noMatch("WARNING: No assertions!", this.io.toString());
+    }
+});
+
+testCase("ConsoleReporterFailureTest", {
+    setUp: reporterSetUp,
+
+    "should print full test name": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testFailure({ name: "should do stuff" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printFailures();
+
+        buster.assert.match("Failure: Stuff should do stuff", this.io.toString());
+    },
+
+    "should print error message": function () {
+        this.reporter.startContext({ name: "Stuff" });
+
+        this.reporter.testFailure({ name: "should do stuff", error: {
+            message: "Expected a to be equal to b"
+        } });
+
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printFailures();
+
+        buster.assert.match("    Expected a to be equal to b", this.io.toString());
+    },
+
+    "should print stack trace": function () {
+        var error = new Error("Expected a to be equal to b");
+        error.name = "AssertionError";
+        try { throw error; } catch (e) { error = e; }
+        this.reporter.startContext({ name: "Stuff" });
+
+        this.reporter.testFailure({ name: "should do stuff", error: {
+            message: "Expected a to be equal to b",
+            stack: error.stack
+        } });
+
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printFailures();
+
+        buster.assert.match("\n\n    at Object", this.io.toString());
+    }
+});
+
+testCase("ConsoleReporterErrorTest", {
+    setUp: reporterSetUp,
+
+    "should print full test name": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testError({ name: "should do stuff" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printErrors();
+
+        buster.assert.match("Error: Stuff should do stuff", this.io.toString());
+    },
+
+    "should print error message": function () {
+        this.reporter.startContext({ name: "Stuff" });
+
+        this.reporter.testError({ name: "should do stuff", error: {
+            message: "a is not defined",
+            name: "ReferenceError"
+        } });
+
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printErrors();
+
+        buster.assert.match("    ReferenceError: a is not defined", this.io.toString());
+    },
+
+    "should print stack trace": function () {
+        var error = new Error("Expected a to be equal to b");
+        error.name = "AssertionError";
+        try { throw error; } catch (e) { error = e; }
+        this.reporter.startContext({ name: "Stuff" });
+
+        this.reporter.testError({ name: "should do stuff", error: {
+            message: "a is not defined",
+            name: "ReferenceError",
+            stack: error.stack
+        } });
+
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printErrors();
+
+        buster.assert.match("\n\n    at Object", this.io.toString());
     }
 });
 
@@ -265,7 +361,7 @@ testCase("ConsoleReporterColorizedStatsTest", {
 
     "should print in red when errors and failures": function () {
         this.reporter.startContext({ name: "Stuff" });
-        this.reporter.testFail({ name: "test1" });
+        this.reporter.testFailure({ name: "test1" });
         this.reporter.testError({ name: "test2" });
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printStats();
@@ -308,6 +404,35 @@ testCase("ConsoleReporterColorizedStatsTest", {
         this.reporter.printStats();
 
         buster.assert.match("\033[31mWARNING: No assertions!\033[0m", this.io.toString());
+    }
+});
+
+testCase("ConsoleReporterColorizedExceptionTest", {
+    setUp: function () {
+        runnerSetUp.call(this);
+
+        this.reporter = buster.consoleReporter.create(this.runner, {
+            io: this.io,
+            color: true
+        });
+    },
+
+    "should print full test name with red label when failure": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testFailure({ name: "should do stuff" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printFailures();
+
+        buster.assert.match("\033[31mFailure\033[0m: Stuff should do stuff", this.io.toString());
+    },
+
+    "should print full test name with yellow label when error": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testError({ name: "should do stuff" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printErrors();
+
+        buster.assert.match("\033[33mError\033[0m: Stuff should do stuff", this.io.toString());
     }
 });
 
@@ -364,7 +489,7 @@ testCase("ConsoleReporterBrightlyColorizedStatsTest", {
 
     "should print in bright red when errors and failures": function () {
         this.reporter.startContext({ name: "Stuff" });
-        this.reporter.testFail({ name: "test1" });
+        this.reporter.testFailure({ name: "test1" });
         this.reporter.testError({ name: "test2" });
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printStats();
@@ -407,5 +532,35 @@ testCase("ConsoleReporterBrightlyColorizedStatsTest", {
         this.reporter.printStats();
 
         buster.assert.match("\033[1m\033[31mWARNING: No assertions!\033[0m", this.io.toString());
+    }
+});
+
+testCase("ConsoleReporterBrightlyColorizedExceptionTest", {
+    setUp: function () {
+        runnerSetUp.call(this);
+
+        this.reporter = buster.consoleReporter.create(this.runner, {
+            io: this.io,
+            color: true,
+            bright: true
+        });
+    },
+
+    "should print full test name with red label when failure": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testFailure({ name: "should do stuff" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printFailures();
+
+        buster.assert.match("\033[1m\033[31mFailure\033[0m: Stuff should do stuff", this.io.toString());
+    },
+
+    "should print full test name with yellow label when error": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testError({ name: "should do stuff" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printErrors();
+
+        buster.assert.match("\033[1m\033[33mError\033[0m: Stuff should do stuff", this.io.toString());
     }
 });
