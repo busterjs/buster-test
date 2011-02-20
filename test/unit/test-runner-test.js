@@ -353,12 +353,31 @@ testCase("TestRunnerRunTest", {
     }
 });
 
+testCase("TestRunnerRunSuiteTest", {
+    setUp: function () {
+        this.runner = buster.util.create(buster.testRunner);
+    },
+
+    "should run all contexts": function () {
+        sinon.stub(this.runner, "run");
+        var contexts = [{}, {}, {}];
+
+        this.runner.runSuite(contexts);
+
+        buster.assert(this.runner.run.calledThrice);
+        buster.assert.same(contexts[0], this.runner.run.args[0][0]);
+        buster.assert.same(contexts[1], this.runner.run.args[1][0]);
+        buster.assert.same(contexts[2], this.runner.run.args[2][0]);
+    }
+});
+
 function runnerEventsSetUp() {
     this.runner = buster.util.create(buster.testRunner);
     this.assertionError = new Error("Oh, crap");
     this.assertionError.name = "AssertionError";
 
     this.listeners = {
+        "suite:start": sinon.spy(),
         "context:start": sinon.spy(),
         "test:setUp": sinon.spy(),
         "test:start": sinon.spy(),
@@ -366,9 +385,11 @@ function runnerEventsSetUp() {
         "test:fail": sinon.spy(),
         "test:error": sinon.spy(),
         "test:success": sinon.spy(),
-        "context:end": sinon.spy()
+        "context:end": sinon.spy(),
+        "suite:end": sinon.spy()
     };
 
+    this.runner.on("suite:start", this.listeners["suite:start"]);
     this.runner.on("context:start", this.listeners["context:start"]);
     this.runner.on("test:setUp", this.listeners["test:setUp"]);
     this.runner.on("test:start", this.listeners["test:start"]);
@@ -377,10 +398,34 @@ function runnerEventsSetUp() {
     this.runner.on("test:fail", this.listeners["test:fail"]);
     this.runner.on("test:error", this.listeners["test:error"]);
     this.runner.on("context:end", this.listeners["context:end"]);
+    this.runner.on("suite:end", this.listeners["suite:end"]);
 }
 
 testCase("TestRunnerEventsTest", {
     setUp: runnerEventsSetUp,
+
+    "should emit event when starting suite": function () {
+        var context = buster.testCase("My case", {});
+        this.runner.runSuite([context]);
+        var listener = this.listeners["suite:start"];
+
+        buster.assert(listener.calledOnce);
+    },
+
+    "should emit event when starting suite only once": function () {
+        this.runner.runSuite([buster.testCase("My case", {}),
+                              buster.testCase("Other", {})]);
+        var listener = this.listeners["suite:start"];
+
+        buster.assert(listener.calledOnce);
+    },
+
+    "should emit end suite event after context end": function () {
+        this.runner.runSuite([buster.testCase("My case", {})]);
+
+        buster.assert(this.listeners["suite:end"].calledOnce);
+        buster.assert(this.listeners["suite:end"].calledAfter(this.listeners["context:end"]));
+    },
 
     "should emit event when starting context": function () {
         var context = buster.testCase("My case", {});
