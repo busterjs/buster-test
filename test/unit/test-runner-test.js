@@ -652,3 +652,40 @@ testCase("TestRunnerEventContentTest", {
         }], args);
     }
 });
+
+testCase("TestRunnerAssertionCountTest", {
+    setUp: function () {
+        this.context = buster.testCase("Test + Assertions", {
+            test1: function () {}
+        });
+
+        this.runner = buster.util.create(buster.testRunner);
+        this.listener = sinon.spy();
+        this.runner.on("test:fail", this.listener);
+    },
+
+    "should fail test if 0 assertions": function () {
+        sinon.stub(this.runner, "assertionCount").returns(0);
+
+        this.runner.run(this.context);
+
+        buster.assert(this.listener.calledOnce);
+    },
+
+    "should not fail test if 1 assertion": function () {
+        sinon.stub(this.runner, "assertionCount").returns(1);
+
+        this.runner.run(this.context);
+
+        buster.assert(!this.listener.calledOnce);
+    },
+
+    "should configure to not fail test if 0 assertions": function () {
+        sinon.stub(this.runner, "assertionCount").returns(0);
+
+        this.runner.failOnNoAssertions = false;
+        this.runner.run(this.context);
+
+        buster.assert(!this.listener.calledOnce);
+    }
+});
