@@ -12,6 +12,11 @@ var sys = require("sys");
 var fs = require("fs");
 var path = require("path");
 
+require("sinon").config = {
+    useFakeTimers: true,
+    useFakeServer: false
+};
+
 require("buster-assert").format = require("buster-object-format").ascii;
 testDir("test");
 var filter = !!process.argv[2] ? new RegExp(process.argv[2]) : null;
