@@ -151,33 +151,33 @@ if (typeof require != "undefined") {
             runner.run(context);
 
             var expected = "start: TestCase\n" +
-                "setUp: TestCase test1\n" +
-                "start: TestCase test1\n" +
-                "tearDown: TestCase test1\n" +
-                "passed: TestCase test1\n" +
-                "setUp: TestCase test2\n" +
-                "start: TestCase test2\n" +
-                "tearDown: TestCase test2\n" +
-                "failed: TestCase test2\n" +
+                "setUp: TestCase should test1\n" +
+                "start: TestCase should test1\n" +
+                "tearDown: TestCase should test1\n" +
+                "passed: TestCase should test1\n" +
+                "setUp: TestCase should test2\n" +
+                "start: TestCase should test2\n" +
+                "tearDown: TestCase should test2\n" +
+                "failed: TestCase should test2\n" +
                 "start: context1\n" +
-                "setUp: TestCase context1 test11\n" +
-                "start: TestCase context1 test11\n" +
-                "tearDown: TestCase context1 test11\n" +
-                "error: TestCase context1 test11\n" +
-                "setUp: TestCase context1 test12\n" +
-                "start: TestCase context1 test12\n" +
-                "tearDown: TestCase context1 test12\n" +
-                "passed: TestCase context1 test12\n" +
+                "setUp: TestCase context1 should test11\n" +
+                "start: TestCase context1 should test11\n" +
+                "tearDown: TestCase context1 should test11\n" +
+                "error: TestCase context1 should test11\n" +
+                "setUp: TestCase context1 should test12\n" +
+                "start: TestCase context1 should test12\n" +
+                "tearDown: TestCase context1 should test12\n" +
+                "passed: TestCase context1 should test12\n" +
                 "end: context1\n" +
                 "start: context2\n" +
-                "setUp: TestCase context2 test21\n" +
-                "start: TestCase context2 test21\n" +
-                "tearDown: TestCase context2 test21\n" +
-                "passed: TestCase context2 test21\n" +
-                "setUp: TestCase context2 test22\n" +
-                "start: TestCase context2 test22\n" +
-                "tearDown: TestCase context2 test22\n" +
-                "passed: TestCase context2 test22\n" +
+                "setUp: TestCase context2 should test21\n" +
+                "start: TestCase context2 should test21\n" +
+                "tearDown: TestCase context2 should test21\n" +
+                "passed: TestCase context2 should test21\n" +
+                "setUp: TestCase context2 should test22\n" +
+                "start: TestCase context2 should test22\n" +
+                "tearDown: TestCase context2 should test22\n" +
+                "passed: TestCase context2 should test22\n" +
                 "end: context2\n" +
                 "end: TestCase";
 

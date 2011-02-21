@@ -259,9 +259,9 @@ testCase("SpecContextTestsTest", {
         var tests = spec.tests();
 
         buster.assert.equals(3, tests.length);
-        buster.assert.equals("test1", tests[0].name);
+        buster.assert.equals("should test1", tests[0].name);
         buster.assert.equals(funcs[0], tests[0].func);
-        buster.assert.equals("test2", tests[1].name);
+        buster.assert.equals("should test2", tests[1].name);
         buster.assert.equals(funcs[1], tests[1].func);
     },
 
