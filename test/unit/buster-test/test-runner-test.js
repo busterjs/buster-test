@@ -373,6 +373,7 @@ testCase("TestRunnerRunSuiteTest", {
 
 function runnerEventsSetUp() {
     this.runner = buster.util.create(buster.testRunner);
+    this.runner.failOnNoAssertions = false;
     this.assertionError = new Error("Oh, crap");
     this.assertionError.name = "AssertionError";
 
@@ -382,7 +383,7 @@ function runnerEventsSetUp() {
         "test:setUp": sinon.spy(),
         "test:start": sinon.spy(),
         "test:tearDown": sinon.spy(),
-        "test:fail": sinon.spy(),
+        "test:failure": sinon.spy(),
         "test:error": sinon.spy(),
         "test:success": sinon.spy(),
         "context:end": sinon.spy(),
@@ -395,7 +396,7 @@ function runnerEventsSetUp() {
     this.runner.on("test:start", this.listeners["test:start"]);
     this.runner.on("test:tearDown", this.listeners["test:tearDown"]);
     this.runner.on("test:success", this.listeners["test:success"]);
-    this.runner.on("test:fail", this.listeners["test:fail"]);
+    this.runner.on("test:failure", this.listeners["test:failure"]);
     this.runner.on("test:error", this.listeners["test:error"]);
     this.runner.on("context:end", this.listeners["context:end"]);
     this.runner.on("suite:end", this.listeners["suite:end"]);
@@ -518,7 +519,7 @@ testCase("TestRunnerEventsTest", {
 
         this.runner.run(context);
 
-        buster.assert(this.listeners["test:fail"].calledOnce);
+        buster.assert(this.listeners["test:failure"].calledOnce);
     },
 
     "should emit test:fail if setUp throws assertion error": function () {
@@ -528,17 +529,18 @@ testCase("TestRunnerEventsTest", {
 
         this.runner.run(context);
 
-        buster.assert(this.listeners["test:fail"].calledOnce);
+        buster.assert(this.listeners["test:failure"].calledOnce);
     },
 
     "should not emit test:fail if test passes": function () {
         var context = buster.testCase("My case", {
-            setUp: sinon.spy(), testIt: sinon.stub()
+            setUp: sinon.spy(),
+            testIt: sinon.stub()
         });
 
         this.runner.run(context);
 
-        buster.assert(!this.listeners["test:fail"].called);
+        buster.assert(!this.listeners["test:failure"].called);
     },
 
     "should emit test:fail if tearDown throws assertion error": function () {
@@ -548,7 +550,7 @@ testCase("TestRunnerEventsTest", {
 
         this.runner.run(context);
 
-        buster.assert(this.listeners["test:fail"].calledOnce);
+        buster.assert(this.listeners["test:failure"].calledOnce);
     },
 
     "should emit test:error when test throws": function () {
@@ -569,7 +571,7 @@ testCase("TestRunnerEventsTest", {
         this.runner.run(context);
 
         buster.assert(this.listeners["test:error"].calledOnce);
-        buster.assert(!this.listeners["test:fail"].calledOnce);
+        buster.assert(!this.listeners["test:failure"].calledOnce);
     },
 
     "should not emit test:error if test passes": function () {
@@ -590,11 +592,11 @@ testCase("TestRunnerEventsTest", {
         this.runner.run(context);
 
         buster.assert(this.listeners["test:error"].calledOnce);
-        buster.assert(!this.listeners["test:fail"].calledOnce);
+        buster.assert(!this.listeners["test:failure"].calledOnce);
     }
 });
 
-testCase("TestRunnerEventContentTest", {
+testCase("TestRunnerEventDataTest", {
     setUp: runnerEventsSetUp,
 
     "context:start event data": function () {
@@ -674,7 +676,7 @@ testCase("TestRunnerEventContentTest", {
         });
 
         this.runner.run(context);
-        var args = this.listeners["test:fail"].args[0];
+        var args = this.listeners["test:failure"].args[0];
 
         buster.assert.equals("test1", args[0].name);
         buster.assert.equals("AssertionError", args[0].error.name);
@@ -695,6 +697,32 @@ testCase("TestRunnerEventContentTest", {
             name: "test1",
             assertions: 2
         }], args);
+    },
+
+    "suite:end event data": function () {
+        var context = buster.testCase("My case", {
+            setUp: function () {},
+            test1: sinon.spy(),
+            test2: sinon.stub().throws(),
+            test3: sinon.spy(),
+            test4: sinon.stub().throws("AssertionError"),
+            inner: {
+                test5: sinon.spy()
+            }
+        });
+
+        sinon.stub(this.runner, "assertionCount").returns(2);
+        this.runner.runSuite([context, context]);
+        var args = this.listeners["suite:end"].args[0];
+
+        buster.assert.equals([{
+            contexts: 2,
+            tests: 10,
+            failures: 2,
+            errors: 2,
+            assertions: 12,
+            ok: true
+        }], args);
     }
 });
 
@@ -706,7 +734,7 @@ testCase("TestRunnerAssertionCountTest", {
 
         this.runner = buster.util.create(buster.testRunner);
         this.listener = sinon.spy();
-        this.runner.on("test:fail", this.listener);
+        this.runner.on("test:failure", this.listener);
     },
 
     "should fail test if 0 assertions": function () {

@@ -44,7 +44,7 @@ if (typeof require != "undefined") {
             events.push("error: " + contexts.join(" ") + " " + result.name);
         });
 
-        runner.on("test:fail", function (result) {
+        runner.on("test:failure", function (result) {
             events.push("failed: " + contexts.join(" ") + " " + result.name);
         });
 
@@ -83,6 +83,7 @@ if (typeof require != "undefined") {
             });
 
             var runner = buster.util.create(buster.testRunner);
+            runner.failOnNoAssertions = false;
             var events = recordEvents(runner);
             runner.run(context);
 
@@ -147,6 +148,7 @@ if (typeof require != "undefined") {
             });
 
             var runner = buster.util.create(buster.testRunner);
+            runner.failOnNoAssertions = false;
             var events = recordEvents(runner);
             runner.run(context);
 
