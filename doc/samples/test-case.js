@@ -1,6 +1,10 @@
 var buster = require("../../lib/buster-test");
 
 var testCase = buster.testCase("Sample test", {
+    setUp: function () {
+        this.a = 1;
+    },
+
     "should pass simple assertion": function () {
         buster.assert(true);
     },
@@ -11,6 +15,22 @@ var testCase = buster.testCase("Sample test", {
 
     "should fail test": function () {
         buster.assert.equals("Something", "Other");
+    },
+
+    "context": {
+        "should be awesome": function () {
+            buster.assert.equals(1, 1);
+        },
+
+        "inside here": {
+            setUp: function () {
+                this.a += 1;
+            },
+
+            "should do it more": function () {
+                buster.assert.equals(2, this.a);
+            }
+        }
     }
 });
 
