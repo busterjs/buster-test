@@ -49,5 +49,5 @@ var testCase2 = buster.testCase("Another test", {
 });
 
 var runner = buster.util.create(buster.testRunner);
-var reporter = buster.consoleReporter.create(runner, { color: true, bright: true });
+var reporter = buster.xUnitConsoleReporter.create(runner, { color: true, bright: true });
 runner.runSuite([testCase, testCase2]);

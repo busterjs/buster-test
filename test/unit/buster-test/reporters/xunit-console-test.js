@@ -7,22 +7,22 @@ if (typeof require != "undefined") {
         assert: require("buster-assert"),
         util: require("buster-util"),
         eventEmitter: require("buster-event-emitter"),
-        consoleReporter: require("buster-test/console-reporter")
+        xUnitConsoleReporter: require("buster-test/reporters/xunit-console")
     };
 }
 
-testCase("ConsoleReporterEventMappingTest", sinon.testCase({
+testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
     setUp: function () {
-        this.stub(buster.consoleReporter, "reset");
-        this.stub(buster.consoleReporter, "printDetails");
-        this.stub(buster.consoleReporter, "startContext");
-        this.stub(buster.consoleReporter, "endContext");
-        this.stub(buster.consoleReporter, "testSuccess");
-        this.stub(buster.consoleReporter, "testFailure");
-        this.stub(buster.consoleReporter, "testError");
+        this.stub(buster.xUnitConsoleReporter, "reset");
+        this.stub(buster.xUnitConsoleReporter, "printDetails");
+        this.stub(buster.xUnitConsoleReporter, "startContext");
+        this.stub(buster.xUnitConsoleReporter, "endContext");
+        this.stub(buster.xUnitConsoleReporter, "testSuccess");
+        this.stub(buster.xUnitConsoleReporter, "testFailure");
+        this.stub(buster.xUnitConsoleReporter, "testError");
 
         this.runner = buster.util.create(buster.eventEmitter);
-        this.reporter = buster.consoleReporter.create(this.runner);
+        this.reporter = buster.xUnitConsoleReporter.create(this.runner);
     },
 
     "should map suite:start to reset": function () {
@@ -76,10 +76,10 @@ function runnerSetUp() {
 
 function reporterSetUp() {
     runnerSetUp.call(this);
-    this.reporter = buster.consoleReporter.create(this.runner, { io: this.io });
+    this.reporter = buster.xUnitConsoleReporter.create(this.runner, { io: this.io });
 }
 
-testCase("ConsoleReporterTestsRunningTest", {
+testCase("XUnitConsoleReporterTestsRunningTest", {
     setUp: reporterSetUp,
 
     "should print dot when test passes": function () {
@@ -139,7 +139,7 @@ testCase("ConsoleReporterTestsRunningTest", {
     }
 });
 
-testCase("ConsoleReporterStatsTest", {
+testCase("XUnitConsoleReporterStatsTest", {
     setUp: reporterSetUp,
 
     "should print for one test case with one test": function () {
@@ -216,7 +216,7 @@ testCase("ConsoleReporterStatsTest", {
     }
 });
 
-testCase("ConsoleReporterFailureTest", {
+testCase("XUnitConsoleReporterFailureTest", {
     setUp: reporterSetUp,
 
     "should print full test name": function () {
@@ -259,7 +259,7 @@ testCase("ConsoleReporterFailureTest", {
     }
 });
 
-testCase("ConsoleReporterErrorTest", {
+testCase("XUnitConsoleReporterErrorTest", {
     setUp: reporterSetUp,
 
     "should print full test name": function () {
@@ -304,11 +304,11 @@ testCase("ConsoleReporterErrorTest", {
     }
 });
 
-testCase("ConsoleReporterColorOutputTest", {
+testCase("XUnitConsoleReporterColorOutputTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.consoleReporter.create(this.runner, {
+        this.reporter = buster.xUnitConsoleReporter.create(this.runner, {
             io: this.io,
             color: true
         });
@@ -339,11 +339,11 @@ testCase("ConsoleReporterColorOutputTest", {
     }
 });
 
-testCase("ConsoleReporterColorizedStatsTest", {
+testCase("XUnitConsoleReporterColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.consoleReporter.create(this.runner, {
+        this.reporter = buster.xUnitConsoleReporter.create(this.runner, {
             io: this.io,
             color: true
         });
@@ -407,11 +407,11 @@ testCase("ConsoleReporterColorizedStatsTest", {
     }
 });
 
-testCase("ConsoleReporterColorizedExceptionTest", {
+testCase("XUnitConsoleReporterColorizedExceptionTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.consoleReporter.create(this.runner, {
+        this.reporter = buster.xUnitConsoleReporter.create(this.runner, {
             io: this.io,
             color: true
         });
@@ -436,11 +436,11 @@ testCase("ConsoleReporterColorizedExceptionTest", {
     }
 });
 
-testCase("ConsoleReporterBrightColorOutputTest", {
+testCase("XUnitConsoleReporterBrightColorOutputTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.consoleReporter.create(this.runner, {
+        this.reporter = buster.xUnitConsoleReporter.create(this.runner, {
             io: this.io,
             color: true,
             bright: true
@@ -466,11 +466,11 @@ testCase("ConsoleReporterBrightColorOutputTest", {
     }
 });
 
-testCase("ConsoleReporterBrightlyColorizedStatsTest", {
+testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.consoleReporter.create(this.runner, {
+        this.reporter = buster.xUnitConsoleReporter.create(this.runner, {
             io: this.io,
             color: true,
             bright: true
@@ -535,11 +535,11 @@ testCase("ConsoleReporterBrightlyColorizedStatsTest", {
     }
 });
 
-testCase("ConsoleReporterBrightlyColorizedExceptionTest", {
+testCase("XUnitConsoleReporterBrightlyColorizedExceptionTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.consoleReporter.create(this.runner, {
+        this.reporter = buster.xUnitConsoleReporter.create(this.runner, {
             io: this.io,
             color: true,
             bright: true

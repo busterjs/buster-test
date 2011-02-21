@@ -51,6 +51,6 @@ var spec2 = describe("Another test", function (it) {
 spec2.specPrefix = "";
 
 var runner = buster.util.create(buster.testRunner);
-//runner.failOnNoAssertions = false;
-var reporter = buster.consoleReporter.create(runner, { color: true });
+runner.failOnNoAssertions = false;
+var reporter = buster.xUnitConsoleReporter.create(runner, { color: true });
 runner.runSuite([spec, spec2]);
