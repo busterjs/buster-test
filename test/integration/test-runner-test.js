@@ -7,7 +7,7 @@ if (typeof require != "undefined") {
     var buster = {
         assert: require("buster-assert"),
         testCase: require("buster-test/test-case"),
-        spec: require("buster-test/spec"),
+        describe: require("buster-test/spec"),
         testRunner: require("buster-test/test-runner"),
         util: require("buster-util")
     };
@@ -125,20 +125,20 @@ if (typeof require != "undefined") {
             assertionError.name = "AssertionError";
             var error = new Error("Oops");
 
-            var context = buster.spec("TestCase", function (should) {
+            var context = buster.describe("TestCase", function (should) {
                 this.before(function () {});
                 this.after(function () {});
                 should("test1", function () {});
                 should("test2", sinon.stub().throws(assertionError));
 
-                this.context("context1", function (should) {
+                this.describe("context1", function (should) {
                     this.before(function () {});
                     this.after(function () {});
                     should("test11", sinon.stub().throws(error));
                     should("test12", function () {});
                 });
 
-                this.context("context2", function (should) {
+                this.describe("context2", function (should) {
                     this.before(function () {});
                     this.after(function () {});
                     should("test21", function () {});
