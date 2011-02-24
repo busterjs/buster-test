@@ -75,7 +75,10 @@ spec2.specPrefix = "";
 
 var runner = buster.util.create(buster.testRunner);
 runner.failOnNoAssertions = false;
-//var reporter = require("../../lib/buster-test/reporters/quiet-console").create(runner, { color: true });
+runner.timeout = 1500;
+
+//var quietReporter = require("../../lib/buster-test/reporters/quiet-console");
+//var reporter = quietReporter.create(runner, { color: true });
 
 var xUnitConsoleReporter = require("../../lib/buster-test/reporters/xunit-console");
 var reporter = xUnitConsoleReporter.create(runner, { color: true, bright: true });

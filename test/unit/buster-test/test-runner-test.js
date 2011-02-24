@@ -867,6 +867,9 @@ testCase("TestRunnerAssertionCountTest", {
 testCase("TestRunnerAsyncTest", {
     setUp: function () {
         this.runner = buster.util.create(buster.testRunner);
+        this.promise = buster.promise.create();
+        this.testFn = sinon.stub().returns(this.promise);
+        this.context = buster.testCase("Test", { test: this.testFn });
     },
 
     "should call test asynchronously": function (test) {
@@ -882,18 +885,83 @@ testCase("TestRunnerAsyncTest", {
     },
 
     "should resolve run when test has resolved": function (test) {
-        var promise = buster.promise.create();
-        var testFn = sinon.stub().returns(promise);
-        var context = buster.testCase("Test", { test: testFn });
-        var runnerResolution = sinon.spy();
-
-        this.runner.run(context).then(runnerResolution);
-
-        buster.util.nextTick(function () {
-            buster.assert(!runnerResolution.called);
-            promise.resolve();
-            buster.assert(runnerResolution.called);
+        this.runner.run(this.context).then(function () {
             test.end();
         });
-    }
+
+        buster.util.nextTick(function () {
+            this.promise.resolve();
+        }.bind(this));
+    },
+
+    "should emit test:async event": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        this.runner.run(this.context);
+
+        buster.util.nextTick(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals([{ name: "test" }], listener.args[0]);
+            test.end();
+        }.bind(this));
+    },
+
+    "should time out after 250ms": function (test) {
+        var runnerResolution = sinon.spy();
+        var promise = this.promise;
+        this.runner.run(this.context).then(runnerResolution);
+
+        setTimeout(function () {
+            buster.util.nextTick(function () {
+                buster.assert(runnerResolution.called);
+                buster.assert(!promise.called);
+                test.end();
+            });
+        }, 250);
+    },
+
+    "should time out after custom timeout": function (test) {
+        var runnerResolution = sinon.spy();
+        this.runner.timeout = 100;
+        this.runner.run(this.context).then(runnerResolution);
+
+        setTimeout(function () {
+            buster.util.nextTick(function () {
+                buster.assert(runnerResolution.called);
+                test.end();
+            });
+        }, 100);
+    },
+
+    "should emit timeout event": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 50;
+        this.runner.on("test:timeout", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listener.called);
+            buster.assert.equals([{ name: "test" }], listener.args[0]);
+            test.end();
+        });
+    },
+
+    "should not emit test:success event until test has completed": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 50;
+        this.runner.on("test:success", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+
+        setTimeout(function () {
+            buster.assert(!listener.called);
+        }, 50);
+    },
+
+    "should error test if it rejects it's returned promise": function () {},
+    "should not run tearDown until test has completed": function () {},
+    "should fail test if it rejects with an AssertionError": function () {}
 });

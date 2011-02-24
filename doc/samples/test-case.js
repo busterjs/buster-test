@@ -60,24 +60,25 @@ var testCase2 = buster.testCase("Another test", {
 });
 
 var runner = buster.util.create(buster.testRunner);
+runner.timeout = 1500;
 
-var log = function (event) {
-    return function () {
-        sys.puts(ind() + event + " (" + arguments[0].name + ")");
-    };
-};
+// var log = function (event) {
+//     return function () {
+//         sys.puts(ind() + event + " (" + arguments[0].name + ")");
+//     };
+// };
 
-var indent = 0;
+// var indent = 0;
 
-function ind() {
-    var str = "";
+// function ind() {
+//     var str = "";
 
-    for (var i = 0; i < indent; ++i) {
-        str += " ";
-    }
+//     for (var i = 0; i < indent; ++i) {
+//         str += " ";
+//     }
 
-    return str;
-}
+//     return str;
+// }
 
 // runner.bind({}, {
 //     "suite:start": log("suite:start"),
