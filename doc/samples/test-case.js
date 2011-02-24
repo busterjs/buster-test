@@ -68,29 +68,29 @@ function ind() {
     return str;
 }
 
-runner.bind({}, {
-    "suite:start": log("suite:start"),
+// runner.bind({}, {
+//     "suite:start": log("suite:start"),
 
-    "context:start": function () {
-        log("context:start").apply(null, arguments);
-        indent = indent + 4;
-    },
+//     "context:start": function () {
+//         log("context:start").apply(null, arguments);
+//         indent = indent + 4;
+//     },
 
-    "test:setUp": log("test:setUp"),
-    "test:tearDown": log("test:tearDown"),
-    "test:start": log("test:start"),
-    "test:success": log("test:success"),
-    "test:failure": log("test:failure"),
-    "test:error": log("test:error"),
+//     "test:setUp": log("test:setUp"),
+//     "test:tearDown": log("test:tearDown"),
+//     "test:start": log("test:start"),
+//     "test:success": log("test:success"),
+//     "test:failure": log("test:failure"),
+//     "test:error": log("test:error"),
 
-    "context:end": function () {
-        indent -= 4;
-        log("context:end").apply(null, arguments);
-    },
+//     "context:end": function () {
+//         indent -= 4;
+//         log("context:end").apply(null, arguments);
+//     },
 
-    "suite:end": log("suite:end")
-});
+//     "suite:end": log("suite:end")
+// });
 
-//var reporter = buster.xUnitConsoleReporter.create(runner, { color: true, bright: true });
+var reporter = buster.xUnitConsoleReporter.create(runner, { color: true, bright: true });
 runner.runSuite([testCase, testCase2]);
 //runner.run(testCase2);

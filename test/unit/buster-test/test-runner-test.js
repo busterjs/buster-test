@@ -743,15 +743,12 @@ testCase("TestRunnerEventDataTest", {
     },
 
     "suite:end event data": function (test) {
-        var errors = [new Error(), new Error()];
-        errors[1].name = "AssertionError";
-
         var context = buster.testCase("My case", {
             setUp: function () {},
             test1: sinon.spy(),
-            test2: sinon.stub().throws(errors[0]),
+            test2: sinon.stub().throws(),
             test3: sinon.spy(),
-            test4: sinon.stub().throws(errors[1]),
+            test4: sinon.stub().throws("AssertionError"),
             inner: {
                 test5: sinon.spy()
             }
@@ -763,8 +760,8 @@ testCase("TestRunnerEventDataTest", {
             var args = this.listeners["suite:end"].args[0];
             buster.assert.equals(2, args[0].contexts);
             buster.assert.equals(10, args[0].tests);
-            buster.assert.equals([errors[0], errors[0]], args[0].errors);
-            buster.assert.equals([errors[1], errors[1]], args[0].failures);
+            buster.assert.equals(2, args[0].errors);
+            buster.assert.equals(2, args[0].failures);
             buster.assert.equals(12, args[0].assertions);
             buster.assert(!args[0].ok);
             test.end();
