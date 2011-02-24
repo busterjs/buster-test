@@ -52,20 +52,42 @@ var runner = buster.util.create(buster.testRunner);
 
 var log = function (event) {
     return function () {
-        sys.puts(event + " (" + arguments[0].name + ")");
+        sys.puts(ind() + event + " (" + arguments[0].name + ")");
     };
 };
 
+var indent = 0;
+
+function ind() {
+    var str = "";
+
+    for (var i = 0; i < indent; ++i) {
+        str += " ";
+    }
+
+    return str;
+}
+
 runner.bind({}, {
     "suite:start": log("suite:start"),
-    "context:start": log("context:start"),
+
+    "context:start": function () {
+        log("context:start").apply(null, arguments);
+        indent = indent + 4;
+    },
+
     "test:setUp": log("test:setUp"),
     "test:tearDown": log("test:tearDown"),
     "test:start": log("test:start"),
     "test:success": log("test:success"),
     "test:failure": log("test:failure"),
     "test:error": log("test:error"),
-    "context:end": log("context:end"),
+
+    "context:end": function () {
+        indent -= 4;
+        log("context:end").apply(null, arguments);
+    },
+
     "suite:end": log("suite:end")
 });
 

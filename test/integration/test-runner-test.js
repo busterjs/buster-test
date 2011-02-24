@@ -56,7 +56,7 @@ if (typeof require != "undefined") {
     }
 
     testCase("TestRunnerIntegrationTest", {
-        "should emit all test case events in proper order": function () {
+        "should emit all test case events in proper order": function (test) {
             var assertionError = new Error("Test failed");
             assertionError.name = "AssertionError";
             var error = new Error("Oops");
@@ -85,7 +85,6 @@ if (typeof require != "undefined") {
             var runner = buster.util.create(buster.testRunner);
             runner.failOnNoAssertions = false;
             var events = recordEvents(runner);
-            runner.run(context);
 
             var expected = "start: TestCase\n" +
                 "setUp: TestCase test1\n" +
@@ -118,10 +117,13 @@ if (typeof require != "undefined") {
                 "end: context2\n" +
                 "end: TestCase";
 
-            buster.assert.equals(expected, events.join("\n"));
+            runner.run(context).then(function () {
+                buster.assert.equals(expected, events.join("\n"));
+                test.end();
+            });
         },
 
-        "should emit all spec events in proper order": function () {
+        "should emit all spec events in proper order": function (test) {
             var assertionError = new Error("Test failed");
             assertionError.name = "AssertionError";
             var error = new Error("Oops");
@@ -150,7 +152,6 @@ if (typeof require != "undefined") {
             var runner = buster.util.create(buster.testRunner);
             runner.failOnNoAssertions = false;
             var events = recordEvents(runner);
-            runner.run(context);
 
             var expected = "start: TestCase\n" +
                 "setUp: TestCase should test1\n" +
@@ -183,7 +184,10 @@ if (typeof require != "undefined") {
                 "end: context2\n" +
                 "end: TestCase";
 
-            buster.assert.equals(expected, events.join("\n"));
+            runner.run(context).then(function () {
+                buster.assert.equals(expected, events.join("\n"));
+                test.end();
+            });
         }
     });
 }());
