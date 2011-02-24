@@ -49,5 +49,26 @@ var testCase2 = buster.testCase("Another test", {
 });
 
 var runner = buster.util.create(buster.testRunner);
-var reporter = buster.xUnitConsoleReporter.create(runner, { color: true, bright: true });
+
+var log = function (event) {
+    return function () {
+        sys.puts(event + " (" + arguments[0].name + ")");
+    };
+};
+
+runner.bind({}, {
+    "suite:start": log("suite:start"),
+    "context:start": log("context:start"),
+    "test:setUp": log("test:setUp"),
+    "test:tearDown": log("test:tearDown"),
+    "test:start": log("test:start"),
+    "test:success": log("test:success"),
+    "test:failure": log("test:failure"),
+    "test:error": log("test:error"),
+    "context:end": log("context:end"),
+    "suite:end": log("suite:end")
+});
+
+//var reporter = buster.xUnitConsoleReporter.create(runner, { color: true, bright: true });
 runner.runSuite([testCase, testCase2]);
+//runner.run(testCase2);

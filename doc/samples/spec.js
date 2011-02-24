@@ -48,9 +48,20 @@ var spec2 = describe("Another test", function (it) {
     });
 });
 
+var spec3 = describe("Third one", function (it) {
+    it("should do #1", function () { buster.assert(true); });
+    it("should do #2", function () { buster.assert(true); });
+    it("should do #3", function () { buster.assert(true); });
+    it("should do #4", function () { buster.assert(true); });
+    it("should do #5", function () { buster.assert(true); });
+    it("should do #6", function () { buster.assert(true); });
+    it("should do #7", function () { buster.assert(true); });
+    it("should do #8", function () { buster.assert(true); });
+});
+
 spec2.specPrefix = "";
 
 var runner = buster.util.create(buster.testRunner);
 runner.failOnNoAssertions = false;
-var reporter = buster.xUnitConsoleReporter.create(runner, { color: true });
-runner.runSuite([spec, spec2]);
+var reporter = require("../../lib/buster-test/reporters/quiet-console").create(runner, { color: true });
+runner.runSuite([spec, spec2, spec3]);
