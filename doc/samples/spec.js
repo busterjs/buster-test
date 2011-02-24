@@ -1,4 +1,5 @@
 var buster = require("../../lib/buster-test");
+buster.promise = require("../../lib/buster-test/promise");
 var describe = buster.describe;
 var assert = require("assert");
 
@@ -43,6 +44,17 @@ var spec2 = describe("Another test", function (it) {
         assert.ok(false);
     });
 
+    it("is asynchronous", function () {
+        var promise = buster.promise.create(function () {
+            setTimeout(function () {
+                console.log("Async");
+                promise.resolve();
+            }, 1000);
+        });
+
+        return promise;
+    }),
+
     it("puts the lotion on its skin or else it gets the hose again", function () {
         buster.assert(true);
     });
@@ -63,5 +75,9 @@ spec2.specPrefix = "";
 
 var runner = buster.util.create(buster.testRunner);
 runner.failOnNoAssertions = false;
-var reporter = require("../../lib/buster-test/reporters/quiet-console").create(runner, { color: true });
+//var reporter = require("../../lib/buster-test/reporters/quiet-console").create(runner, { color: true });
+
+var xUnitConsoleReporter = require("../../lib/buster-test/reporters/xunit-console");
+var reporter = xUnitConsoleReporter.create(runner, { color: true, bright: true });
+
 runner.runSuite([spec, spec2, spec3]);

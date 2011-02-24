@@ -1,4 +1,5 @@
 var buster = require("../../lib/buster-test");
+buster.promise = require("../../lib/buster-test/promise");
 
 var testCase = buster.testCase("Sample test", {
     setUp: function () {
@@ -15,6 +16,16 @@ var testCase = buster.testCase("Sample test", {
 
     "should fail test": function () {
         buster.assert.equals("Something", "Other");
+    },
+
+    "look ma, I'm asynchronous": function () {
+        var promise = buster.promise.create(function () {
+            setTimeout(function () {
+                promise.resolve();
+            }, 1000);
+        });
+
+        return promise;
     },
 
     "context": {
