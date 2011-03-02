@@ -54,11 +54,10 @@ var testCase = buster.testCase("Sample test", {
 
 var testCase2 = buster.testCase("Another test", {
     setUp: function (done) {
-        console.log("Imma async setUp");
+        console.log("Imma async setUp that will time out");
 
         setTimeout(function () {
             console.log("DONE!");
-            done();
         }, 3000);
     },
 

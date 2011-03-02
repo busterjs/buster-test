@@ -898,6 +898,7 @@ testCase("TestRunnerEventDataTest", {
             buster.assert.equals(2, args[0].errors);
             buster.assert.equals(2, args[0].failures);
             buster.assert.equals(12, args[0].assertions);
+            buster.assert.equals(0, args[0].timeouts);
             buster.assert(!args[0].ok);
             test.end();
         }.bind(this));
@@ -1201,6 +1202,22 @@ testCase("TestRunnerImplicitAsyncTest", {
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
             buster.assert.equals("Oops", listener.args[0][0].error.message);
+            test.end();
+        });
+    },
+
+    "should include timeouts in suite:end results": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("suite:end", listener);
+
+        var context = buster.testCase("My case", {
+            test1: function (done) {}
+        });
+
+        sinon.stub(this.runner, "assertionCount").returns(2);
+
+        this.runner.runSuite([context]).then(function () {
+            buster.assert.equals(1, listener.args[0][0].timeouts);
             test.end();
         });
     }
