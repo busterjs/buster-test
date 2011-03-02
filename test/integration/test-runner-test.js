@@ -1,8 +1,6 @@
 if (typeof require != "undefined") {
     var testCase = require("buster-util").testCase;
-    var sys = require("sys");
     var sinon = require("sinon");
-    var sys = require("sys"); 
 
     var buster = {
         assert: require("buster-assert"),
