@@ -50,6 +50,19 @@ testCase("TestRunnerRunTest", {
         });
     },
 
+    "should run test asynchronously": function (test) {
+        var testFn = sinon.spy();
+        var context = buster.testCase("Test", { test: testFn });
+
+        this.runner.run(context).then(function () {
+            buster.assert(testFn.calledOnce);
+            buster.assert(testFn.calledOn(context.testCase));
+            test.end();
+        });
+
+        buster.assert(!testFn.called);
+    },
+
     "should not reject if test throws": function (test) {
         var context = buster.testCase("Test", { test: sinon.stub().throws() });
 
@@ -82,6 +95,25 @@ testCase("TestRunnerRunTest", {
         });
     },
 
+    "should not call test until setUp resolves": function (test) {
+        var promise = buster.promise.create();
+        var testFn = sinon.spy();
+
+        var setUp = sinon.spy(function () {
+            buster.assert(!testFn.called);
+            return promise;
+        });
+
+        var context = buster.testCase("Test", { setUp: setUp, test: testFn });
+
+        this.runner.run(context).then(function () {
+            buster.assert(testFn.calledOnce);
+            test.end();
+        });
+
+        promise.resolve();
+    },
+
     "should not reject if setUp fails": function (test) {
         var setUp = sinon.stub().throws();
         var context = buster.testCase("Test", { setUp: setUp, test: sinon.spy() });
@@ -104,6 +136,20 @@ testCase("TestRunnerRunTest", {
         });
     },
 
+    "should not call test if setUp rejects": function (test) {
+        var promise = buster.promise.create();
+        var testFn = sinon.spy();
+        var setUp = sinon.stub().returns(promise);
+        var context = buster.testCase("Test", { setUp: setUp, test: testFn });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!testFn.called);
+            test.end();
+        });
+
+        promise.reject();
+    },
+
     "should call tearDown on test case object": function (test) {
         var testFn = sinon.spy();
         var tearDown = sinon.spy();
@@ -124,6 +170,27 @@ testCase("TestRunnerRunTest", {
         this.runner.run(context).then(function () {
             buster.assert(tearDown.calledAfter(testFn));
             test.end();
+        });
+    },
+
+    "should not resolve until tearDown resolves": function (test) {
+        var promise = buster.promise.create();
+        var tearDown = sinon.stub().returns(promise);
+        var context = buster.testCase("Test", {
+            tearDown: tearDown, test: sinon.spy()
+        });
+
+        var complete = sinon.spy(function () {
+            buster.util.nextTick(function () {
+                test.end();
+            });
+        });
+
+        this.runner.run(context).then(complete);
+
+        buster.util.nextTick(function () {
+            buster.assert(!complete.called);
+            promise.resolve();
         });
     },
 
@@ -290,6 +357,40 @@ testCase("TestRunnerRunTest", {
         });
     },
 
+    "should wait for setUp promises to resolve": function (test) {
+        var promises = [buster.promise.create(), buster.promise.create()];
+        sinon.spy(promises[0], "resolve");
+        sinon.spy(promises[1], "resolve");
+
+        var setUps = [sinon.spy(function () {
+            buster.util.nextTick(function () {
+                promises[0].resolve();
+            });
+
+            return promises[0];
+        }), sinon.spy(function () {
+            buster.util.nextTick(function () {
+                promises[1].resolve();
+            });
+
+            return promises[1];
+        })];
+
+        var testFn = sinon.spy();
+
+        var context = buster.testCase("Test", {
+            setUp: setUps[0],
+            "context": { setUp: setUps[1], test1: testFn }
+        });
+
+        this.runner.run(context).then(function () {
+            sinon.assert.callOrder(setUps[0], promises[0].resolve,
+                                   setUps[1], promises[1].resolve,
+                                   testFn);
+            test.end();
+        });
+    },
+
     "should run parent setUp on local test case object": function (test) {
         var setUp = sinon.spy();
 
@@ -373,6 +474,40 @@ testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(tearDowns[1].called);
+            test.end();
+        });
+    },
+
+    "should wait for tearDown promises to resolve": function (test) {
+        var promises = [buster.promise.create(), buster.promise.create()];
+        sinon.spy(promises[0], "resolve");
+        sinon.spy(promises[1], "resolve");
+
+        var tearDowns = [sinon.spy(function () {
+            buster.util.nextTick(function () {
+                promises[0].resolve();
+            });
+
+            return promises[0];
+        }), sinon.spy(function () {
+            buster.util.nextTick(function () {
+                promises[1].resolve();
+            });
+
+            return promises[1];
+        })];
+
+        var testFn = sinon.spy();
+
+        var context = buster.testCase("Test", {
+            tearDown: tearDowns[0],
+            "context": { tearDown: tearDowns[1], test1: testFn }
+        });
+
+        this.runner.run(context).then(function () {
+            sinon.assert.callOrder(testFn,
+                                   tearDowns[1], promises[1].resolve,
+                                   tearDowns[0], promises[0].resolve);
             test.end();
         });
     }
@@ -872,18 +1007,6 @@ testCase("TestRunnerAsyncTest", {
         this.context = buster.testCase("Test", { test: this.testFn });
     },
 
-    "should call test asynchronously": function (test) {
-        var testFn = sinon.spy();
-        var context = buster.testCase("Test", { test: testFn });
-
-        this.runner.run(context).then(function () {
-            buster.assert(testFn.called);
-            test.end();
-        });
-
-        buster.assert(!testFn.called);
-    },
-
     "should resolve run when test has resolved": function (test) {
         this.runner.run(this.context).then(function () {
             test.end();
@@ -895,16 +1018,18 @@ testCase("TestRunnerAsyncTest", {
     },
 
     "should emit test:async event": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:async", listener);
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.on("test:async", listeners[0]);
+        this.runner.on("test:success", listeners[1]);
 
-        this.runner.run(this.context);
-
-        buster.util.nextTick(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals([{ name: "test" }], listener.args[0]);
+        this.runner.run(this.context).then(function () {
+            buster.assert(listeners[0].calledOnce);
+            buster.assert.equals([{ name: "test" }], listeners[0].args[0]);
+            buster.assert(listeners[0].calledBefore(listeners[1]));
             test.end();
-        }.bind(this));
+        });
+
+        this.promise.resolve();
     },
 
     "should time out after 250ms": function (test) {
@@ -913,12 +1038,10 @@ testCase("TestRunnerAsyncTest", {
         this.runner.run(this.context).then(runnerResolution);
 
         setTimeout(function () {
-            buster.util.nextTick(function () {
-                buster.assert(runnerResolution.called);
-                buster.assert(!promise.called);
-                test.end();
-            });
-        }, 250);
+            buster.assert(runnerResolution.called);
+            buster.assert(!promise.resolve.called);
+            test.end();
+        }, 265);
     },
 
     "should time out after custom timeout": function (test) {
@@ -927,16 +1050,14 @@ testCase("TestRunnerAsyncTest", {
         this.runner.run(this.context).then(runnerResolution);
 
         setTimeout(function () {
-            buster.util.nextTick(function () {
-                buster.assert(runnerResolution.called);
-                test.end();
-            });
-        }, 100);
+            buster.assert(runnerResolution.called);
+            test.end();
+        }, 115);
     },
 
     "should emit timeout event": function (test) {
         var listener = sinon.spy();
-        this.runner.timeout = 50;
+        this.runner.timeout = 20;
         this.runner.on("test:timeout", listener);
 
         this.runner.run(this.context).then(function () {
@@ -948,7 +1069,7 @@ testCase("TestRunnerAsyncTest", {
 
     "should not emit test:success event until test has completed": function (test) {
         var listener = sinon.spy();
-        this.runner.timeout = 50;
+        this.runner.timeout = 20;
         this.runner.on("test:success", listener);
 
         this.runner.run(this.context).then(function () {
@@ -958,10 +1079,36 @@ testCase("TestRunnerAsyncTest", {
 
         setTimeout(function () {
             buster.assert(!listener.called);
-        }, 50);
+        }, 20);
     },
 
-    "should error test if it rejects it's returned promise": function () {},
-    "should not run tearDown until test has completed": function () {},
-    "should fail test if it rejects with an AssertionError": function () {}
+    "should error test if it rejects it's returned promise": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 20;
+        this.runner.on("test:error", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals("Oh no", listener.args[0][0].error.message);
+            test.end();
+        });
+
+        this.promise.reject(new Error("Oh no"));
+    },
+
+    "should fail test if it rejects with an AssertionError": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 20;
+        this.runner.on("test:failure", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals("Oh no", listener.args[0][0].error.message);
+            test.end();
+        });
+
+        var error = new Error("Oh no");
+        error.name = "AssertionError";
+        this.promise.reject(error);
+    }
 });
