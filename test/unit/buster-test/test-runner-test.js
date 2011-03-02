@@ -1302,6 +1302,51 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
             buster.assert.equals("Oops", listener.args[0][0].error.message);
             test.end();
         });
+    },
+
+    "should time out async setUp": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:timeout", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {},
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should emit test:async when setUp is async": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) { done(); },
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should not emit test:async twice": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) { done(); },
+            test: function (done) { done(); }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
     }
 });
 
@@ -1399,6 +1444,52 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
             buster.assert.equals("Oops", listener.args[0][0].error.message);
+            test.end();
+        });
+    },
+
+    "should time out async tearDown": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:timeout", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {},
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should emit test:async when tearDown is async": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) { done(); },
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should not emit test:async more than once": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) { done(); },
+            tearDown: function (done) { done(); },
+            test: function (done) { done(); }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
             test.end();
         });
     }

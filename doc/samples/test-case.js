@@ -28,6 +28,13 @@ var testCase = buster.testCase("Sample test", {
         return promise;
     },
 
+    "look ma, I'm implicitly asynchronous": function (done) {
+        setTimeout(function () {
+            console.log("Oh yeah");
+            done();
+        }, 1000);
+    },
+
     "context": {
         "should be awesome": function () {
             buster.assert.equals(1, 1);
@@ -46,6 +53,15 @@ var testCase = buster.testCase("Sample test", {
 });
 
 var testCase2 = buster.testCase("Another test", {
+    setUp: function (done) {
+        console.log("Imma async setUp");
+
+        setTimeout(function () {
+            console.log("DONE!");
+            done();
+        }, 3000);
+    },
+
     "should pass simple assertion": function () {
         buster.assert(true);
     },
@@ -94,6 +110,7 @@ runner.bind({}, {
     "test:success": log("test:success"),
     "test:failure": log("test:failure"),
     "test:error": log("test:error"),
+    "test:timeout": log("test:timeout"),
 
     "context:end": function () {
         indent -= 4;
@@ -103,6 +120,6 @@ runner.bind({}, {
     "suite:end": log("suite:end")
 });
 
-// var reporter = buster.xUnitConsoleReporter.create(runner, { color: true, bright: true });
+//var reporter = buster.xUnitConsoleReporter.create(runner, { color: true, bright: true });
 runner.runSuite([testCase, testCase2]);
 //runner.run(testCase2);
