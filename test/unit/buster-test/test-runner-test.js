@@ -1052,7 +1052,7 @@ testCase("TestRunnerAsyncTest", {
         setTimeout(function () {
             buster.assert(runnerResolution.called);
             test.end();
-        }, 115);
+        }, 130);
     },
 
     "should emit timeout event": function (test) {
@@ -1110,5 +1110,296 @@ testCase("TestRunnerAsyncTest", {
         var error = new Error("Oh no");
         error.name = "AssertionError";
         this.promise.reject(error);
+    }
+});
+
+testCase("TestRunnerImplicitAsyncTest", {
+    setUp: function () {
+        this.runner = buster.util.create(buster.testRunner);
+    },
+
+    "should resolve run when test calls passed argument": function (test) {
+        var callback, listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            test: function (done) {
+                callback = done;
+
+                buster.util.nextTick(function () {
+                    callback.called = true;
+                    callback();
+                });
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.called);
+            buster.assert.isNotUndefined(callback);
+            buster.assert(callback.called);
+            test.end();
+        });
+    },
+
+    "should emit test:success when test calls passed argument": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:success", listener);
+
+        var context = buster.testCase("Test", {
+            test: function (done) {
+                buster.util.nextTick(function () {
+                    done();
+                });
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+
+        buster.util.nextTick(function () {
+            buster.assert(!listener.called);
+        });
+    },
+
+    "should emit test:failure when test calls passed argument with AssertionError":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            test: function (done) {
+                buster.util.nextTick(function () {
+                    var error = new Error("Oops");
+                    error.name = "AssertionError";
+                    done(error);
+                });
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            test.end();
+        });
+    },
+
+    "should emit test:error when test calls passed argument with Error":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:error", listener);
+
+        var context = buster.testCase("Test", {
+            test: function (done) {
+                buster.util.nextTick(function () {
+                    done(new Error("Oops"));
+                });
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            test.end();
+        });
+    }
+});
+
+testCase("TestRunnerImplicitAsyncSetUpTest", {
+    setUp: function () {
+        this.runner = buster.util.create(buster.testRunner);
+    },
+
+    "should resolve run when setUp calls passed argument": function (test) {
+        var callback;
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {
+                callback = done;
+
+                buster.util.nextTick(function () {
+                    callback.called = true;
+                    callback();
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert.isNotUndefined(callback);
+            buster.assert(callback.called);
+            test.end();
+        });
+    },
+
+    "should emit test:start when setUp calls passed argument": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:start", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {
+                buster.util.nextTick(function () {
+                    done();
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+
+        buster.util.nextTick(function () {
+            buster.assert(!listener.called);
+        });
+    },
+
+    "should emit test:failure when setUp calls passed argument with AssertionError":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {
+                buster.util.nextTick(function () {
+                    var error = new Error("Oops");
+                    error.name = "AssertionError";
+                    done(error);
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            test.end();
+        });
+    },
+
+    "should emit test:error when setUp calls passed argument with Error":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:error", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {
+                buster.util.nextTick(function () {
+                    done(new Error("Oops"));
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            test.end();
+        });
+    }
+});
+
+testCase("TestRunnerImplicitAsyncTearDownTest", {
+    setUp: function () {
+        this.runner = buster.util.create(buster.testRunner);
+    },
+
+    "should resolve run when tearDown calls passed argument": function (test) {
+        var callback;
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {
+                callback = done;
+
+                buster.util.nextTick(function () {
+                    callback.called = true;
+                    callback();
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert.isNotUndefined(callback);
+            buster.assert(callback.called);
+            test.end();
+        });
+    },
+
+    "should emit test:success when tearDown calls passed argument": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:success", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {
+                buster.util.nextTick(function () {
+                    done();
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+
+        buster.util.nextTick(function () {
+            buster.assert(!listener.called);
+        });
+    },
+
+    "should emit test:failure when tearDown calls passed argument with AssertionError":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {
+                buster.util.nextTick(function () {
+                    var error = new Error("Oops");
+                    error.name = "AssertionError";
+                    done(error);
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            test.end();
+        });
+    },
+
+    "should emit test:error when tearDown calls passed argument with Error":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:error", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {
+                buster.util.nextTick(function () {
+                    done(new Error("Oops"));
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            test.end();
+        });
     }
 });
