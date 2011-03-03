@@ -1,6 +1,5 @@
 if (typeof require != "undefined") {
     var testCase = require("buster-util").testCase;
-    var sys = require("sys");
     var sinon = require("sinon");
 
     var buster = {
@@ -20,6 +19,8 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.stub(buster.xUnitConsoleReporter, "testSuccess");
         this.stub(buster.xUnitConsoleReporter, "testFailure");
         this.stub(buster.xUnitConsoleReporter, "testError");
+        this.stub(buster.xUnitConsoleReporter, "testAsync");
+        this.stub(buster.xUnitConsoleReporter, "testTimeout");
 
         this.runner = buster.util.create(buster.eventEmitter);
         this.reporter = buster.xUnitConsoleReporter.create(this.runner);
@@ -60,6 +61,18 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.runner.emit("test:failure");
 
         buster.assert(this.reporter.testFailure.calledOnce);
+    },
+
+    "should map test:async to testAsync": function () {
+        this.runner.emit("test:async");
+
+        buster.assert(this.reporter.testAsync.calledOnce);
+    },
+
+    "should map test:timeout to testTimeout": function () {
+        this.runner.emit("test:timeout");
+
+        buster.assert(this.reporter.testTimeout.calledOnce);
     }
 }, "should"));
 
@@ -98,6 +111,23 @@ testCase("XUnitConsoleReporterTestsRunningTest", {
         this.reporter.testFailure({ name: "Stuff" });
 
         buster.assert.equals("F", this.io.toString());
+    },
+
+    "should print capital A when test is asynchronous": function () {
+        this.reporter.testAsync({ name: "Stuff" });
+
+        buster.assert.equals("A", this.io.toString());
+    },
+
+    "should replace async marker when test completes": function () {
+        this.reporter.testAsync({ name: "Stuff #1" });
+        this.reporter.testSuccess({ name: "Stuff #1" });
+        this.reporter.testAsync({ name: "Stuff #2" });
+        this.reporter.testFailure({ name: "Stuff #2" });
+        this.reporter.testAsync({ name: "Stuff #3" });
+        this.reporter.testError({ name: "Stuff #3" });
+
+        buster.assert.equals("A\033[1D.A\033[1DFA\033[1DE", this.io.toString());
     },
 
     "should print context name when starting top-level context": function () {
@@ -309,6 +339,12 @@ testCase("XUnitConsoleReporterColorOutputTest", {
         this.runner.emit("test:failure", { name: "Stuff" });
 
         buster.assert.equals("\033[31mF\033[0m", this.io.toString());
+    },
+
+    "should print purple capital A when test is asynchronous": function () {
+        this.reporter.testAsync({ name: "Stuff" });
+
+        buster.assert.equals("\033[35mA\033[0m", this.io.toString());
     }
 });
 
@@ -419,6 +455,12 @@ testCase("XUnitConsoleReporterBrightColorOutputTest", {
         this.runner.emit("test:failure", { name: "Stuff" });
 
         buster.assert.equals("\033[1m\033[31mF\033[0m", this.io.toString());
+    },
+
+    "should print bright purple capital A when test is asynchronous": function () {
+        this.reporter.testAsync({ name: "Stuff" });
+
+        buster.assert.equals("\033[1m\033[35mA\033[0m", this.io.toString());
     }
 });
 
