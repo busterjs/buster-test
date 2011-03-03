@@ -84,7 +84,6 @@ var testCase2 = buster.testCase("Another test", {
         },
 
         "some other nested test": function () {
-
         }
     }
 });

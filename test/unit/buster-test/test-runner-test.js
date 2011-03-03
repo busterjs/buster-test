@@ -1384,6 +1384,25 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
             buster.assert(listener.calledOnce);
             test.end();
         });
+    },
+
+    "should not emit test:async more than once in nested async context": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) { done(); },
+
+            context1: {
+                setUp: function (done) { done(); },
+                test: function (done) { done(); }
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
     }
 });
 
