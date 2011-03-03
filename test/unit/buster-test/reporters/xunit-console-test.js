@@ -21,8 +21,10 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.stub(buster.xUnitConsoleReporter, "testError");
         this.stub(buster.xUnitConsoleReporter, "testAsync");
         this.stub(buster.xUnitConsoleReporter, "testTimeout");
+        this.stub(buster.xUnitConsoleReporter, "log");
 
         this.runner = buster.util.create(buster.eventEmitter);
+        this.runner.console = buster.util.create(buster.eventEmitter);
         this.reporter = buster.xUnitConsoleReporter.create(this.runner);
     },
 
@@ -73,6 +75,12 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.runner.emit("test:timeout");
 
         buster.assert(this.reporter.testTimeout.calledOnce);
+    },
+
+    "should map logger log to log": function () {
+        this.runner.console.emit("log");
+
+        buster.assert(this.reporter.log.calledOnce);
     }
 }, "should"));
 
@@ -175,34 +183,71 @@ testCase("XUnitConsoleReporterTestsRunningTest", {
     }
 });
 
+testCase("XUnitConsoleReporterMessagesTest", {
+    setUp: function () {
+        reporterSetUp.call(this);
+        sinon.stub(this.reporter, "printStats");
+    },
+
+    "should print messages for passed test": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testSetUp({ name: "some test" });
+        this.reporter.log({ level: "log", message: "Is message" });
+        this.reporter.success({ name: "some test" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        buster.assert.match("Passed: Stuff some test", this.io.toString());
+        buster.assert.match("[LOG] Is message", this.io.toString());
+    },
+
+    "should not re-print messages for failed test": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testSetUp({ name: "some test" });
+        this.reporter.log({ level: "log", message: "Is message" });
+        this.reporter.testFailure({ name: "some test" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        buster.assert.noMatch("Passed: Stuff some test", this.io.toString());
+    }
+});
+
 testCase("XUnitConsoleReporterStatsTest", {
     setUp: reporterSetUp,
 
     "should print for one test case with one test": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, assertions: 1, failures: 0, errors: 0 });
 
-        var expected = "1 test case, 1 test, 1 assertion, 0 failures, 0 errors\n";
+        var expected = "1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should print for two test cases": function () {
         this.reporter.printStats({ contexts:  2, tests: 2, assertions: 2, failures: 0, errors: 0 });
 
-        var expected = "2 test cases, 2 tests, 2 assertions, 0 failures, 0 errors\n";
+        var expected = "2 test cases, 2 tests, 2 assertions, 0 failures, 0 errors, 0 timeouts\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should print for errors and failures": function () {
         this.reporter.printStats({ contexts:  2, tests: 4, assertions: 5, failures: 1, errors: 1 });
 
-        var expected = "2 test cases, 4 tests, 5 assertions, 1 failure, 1 error\n";
+        var expected = "2 test cases, 4 tests, 5 assertions, 1 failure, 1 error, 0 timeouts\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should report 0 assertions when assertions property is missing from test success": function () {
         this.reporter.printStats({ contexts:  1, tests: 1 });
 
-        var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors\n";
+        var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\n";
+        buster.assert.match(expected, this.io.toString());
+    },
+
+    "should report timeouts": function () {
+        this.reporter.printStats({ contexts:  1, tests: 1, timeouts: 1 });
+
+        var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\n";
         buster.assert.match(expected, this.io.toString());
     },
 
@@ -250,6 +295,21 @@ testCase("XUnitConsoleReporterFailureTest", {
         buster.assert.match("    Expected a to be equal to b", this.io.toString());
     },
 
+    "should print log messages": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testSetUp({ name: "should do stuff" });
+        this.reporter.log({ level: "log", message: "Hey" });
+
+        this.reporter.testFailure({ name: "should do stuff", error: {
+            message: "Expected a to be equal to b"
+        } });
+
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printFailures();
+
+        buster.assert.match("[LOG] Hey", this.io.toString());
+    },
+
     "should print stack trace": function () {
         var error = new Error("Expected a to be equal to b");
         error.name = "AssertionError";
@@ -264,7 +324,7 @@ testCase("XUnitConsoleReporterFailureTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printFailures();
 
-        buster.assert.match("\n\n    at Object", this.io.toString());
+        buster.assert.match("\n    at Object", this.io.toString());
     }
 });
 
@@ -294,6 +354,21 @@ testCase("XUnitConsoleReporterErrorTest", {
         buster.assert.match("    ReferenceError: a is not defined", this.io.toString());
     },
 
+    "should print log messages": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testSetUp({ name: "should do stuff" });
+        this.reporter.log({ level: "log", message: "Hey" });
+
+        this.reporter.testError({ name: "should do stuff", error: {
+            message: "Expected a to be equal to b"
+        } });
+
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printErrors();
+
+        buster.assert.match("[LOG] Hey", this.io.toString());
+    },
+
     "should print stack trace": function () {
         var error = new Error("Expected a to be equal to b");
         error.name = "AssertionError";
@@ -309,7 +384,7 @@ testCase("XUnitConsoleReporterErrorTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printErrors();
 
-        buster.assert.match("\n\n    at Object", this.io.toString());
+        buster.assert.match("\n    at Object", this.io.toString());
     }
 });
 
@@ -360,6 +435,31 @@ testCase("XUnitConsoleReporterColorOutputTest", {
     }
 });
 
+testCase("XUnitConsoleReporterColorizedMessagesTest", {
+    setUp: function () {
+        reporterSetUp.call(this);
+
+        this.reporter = buster.xUnitConsoleReporter.create(this.runner, {
+            io: this.io,
+            color: true
+        });
+
+        sinon.stub(this.reporter, "printStats");
+    },
+
+    "should print passed in green": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testSetUp({ name: "some test" });
+        this.reporter.log({ level: "log", message: "Is message" });
+        this.reporter.success({ name: "some test" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        buster.assert.match("\033[32mPassed: Stuff some test\033[0m",
+                            this.io.toString());
+    }
+});
+
 testCase("XUnitConsoleReporterColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
@@ -373,28 +473,35 @@ testCase("XUnitConsoleReporterColorizedStatsTest", {
     "should print in green when OK": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 1, failures: 0, errors: 0 });
 
-        var expected = "\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors\033[0m\n";
+        var expected = "\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\033[0m\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should print in red when errors and failures": function () {
         this.reporter.printStats({ contexts: 1, tests: 2, assertions: 2, failures: 1, errors: 1 });
 
-        var expected = "\033[31m1 test case, 2 tests, 2 assertions, 1 failure, 1 error\033[0m\n";
+        var expected = "\033[31m1 test case, 2 tests, 2 assertions, 1 failure, 1 error, 0 timeouts\033[0m\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should print in red when no assertions": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
-        var expected = "\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors\033[0m\n";
+        var expected = "\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should print in red when no tests": function () {
         this.reporter.printStats({ contexts: 1, tests: 0 });
 
-        var expected = "\033[31m1 test case, 0 tests, 0 assertions, 0 failures, 0 errors\033[0m\n";
+        var expected = "\033[31m1 test case, 0 tests, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
+        buster.assert.match(expected, this.io.toString());
+    },
+
+    "should print in red when timeouts": function () {
+        this.reporter.printStats({ contexts: 1, tests: 1, timeouts: 1 });
+
+        var expected = "\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\033[0m\n";
         buster.assert.match(expected, this.io.toString());
     },
 
@@ -496,28 +603,35 @@ testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
     "should print in bright green when OK": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, failures: 0, errors: 0, assertions: 1 });
 
-        var expected = "\033[1m\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors\033[0m\n";
+        var expected = "\033[1m\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\033[0m\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should print in bright red when errors and failures": function () {
         this.reporter.printStats({ contexts: 1, tests: 2, failures: 1, errors: 1 });
 
-        var expected = "\033[1m\033[31m1 test case, 2 tests, 0 assertions, 1 failure, 1 error\033[0m\n";
+        var expected = "\033[1m\033[31m1 test case, 2 tests, 0 assertions, 1 failure, 1 error, 0 timeouts\033[0m\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should print in bright red when no assertions": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
-        var expected = "\033[1m\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors\033[0m\n";
+        var expected = "\033[1m\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
         buster.assert.match(expected, this.io.toString());
     },
 
     "should print in bright red when no tests": function () {
         this.reporter.printStats({ contexts: 1, tests: 0 });
 
-        var expected = "\033[1m\033[31m1 test case, 0 tests, 0 assertions, 0 failures, 0 errors\033[0m\n";
+        var expected = "\033[1m\033[31m1 test case, 0 tests, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
+        buster.assert.match(expected, this.io.toString());
+    },
+
+    "should print in bright red when timeouts": function () {
+        this.reporter.printStats({ contexts: 1, tests: 1, timeouts: 1 });
+
+        var expected = "\033[1m\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\033[0m\n";
         buster.assert.match(expected, this.io.toString());
     },
 

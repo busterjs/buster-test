@@ -7,10 +7,12 @@ var testCase = buster.testCase("Sample test", {
     },
 
     "should pass simple assertion": function () {
+        this.console.log("Trying shit out");
         buster.assert(true);
     },
 
     "should fail when test throws": function () {
+        this.console.log("Hey, wazzup?");
         throw new Error("Ooops!");
     },
 
@@ -22,16 +24,18 @@ var testCase = buster.testCase("Sample test", {
         var promise = buster.promise.create(function () {
             setTimeout(function () {
                 promise.resolve();
-            }, 1000);
+            }, 500);
         });
 
         return promise;
     },
 
     "look ma, I'm implicitly asynchronous": function (done) {
+        buster.assert(true);
+
         setTimeout(function () {
             done();
-        }, 2000);
+        }, 1000);
     },
 
     "context": {
@@ -55,7 +59,7 @@ var testCase2 = buster.testCase("Another test", {
     setUp: function (done) {
         setTimeout(function () {
             done();
-        }, 1000);
+        }, 500);
     },
 
     "should pass simple assertion": function () {
@@ -74,13 +78,13 @@ var testCase2 = buster.testCase("Another test", {
         setUp: function (done) {
             setTimeout(function() {
                 done();
-            }, 1400);
+            }, 700);
         },
 
         tearDown: function (done) {
             setTimeout(function() {
                 done();
-            }, 1000);
+            }, 500);
         },
 
         "some other nested test": function () {
@@ -88,26 +92,27 @@ var testCase2 = buster.testCase("Another test", {
     }
 });
 
-var runner = buster.util.create(buster.testRunner);
-runner.timeout = 1500;
+var runner = buster.testRunner.create({
+    timeout: 750
+});
 
-var log = function (event) {
-    return function () {
-        sys.puts(ind() + event + " (" + arguments[0].name + ")");
-    };
-};
+// var log = function (event) {
+//     return function () {
+//         sys.puts(ind() + event + " (" + arguments[0].name + ")");
+//     };
+// };
 
-var indent = 0;
+// var indent = 0;
 
-function ind() {
-    var str = "";
+// function ind() {
+//     var str = "";
 
-    for (var i = 0; i < indent; ++i) {
-        str += " ";
-    }
+//     for (var i = 0; i < indent; ++i) {
+//         str += " ";
+//     }
 
-    return str;
-}
+//     return str;
+// }
 
 // runner.bind({}, {
 //     "suite:start": log("suite:start"),

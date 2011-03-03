@@ -22,7 +22,7 @@ Function.prototype.bind = function (obj) {
 
 testCase("TestRunnerRunTest", {
     setUp: function () {
-        this.runner = buster.util.create(buster.testRunner);
+        this.runner = buster.testRunner.create();
     },
 
     "should return promise": function () {
@@ -46,6 +46,17 @@ testCase("TestRunnerRunTest", {
         this.runner.run(context).then(function () {
             buster.assert(testFn.calledOnce);
             buster.assert(context.testCase.isPrototypeOf(testFn.thisValues[0]));
+            test.end();
+        });
+    },
+
+    "should run test with this object containing a logger": function (test) {
+        var testFn = sinon.spy();
+        var context = buster.testCase("Test", { test: testFn });
+
+        this.runner.run(context).then(function () {
+            buster.assert.isObject(testFn.thisValues[0].console);
+            buster.assert.isFunction(testFn.thisValues[0].console.log);
             test.end();
         });
     },
@@ -518,7 +529,7 @@ testCase("TestRunnerRunTest", {
 
 testCase("TestRunnerRunSuiteTest", {
     setUp: function () {
-        this.runner = buster.util.create(buster.testRunner);
+        this.runner = buster.testRunner.create();
     },
 
     "should run all contexts": function (test) {
@@ -540,7 +551,7 @@ testCase("TestRunnerRunSuiteTest", {
 });
 
 function runnerEventsSetUp() {
-    this.runner = buster.util.create(buster.testRunner);
+    this.runner = buster.testRunner.create();
     this.runner.failOnNoAssertions = false;
     this.assertionError = new Error("Oh, crap");
     this.assertionError.name = "AssertionError";
@@ -914,7 +925,7 @@ testCase("TestRunnerAssertionCountTest", {
             test1: function () {}
         });
 
-        this.runner = buster.util.create(buster.testRunner);
+        this.runner = buster.testRunner.create();
         this.listener = sinon.spy();
         this.runner.on("test:failure", this.listener);
     },
@@ -1005,7 +1016,7 @@ testCase("TestRunnerAssertionCountTest", {
 
 testCase("TestRunnerAsyncTest", {
     setUp: function () {
-        this.runner = buster.util.create(buster.testRunner);
+        this.runner = buster.testRunner.create();
         this.promise = buster.promise.create();
         this.testFn = sinon.stub().returns(this.promise);
         this.context = buster.testCase("Test", { test: this.testFn });
@@ -1119,7 +1130,7 @@ testCase("TestRunnerAsyncTest", {
 
 testCase("TestRunnerImplicitAsyncTest", {
     setUp: function () {
-        this.runner = buster.util.create(buster.testRunner);
+        this.runner = buster.testRunner.create();
     },
 
     "should resolve run when test calls passed argument": function (test) {
@@ -1248,7 +1259,7 @@ testCase("TestRunnerImplicitAsyncTest", {
 
 testCase("TestRunnerImplicitAsyncSetUpTest", {
     setUp: function () {
-        this.runner = buster.util.create(buster.testRunner);
+        this.runner = buster.testRunner.create();
     },
 
     "should resolve run when setUp calls passed argument": function (test) {
@@ -1411,7 +1422,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
 
 testCase("TestRunnerImplicitAsyncTearDownTest", {
     setUp: function () {
-        this.runner = buster.util.create(buster.testRunner);
+        this.runner = buster.testRunner.create();
     },
 
     "should resolve run when tearDown calls passed argument": function (test) {
