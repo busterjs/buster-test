@@ -1220,6 +1220,26 @@ testCase("TestRunnerImplicitAsyncTest", {
             buster.assert.equals(1, listener.args[0][0].timeouts);
             test.end();
         });
+    },
+
+    "should disarm callback when test times out": function (test) {
+        var callback;
+
+        var context = buster.testCase("My case", {
+            test1: function (done) {
+                callback = done;
+            }
+        });
+
+        sinon.stub(this.runner, "assertionCount").returns(2);
+
+        this.runner.runSuite([context]).then(function () {
+            buster.assert.noException(function () {
+                callback();
+            });
+
+            test.end();
+        });
     }
 });
 
