@@ -45,7 +45,7 @@ testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(testFn.calledOnce);
-            buster.assert(testFn.calledOn(context.testCase));
+            buster.assert(context.testCase.isPrototypeOf(testFn.thisValues[0]));
             test.end();
         });
     },
@@ -56,7 +56,6 @@ testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(testFn.calledOnce);
-            buster.assert(testFn.calledOn(context.testCase));
             test.end();
         });
 
@@ -73,13 +72,14 @@ testCase("TestRunnerRunTest", {
         });
     },
 
-    "should call setUp on test case object": function (test) {
+    "should call setUp on same test case object as test": function (test) {
         var setUp = sinon.spy();
-        var context = buster.testCase("Test", { setUp: setUp, test: function () {} });
+        var testFn = sinon.spy();
+        var context = buster.testCase("Test", { setUp: setUp, test: testFn });
 
         this.runner.run(context).then(function () {
             buster.assert(setUp.calledOnce);
-            buster.assert(setUp.calledOn(context.testCase));
+            buster.assert.same(setUp.thisValues[0], testFn.thisValues[0]);
             test.end();
         });
     },
@@ -150,14 +150,14 @@ testCase("TestRunnerRunTest", {
         promise.reject();
     },
 
-    "should call tearDown on test case object": function (test) {
+    "should call tearDown on same test case object as test": function (test) {
         var testFn = sinon.spy();
         var tearDown = sinon.spy();
         var context = buster.testCase("Test", { tearDown: tearDown, test: testFn });
 
         this.runner.run(context).then(function () {
             buster.assert(tearDown.calledOnce);
-            buster.assert(tearDown.calledOn(context.testCase));
+            buster.assert.same(tearDown.thisValues[0], testFn.thisValues[0]);
             test.end();
         });
     },
@@ -335,7 +335,7 @@ testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(setUp.calledOnce);
-            buster.assert(setUp.calledOn(context.contexts()[0].testCase));
+            buster.assert.same(setUp.thisValues[0], testFn.thisValues[0]);
             test.end();
         });
     },
@@ -393,14 +393,15 @@ testCase("TestRunnerRunTest", {
 
     "should run parent setUp on local test case object": function (test) {
         var setUp = sinon.spy();
+        var testFn = sinon.spy();
 
         var context = buster.testCase("Test", {
             setUp: setUp,
-            "context": { test1: sinon.spy() }
+            "context": { test1: testFn }
         });
 
         this.runner.run(context).then(function () {
-            buster.assert(setUp.calledOn(context.contexts()[0].testCase));
+            buster.assert.same(setUp.thisValues[0], testFn.thisValues[0]);
             test.end();
         });
     },
@@ -421,14 +422,15 @@ testCase("TestRunnerRunTest", {
 
     "should run sub context tearDown for test in sub context": function (test) {
         var tearDown = sinon.spy();
+        var testFn = sinon.spy();
 
         var context = buster.testCase("Test", {
-            "context": { tearDown: tearDown, test1: sinon.spy() }
+            "context": { tearDown: tearDown, test1: testFn }
         });
 
         this.runner.run(context).then(function () {
             buster.assert(tearDown.calledOnce);
-            buster.assert(tearDown.calledOn(context.contexts()[0].testCase));
+            buster.assert.same(tearDown.thisValues[0], testFn.thisValues[0]);
             test.end();
         });
     },
@@ -452,14 +454,15 @@ testCase("TestRunnerRunTest", {
 
     "should run parent tearDown on local test case object": function (test) {
         var tearDown = sinon.spy();
+        var testFn = sinon.spy();
 
         var context = buster.testCase("Test", {
             tearDown: tearDown,
-            "context": { test1: sinon.spy() }
+            "context": { test1: testFn }
         });
 
         this.runner.run(context).then(function () {
-            buster.assert(tearDown.calledOn(context.contexts()[0].testCase));
+            buster.assert.same(tearDown.thisValues[0], testFn.thisValues[0]);
             test.end();
         });
     },
