@@ -821,8 +821,9 @@ testCase("TestRunnerEventDataTest", {
         });
 
         this.runner.run(context).then(function () {
-            var args = this.listeners["test:setUp"].args[0];
-            buster.assert.equals(args, [{ name: "test1" }]);
+            var args = this.listeners["test:setUp"].args;
+            buster.assert.equals("test1", args[0][0].name);
+            buster.assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             test.end();
         }.bind(this));
     },
@@ -833,8 +834,9 @@ testCase("TestRunnerEventDataTest", {
         });
 
         this.runner.run(context).then(function () {
-            var args = this.listeners["test:tearDown"].args[0];
-            buster.assert.equals(args, [{ name: "test1" }]);
+            var args = this.listeners["test:tearDown"].args;
+            buster.assert.equals("test1", args[0][0].name);
+            buster.assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             test.end();
         }.bind(this));
     },
@@ -845,8 +847,9 @@ testCase("TestRunnerEventDataTest", {
         });
 
         this.runner.run(context).then(function () {
-            var args = this.listeners["test:start"].args[0];
-            buster.assert.equals(args, [{ name: "test1" }]);
+            var args = this.listeners["test:start"].args;
+            buster.assert.equals("test1", args[0][0].name);
+            buster.assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             test.end();
         }.bind(this));
     },
