@@ -113,6 +113,12 @@ testCase("XUnitConsoleReporterTestsRunningTest", {
         buster.assert.equals("F", this.io.toString());
     },
 
+    "should print capital T when test times out": function () {
+        this.runner.emit("test:timeout", { name: "Stuff" });
+
+        buster.assert.equals("T", this.io.toString());
+    },
+
     "should print capital A when test is asynchronous": function () {
         this.reporter.testAsync({ name: "Stuff" });
 
@@ -341,6 +347,12 @@ testCase("XUnitConsoleReporterColorOutputTest", {
         buster.assert.equals("\033[31mF\033[0m", this.io.toString());
     },
 
+    "should print red capital T when test times out": function () {
+        this.runner.emit("test:timeout", { name: "Stuff" });
+
+        buster.assert.equals("\033[31mT\033[0m", this.io.toString());
+    },
+
     "should print purple capital A when test is asynchronous": function () {
         this.reporter.testAsync({ name: "Stuff" });
 
@@ -455,6 +467,12 @@ testCase("XUnitConsoleReporterBrightColorOutputTest", {
         this.runner.emit("test:failure", { name: "Stuff" });
 
         buster.assert.equals("\033[1m\033[31mF\033[0m", this.io.toString());
+    },
+
+    "should print bright red capital T when test times out": function () {
+        this.runner.emit("test:timeout", { name: "Stuff" });
+
+        buster.assert.equals("\033[1m\033[31mT\033[0m", this.io.toString());
     },
 
     "should print bright purple capital A when test is asynchronous": function () {
