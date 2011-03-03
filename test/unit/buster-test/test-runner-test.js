@@ -20,6 +20,16 @@ Function.prototype.bind = function (obj) {
     };
 };
 
+testCase("TestRunnerCreateTest", {
+    "should emit newly created object to callback": function () {
+        buster.testRunner.onCreate = sinon.spy();
+        var runner = buster.testRunner.create();
+
+        buster.assert(buster.testRunner.onCreate.calledOnce);
+        buster.assert(buster.testRunner.onCreate.calledWith(runner));
+    }
+});
+
 testCase("TestRunnerRunTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
