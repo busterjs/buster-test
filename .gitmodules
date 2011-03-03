@@ -13,3 +13,6 @@
 [submodule "deps/sinon-js"]
 	path = deps/sinon-js
 	url = git@github.com:cjohansen/Sinon.JS.git
+[submodule "deps/sinon-buster"]
+	path = deps/sinon-buster
+	url = git@git.cjohansen.no:sinon/sinon-buster.git

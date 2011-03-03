@@ -6,6 +6,22 @@ var testCase = buster.testCase("Sample test", {
         this.a = 1;
     },
 
+    "should use sinon": function () {
+        var obj = { meth: function () {} };
+        this.spy(obj, "meth");
+        buster.assert.called(obj.meth);
+    },
+
+    "should use sinon successfully": function () {
+        var obj = { meth: function () {} };
+        this.spy(obj, "meth");
+
+        obj.meth();
+        this.console.log("Just called a spy, tihi");
+
+        buster.assert.called(obj.meth);
+    },
+
     "should pass simple assertion": function () {
         this.console.log("Trying shit out");
         buster.assert(true);
@@ -23,6 +39,7 @@ var testCase = buster.testCase("Sample test", {
     "look ma, I'm asynchronous": function () {
         var promise = buster.promise.create(function () {
             setTimeout(function () {
+                buster.assert(true);
                 promise.resolve();
             }, 500);
         });
@@ -93,7 +110,8 @@ var testCase2 = buster.testCase("Another test", {
 });
 
 var runner = buster.testRunner.create({
-    timeout: 750
+    timeout: 750,
+    failOnNoAssertions: false
 });
 
 // var log = function (event) {
