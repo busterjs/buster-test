@@ -1,13 +1,4 @@
 #!/usr/bin/env node
-
-require.paths.unshift(__dirname + "/deps/buster-util/lib");
-require.paths.unshift(__dirname + "/deps/buster-assert/lib");
-require.paths.unshift(__dirname + "/deps/buster-object-format/lib");
-require.paths.unshift(__dirname + "/deps/buster-event-emitter/lib");
-require.paths.unshift(__dirname + "/deps/sinon-js/lib");
-require.paths.unshift(__dirname + "/test");
-require.paths.unshift(__dirname + "/lib");
-
 var sys = require("sys");
 var fs = require("fs");
 var path = require("path");
