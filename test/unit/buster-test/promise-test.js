@@ -5,7 +5,7 @@ if (typeof require != "undefined") {
 
     var buster = {
         assert: require("buster-assert"),
-        promise: require("buster-test/promise")
+        promise: require("../../../lib/buster-test/promise")
     };
 }
 

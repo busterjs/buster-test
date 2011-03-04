@@ -6,7 +6,7 @@ if (typeof require != "undefined") {
         assert: require("buster-assert"),
         util: require("buster-util"),
         eventEmitter: require("buster-event-emitter"),
-        xUnitConsoleReporter: require("buster-test/reporters/xunit-console")
+        xUnitConsoleReporter: require("../../../../lib/buster-test/reporters/xunit-console")
     };
 }
 

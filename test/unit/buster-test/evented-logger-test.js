@@ -4,7 +4,7 @@ if (typeof require != "undefined") {
 
     var buster = {
         assert: require("buster-assert"),
-        eventedLogger: require("buster-test/evented-logger")
+        eventedLogger: require("../../../lib/buster-test/evented-logger")
     };
 }
 

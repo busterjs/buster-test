@@ -4,9 +4,9 @@ if (typeof require != "undefined") {
 
     var buster = {
         assert: require("buster-assert"),
-        testCase: require("buster-test/test-case"),
-        describe: require("buster-test/spec"),
-        testRunner: require("buster-test/test-runner"),
+        testCase: require("../../lib/buster-test/test-case"),
+        describe: require("../../lib/buster-test/spec"),
+        testRunner: require("../../lib/buster-test/test-runner"),
         util: require("buster-util")
     };
 }
