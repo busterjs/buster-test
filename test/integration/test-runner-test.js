@@ -1,14 +1,14 @@
 if (typeof require != "undefined") {
     var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
+    var buster = require("buster-core");
 
-    var buster = {
+    buster.extend(buster, {
         assert: require("buster-assert"),
         testCase: require("../../lib/buster-test/test-case"),
         describe: require("../../lib/buster-test/spec"),
-        testRunner: require("../../lib/buster-test/test-runner"),
-        util: require("buster-util")
-    };
+        testRunner: require("../../lib/buster-test/test-runner")
+    });
 }
 
 (function () {
@@ -80,7 +80,7 @@ if (typeof require != "undefined") {
                 }
             });
 
-            var runner = buster.util.create(buster.testRunner);
+            var runner = buster.create(buster.testRunner);
             runner.failOnNoAssertions = false;
             var events = recordEvents(runner);
 
@@ -147,7 +147,7 @@ if (typeof require != "undefined") {
                 });
             });
 
-            var runner = buster.util.create(buster.testRunner);
+            var runner = buster.create(buster.testRunner);
             runner.failOnNoAssertions = false;
             var events = recordEvents(runner);
 

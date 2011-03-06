@@ -16,3 +16,6 @@
 [submodule "node_modules/buster-format"]
 	path = node_modules/buster-format
 	url = git@git.cjohansen.no:buster-js/buster-format.git
+[submodule "node_modules/buster-core"]
+	path = node_modules/buster-core
+	url = git@git.cjohansen.no:buster-js/buster-core.git

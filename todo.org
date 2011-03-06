@@ -10,8 +10,6 @@
 * TODO Allow node my-test.js to automatically run tests
 * TODO Allow exports["should do this"] = function () {}; testRunner.run(module);
 ** Test runner: if object does not have "tests" and "contexts" properties: pass it to testCase
-* TODO buster.assert(actual, expected) -> do it
-* TODO buster.assert(actual).assertionName(arg1, arg2, ...)
 * TODO topic?
 buster.testCase("Something", {
     topic: new Car(),
@@ -36,3 +34,4 @@ buster.testCase("Something", {
 * TODO Catch unexpected exceptions
 * DONE "Disarm" promises after timeout
 * DONE Sinon integration
+* TODO buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);

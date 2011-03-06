@@ -1,13 +1,13 @@
 if (typeof require != "undefined") {
     var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
+    var buster = require("buster-core");
 
-    var buster = {
+    buster.extend(buster, {
         assert: require("buster-assert"),
-        util: require("buster-util"),
         eventEmitter: require("buster-event-emitter"),
         xUnitConsoleReporter: require("../../../../lib/buster-test/reporters/xunit-console")
-    };
+    });
 }
 
 testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
@@ -23,8 +23,8 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.stub(buster.xUnitConsoleReporter, "testTimeout");
         this.stub(buster.xUnitConsoleReporter, "log");
 
-        this.runner = buster.util.create(buster.eventEmitter);
-        this.runner.console = buster.util.create(buster.eventEmitter);
+        this.runner = buster.create(buster.eventEmitter);
+        this.runner.console = buster.create(buster.eventEmitter);
         this.reporter = buster.xUnitConsoleReporter.create(this.runner);
     },
 
@@ -92,7 +92,7 @@ function runnerSetUp() {
         toString: function () { return this.content }
     };
 
-    this.runner = buster.util.create(buster.eventEmitter);
+    this.runner = buster.create(buster.eventEmitter);
 }
 
 function reporterSetUp() {

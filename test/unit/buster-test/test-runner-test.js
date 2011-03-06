@@ -2,14 +2,15 @@ if (typeof require != "undefined") {
     var testCase = require("buster-util").testCase;
     var sys = require("sys");
     var sinon = require("sinon");
+    var buster = require("buster-core");
 
-    var buster = {
+    buster.extend(buster, {
         assert: require("buster-assert"),
         testCase: require("../../../lib/buster-test/test-case"),
         testRunner: require("../../../lib/buster-test/test-runner"),
         util: require("buster-util"),
         promise: require("../../../lib/buster-test/promise")
-    };
+    });
 }
 
 Function.prototype.bind = function (obj) {
@@ -202,14 +203,14 @@ testCase("TestRunnerRunTest", {
         });
 
         var complete = sinon.spy(function () {
-            buster.util.nextTick(function () {
+            buster.nextTick(function () {
                 test.end();
             });
         });
 
         this.runner.run(context).then(complete);
 
-        buster.util.nextTick(function () {
+        buster.nextTick(function () {
             buster.assert(!complete.called);
             promise.resolve();
         });
@@ -384,13 +385,13 @@ testCase("TestRunnerRunTest", {
         sinon.spy(promises[1], "resolve");
 
         var setUps = [sinon.spy(function () {
-            buster.util.nextTick(function () {
+            buster.nextTick(function () {
                 promises[0].resolve();
             });
 
             return promises[0];
         }), sinon.spy(function () {
-            buster.util.nextTick(function () {
+            buster.nextTick(function () {
                 promises[1].resolve();
             });
 
@@ -508,13 +509,13 @@ testCase("TestRunnerRunTest", {
         sinon.spy(promises[1], "resolve");
 
         var tearDowns = [sinon.spy(function () {
-            buster.util.nextTick(function () {
+            buster.nextTick(function () {
                 promises[0].resolve();
             });
 
             return promises[0];
         }), sinon.spy(function () {
-            buster.util.nextTick(function () {
+            buster.nextTick(function () {
                 promises[1].resolve();
             });
 
@@ -1067,7 +1068,7 @@ testCase("TestRunnerAsyncTest", {
             test.end();
         });
 
-        buster.util.nextTick(function () {
+        buster.nextTick(function () {
             this.promise.resolve();
         }.bind(this));
     },
@@ -1181,7 +1182,7 @@ testCase("TestRunnerImplicitAsyncTest", {
             test: function (done) {
                 callback = done;
 
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     callback.called = true;
                     callback();
                 });
@@ -1202,7 +1203,7 @@ testCase("TestRunnerImplicitAsyncTest", {
 
         var context = buster.testCase("Test", {
             test: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     done();
                 });
             }
@@ -1213,7 +1214,7 @@ testCase("TestRunnerImplicitAsyncTest", {
             test.end();
         });
 
-        buster.util.nextTick(function () {
+        buster.nextTick(function () {
             buster.assert(!listener.called);
         });
     },
@@ -1225,7 +1226,7 @@ testCase("TestRunnerImplicitAsyncTest", {
 
         var context = buster.testCase("Test", {
             test: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     var error = new Error("Oops");
                     error.name = "AssertionError";
                     done(error);
@@ -1247,7 +1248,7 @@ testCase("TestRunnerImplicitAsyncTest", {
 
         var context = buster.testCase("Test", {
             test: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     done(new Error("Oops"));
                 });
             }
@@ -1309,7 +1310,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
             setUp: function (done) {
                 callback = done;
 
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     callback.called = true;
                     callback();
                 });
@@ -1331,7 +1332,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
 
         var context = buster.testCase("Test", {
             setUp: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     done();
                 });
             },
@@ -1344,7 +1345,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
             test.end();
         });
 
-        buster.util.nextTick(function () {
+        buster.nextTick(function () {
             buster.assert(!listener.called);
         });
     },
@@ -1356,7 +1357,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
 
         var context = buster.testCase("Test", {
             setUp: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     var error = new Error("Oops");
                     error.name = "AssertionError";
                     done(error);
@@ -1380,7 +1381,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
 
         var context = buster.testCase("Test", {
             setUp: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     done(new Error("Oops"));
                 });
             },
@@ -1472,7 +1473,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
             tearDown: function (done) {
                 callback = done;
 
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     callback.called = true;
                     callback();
                 });
@@ -1494,7 +1495,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
 
         var context = buster.testCase("Test", {
             tearDown: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     done();
                 });
             },
@@ -1507,7 +1508,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
             test.end();
         });
 
-        buster.util.nextTick(function () {
+        buster.nextTick(function () {
             buster.assert(!listener.called);
         });
     },
@@ -1519,7 +1520,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
 
         var context = buster.testCase("Test", {
             tearDown: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     var error = new Error("Oops");
                     error.name = "AssertionError";
                     done(error);
@@ -1543,7 +1544,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
 
         var context = buster.testCase("Test", {
             tearDown: function (done) {
-                buster.util.nextTick(function () {
+                buster.nextTick(function () {
                     done(new Error("Oops"));
                 });
             },
