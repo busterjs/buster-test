@@ -6,5 +6,5 @@ require("sinon").config = {
     useFakeServer: false
 };
 
-var testDir = require("buster-test/runner");
-testDir("test", process.argv[2] && new RegExp(process.argv[2]));
+var testDir = require("./node_modules/buster-util/lib/buster-util/runner");
+testDir(__dirname + "/test", process.argv[2] && new RegExp(process.argv[2]));

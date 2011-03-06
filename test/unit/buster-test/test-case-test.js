@@ -60,11 +60,11 @@ testCase("BusterTestCaseTest", {
         });
 
         buster.assert.isObject(testCase);
-        buster.assert.equals("Some test", testCase.name);
-        buster.assert.equals(1, testCase.tests().length);
-        buster.assert.equals("testSomething", testCase.tests()[0].name);
-        buster.assert.equals(test, testCase.tests()[0].func);
-        buster.assert.equals(setUp, testCase.getSetUp());
+        buster.assert.equals(testCase.name, "Some test");
+        buster.assert.equals(testCase.tests().length, 1);
+        buster.assert.equals(testCase.tests()[0].name, "testSomething");
+        buster.assert.equals(testCase.tests()[0].func, test);
+        buster.assert.equals(testCase.getSetUp(), setUp);
     },
 
     "should emit create event when a test case is created": function () {
@@ -74,7 +74,7 @@ testCase("BusterTestCaseTest", {
         var testCase = buster.testCase("Some test", {});
 
         buster.assert(callback.calledOnce);
-        buster.assert.equals(testCase, callback.args[0][0]);
+        buster.assert.equals(callback.args[0][0], testCase);
     }
 });
 
@@ -82,7 +82,7 @@ testCase("TestCaseContextTest", {
     "should have name property": function () {
         var context = buster.testCase("Name", {});
 
-        buster.assert.equals("Name", context.name);
+        buster.assert.equals(context.name, "Name");
     }
 });
 
@@ -100,9 +100,9 @@ testCase("TestContextTestsTest", {
             "test 1": test
         });
 
-        buster.assert.equals(1, context.tests().length);
-        buster.assert.equals("test 1", context.tests()[0].name);
-        buster.assert.equals(test, context.tests()[0].func);
+        buster.assert.equals(context.tests().length, 1);
+        buster.assert.equals(context.tests()[0].name, "test 1");
+        buster.assert.equals(context.tests()[0].func, test);
     },
 
     "should exclude setUp": function () {
@@ -110,7 +110,7 @@ testCase("TestContextTestsTest", {
             setUp: function () {}
         });
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude tearDown": function () {
@@ -118,7 +118,7 @@ testCase("TestContextTestsTest", {
             tearDown: function () {}
         });
 
-        buster.assert.equals(0, context.tests());
+        buster.assert.equals(context.tests(), 0);
     },
 
     "should exclude non-function property": function () {
@@ -126,7 +126,7 @@ testCase("TestContextTestsTest", {
             id: 42
         });
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude custom setUp and tearDown": function () {
@@ -138,7 +138,7 @@ testCase("TestContextTestsTest", {
             after: function () {}
         });
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude instance-custom setUp and tearDown": function () {
@@ -150,7 +150,7 @@ testCase("TestContextTestsTest", {
         context.setUpName = "before";
         context.tearDownName = "after";
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude contextSetUp": function () {
@@ -158,7 +158,7 @@ testCase("TestContextTestsTest", {
             contextSetUp: function () {}
         });
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude contextTearDown": function () {
@@ -166,7 +166,7 @@ testCase("TestContextTestsTest", {
             contextTearDown: function () {}
         });
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude custom contextSetUp": function () {
@@ -176,7 +176,7 @@ testCase("TestContextTestsTest", {
             beforeContext: function () {}
         });
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude custom contextTearDown": function () {
@@ -186,7 +186,7 @@ testCase("TestContextTestsTest", {
             afterContext: function () {}
         });
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude instance-custom contextSetUp": function () {
@@ -196,7 +196,7 @@ testCase("TestContextTestsTest", {
 
         context.contextSetUpName = "beforeContext";
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should exclude instance-custom contextTearDown": function () {
@@ -206,7 +206,7 @@ testCase("TestContextTestsTest", {
 
         context.contextTearDownName = "afterContext";
 
-        buster.assert.equals(0, context.tests().length);
+        buster.assert.equals(context.tests().length, 0);
     },
 
     "should keep reference to parent context": function () {
@@ -216,7 +216,7 @@ testCase("TestContextTestsTest", {
 
         var tests = context.tests();
 
-        buster.assert.equals(context, tests[0].context);
+        buster.assert.equals(tests[0].context, context);
     }
 });
 
@@ -229,8 +229,8 @@ testCase("TestContextContextsTest", {
 
         var contexts = context.contexts();
 
-        buster.assert.equals(1, contexts.length);
-        buster.assert.equals("doingIt", contexts[0].name);
+        buster.assert.equals(contexts.length, 1);
+        buster.assert.equals(contexts[0].name, "doingIt");
     },
 
     "should get contexts with context as parent": function () {
@@ -241,7 +241,7 @@ testCase("TestContextContextsTest", {
 
         var contexts = context.contexts();
 
-        buster.assert.equals(context, contexts[0].parent);
+        buster.assert.equals(contexts[0].parent, context);
     },
 
     "should not include null properties": function () {
@@ -252,7 +252,7 @@ testCase("TestContextContextsTest", {
 
         var contexts = context.contexts();
 
-        buster.assert.equals(0, contexts.length);
+        buster.assert.equals(contexts.length, 0);
     },
 
     "should get tests from nested context": function () {
@@ -262,8 +262,8 @@ testCase("TestContextContextsTest", {
 
         var tests = context.contexts()[0].tests();
 
-        buster.assert.equals(1, tests.length);
-        buster.assert.equals("test", tests[0].name);
+        buster.assert.equals(tests.length, 1);
+        buster.assert.equals(tests[0].name, "test");
     },
 
     "should give contexts unique test case objects": function () {
@@ -273,7 +273,7 @@ testCase("TestContextContextsTest", {
 
         var contexts = context.contexts();
 
-        buster.assert.notSame(context.testCase, contexts[0].testCase);
+        buster.assert.notSame(contexts[0].testCase, context.testCase);
     },
 
     "should return the same context instance each time": function () {
@@ -284,7 +284,7 @@ testCase("TestContextContextsTest", {
         var contexts = context.contexts();
         var contexts2 = context.contexts();
 
-        buster.assert.same(contexts, contexts2);
+        buster.assert.same(contexts2, contexts);
     }
 });
 
@@ -304,7 +304,7 @@ testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.equals(setUp, context.getSetUp());
+        buster.assert.equals(context.getSetUp(), setUp);
     },
 
     "should keep reference to tearDown method": function () {
@@ -315,7 +315,7 @@ testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.equals(tearDown, context.getTearDown());
+        buster.assert.equals(context.getTearDown(), tearDown);
     },
 
     "should keep reference to context setUp method": function () {
@@ -326,7 +326,7 @@ testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.equals(contextSetUp, context.getContextSetUp());
+        buster.assert.equals(context.getContextSetUp(), contextSetUp);
     },
 
     "should keep reference to tearDown method": function () {
@@ -337,7 +337,7 @@ testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.equals(contextTearDown, context.getContextTearDown());
+        buster.assert.equals(context.getContextTearDown(), contextTearDown);
     },
 
     "should keep reference to setUp and tearDown methods with custom names": function () {

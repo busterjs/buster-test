@@ -100,7 +100,7 @@ testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(setUp.calledOnce);
-            buster.assert.same(setUp.thisValues[0], testFn.thisValues[0]);
+            buster.assert.same(testFn.thisValues[0], setUp.thisValues[0]);
             test.end();
         });
     },
@@ -178,7 +178,7 @@ testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(tearDown.calledOnce);
-            buster.assert.same(tearDown.thisValues[0], testFn.thisValues[0]);
+            buster.assert.same(testFn.thisValues[0], tearDown.thisValues[0]);
             test.end();
         });
     },
@@ -356,7 +356,7 @@ testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(setUp.calledOnce);
-            buster.assert.same(setUp.thisValues[0], testFn.thisValues[0]);
+            buster.assert.same(testFn.thisValues[0], setUp.thisValues[0]);
             test.end();
         });
     },
@@ -422,7 +422,7 @@ testCase("TestRunnerRunTest", {
         });
 
         this.runner.run(context).then(function () {
-            buster.assert.same(setUp.thisValues[0], testFn.thisValues[0]);
+            buster.assert.same(testFn.thisValues[0], setUp.thisValues[0]);
             test.end();
         });
     },
@@ -451,7 +451,7 @@ testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(tearDown.calledOnce);
-            buster.assert.same(tearDown.thisValues[0], testFn.thisValues[0]);
+            buster.assert.same(testFn.thisValues[0], tearDown.thisValues[0]);
             test.end();
         });
     },
@@ -822,7 +822,7 @@ testCase("TestRunnerEventDataTest", {
 
         this.runner.run(context).then(function () {
             var args = this.listeners["test:setUp"].args;
-            buster.assert.equals("test1", args[0][0].name);
+            buster.assert.equals(args[0][0].name, "test1");
             buster.assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             test.end();
         }.bind(this));
@@ -848,7 +848,7 @@ testCase("TestRunnerEventDataTest", {
 
         this.runner.run(context).then(function () {
             var args = this.listeners["test:start"].args;
-            buster.assert.equals("test1", args[0][0].name);
+            buster.assert.equals(args[0][0].name, "test1");
             buster.assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             test.end();
         }.bind(this));
@@ -862,10 +862,10 @@ testCase("TestRunnerEventDataTest", {
         this.runner.run(context).then(function () {
             var args = this.listeners["test:error"].args[0];
 
-            buster.assert.equals("test1", args[0].name);
-            buster.assert.equals("TypeError", args[0].error.name);
-            buster.assert.equals("", args[0].error.message);
-            buster.assert.match(/\.js/, args[0].error.stack);
+            buster.assert.equals(args[0].name, "test1");
+            buster.assert.equals(args[0].error.name, "TypeError");
+            buster.assert.equals(args[0].error.message, "");
+            buster.assert.match(args[0].error.stack, /\.js/);
             test.end();
         }.bind(this));
     },
@@ -878,10 +878,10 @@ testCase("TestRunnerEventDataTest", {
         this.runner.run(context).then(function () {
             var args = this.listeners["test:failure"].args[0];
 
-            buster.assert.equals("test1", args[0].name);
-            buster.assert.equals("AssertionError", args[0].error.name);
-            buster.assert.equals("", args[0].error.message);
-            buster.assert.match(/\.js/, args[0].error.stack);
+            buster.assert.equals(args[0].name, "test1");
+            buster.assert.equals(args[0].error.name, "AssertionError");
+            buster.assert.equals(args[0].error.message, "");
+            buster.assert.match(args[0].error.stack, /\.js/);
             test.end();
         }.bind(this));
     },
@@ -896,10 +896,10 @@ testCase("TestRunnerEventDataTest", {
         this.runner.run(context).then(function () {
             var args = this.listeners["test:success"].args[0];
 
-            buster.assert.equals([{
+            buster.assert.equals(args, [{
                 name: "test1",
                 assertions: 2
-            }], args);
+            }]);
             test.end();
         }.bind(this));
     },
@@ -920,13 +920,40 @@ testCase("TestRunnerEventDataTest", {
 
         this.runner.runSuite([context, context]).then(function () {
             var args = this.listeners["suite:end"].args[0];
-            buster.assert.equals(2, args[0].contexts);
-            buster.assert.equals(10, args[0].tests);
-            buster.assert.equals(2, args[0].errors);
-            buster.assert.equals(2, args[0].failures);
-            buster.assert.equals(12, args[0].assertions);
-            buster.assert.equals(0, args[0].timeouts);
+            buster.assert.equals(args[0].contexts, 2);
+            buster.assert.equals(args[0].tests, 10);
+            buster.assert.equals(args[0].errors, 2);
+            buster.assert.equals(args[0].failures, 2);
+            buster.assert.equals(args[0].assertions, 12);
+            buster.assert.equals(args[0].timeouts, 0);
             buster.assert(!args[0].ok);
+            test.end();
+        }.bind(this));
+    },
+
+    "suite:end event data passing test case": function (test) {
+        var context = buster.testCase("My case", {
+            setUp: function () {},
+            test1: sinon.spy(),
+            test2: sinon.spy(),
+            test3: sinon.spy(),
+            test4: sinon.spy(),
+            inner: {
+                test5: sinon.spy()
+            }
+        });
+
+        sinon.stub(this.runner, "assertionCount").returns(2);
+
+        this.runner.runSuite([context, context]).then(function () {
+            var args = this.listeners["suite:end"].args[0];
+            buster.assert.equals(args[0].contexts, 2);
+            buster.assert.equals(args[0].tests, 10);
+            buster.assert.equals(args[0].errors, 0);
+            buster.assert.equals(args[0].failures, 0);
+            buster.assert.equals(args[0].assertions, 20);
+            buster.assert.equals(args[0].timeouts, 0);
+            buster.assert(args[0].ok);
             test.end();
         }.bind(this));
     }
@@ -982,8 +1009,8 @@ testCase("TestRunnerAssertionCountTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(this.listener.calledOnce);
-            buster.assert.equals("Expected 2 assertions, ran 3",
-                                 this.listener.args[0][0].error.message);
+            buster.assert.equals(this.listener.args[0][0].error.message,
+                                 "Expected 2 assertions, ran 3");
             test.end();
         }.bind(this));
     },
@@ -1001,7 +1028,7 @@ testCase("TestRunnerAssertionCountTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(this.listener.calledOnce);
-            buster.assert.equals("test1", this.listener.args[0][0].name);
+            buster.assert.equals(this.listener.args[0][0].name, "test1");
             test.end();
         }.bind(this));
     },
@@ -1021,7 +1048,7 @@ testCase("TestRunnerAssertionCountTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(this.listener.calledOnce);
-            buster.assert.equals("test1", this.listener.args[0][0].name);
+            buster.assert.equals(this.listener.args[0][0].name, "test1");
             test.end();
         }.bind(this));
     }
@@ -1052,7 +1079,7 @@ testCase("TestRunnerAsyncTest", {
 
         this.runner.run(this.context).then(function () {
             buster.assert(listeners[0].calledOnce);
-            buster.assert.equals([{ name: "test" }], listeners[0].args[0]);
+            buster.assert.equals(listeners[0].args[0], [{ name: "test" }]);
             buster.assert(listeners[0].calledBefore(listeners[1]));
             test.end();
         });
@@ -1090,7 +1117,7 @@ testCase("TestRunnerAsyncTest", {
 
         this.runner.run(this.context).then(function () {
             buster.assert(listener.called);
-            buster.assert.equals([{ name: "test" }], listener.args[0]);
+            buster.assert.equals(listener.args[0], [{ name: "test" }]);
             test.end();
         });
     },
@@ -1117,7 +1144,7 @@ testCase("TestRunnerAsyncTest", {
 
         this.runner.run(this.context).then(function () {
             buster.assert(listener.calledOnce);
-            buster.assert.equals("Oh no", listener.args[0][0].error.message);
+            buster.assert.equals(listener.args[0][0].error.message, "Oh no");
             test.end();
         });
 
@@ -1131,7 +1158,7 @@ testCase("TestRunnerAsyncTest", {
 
         this.runner.run(this.context).then(function () {
             buster.assert(listener.calledOnce);
-            buster.assert.equals("Oh no", listener.args[0][0].error.message);
+            buster.assert.equals(listener.args[0][0].error.message, "Oh no");
             test.end();
         });
 
@@ -1208,7 +1235,7 @@ testCase("TestRunnerImplicitAsyncTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
-            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
             test.end();
         });
     },
@@ -1228,7 +1255,7 @@ testCase("TestRunnerImplicitAsyncTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
-            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
             test.end();
         });
     },
@@ -1244,7 +1271,7 @@ testCase("TestRunnerImplicitAsyncTest", {
         sinon.stub(this.runner, "assertionCount").returns(2);
 
         this.runner.runSuite([context]).then(function () {
-            buster.assert.equals(1, listener.args[0][0].timeouts);
+            buster.assert.equals(listener.args[0][0].timeouts, 1);
             test.end();
         });
     },
@@ -1341,7 +1368,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
-            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
             test.end();
         });
     },
@@ -1363,7 +1390,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
-            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
             test.end();
         });
     },
@@ -1504,7 +1531,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
-            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
             test.end();
         });
     },
@@ -1526,7 +1553,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
 
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
-            buster.assert.equals("Oops", listener.args[0][0].error.message);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
             test.end();
         });
     },

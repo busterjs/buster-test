@@ -116,7 +116,7 @@ if (typeof require != "undefined") {
                 "end: TestCase";
 
             runner.run(context).then(function () {
-                buster.assert.equals(expected, events.join("\n"));
+                buster.assert.equals(events.join("\n"), expected);
                 test.end();
             });
         },
@@ -183,7 +183,7 @@ if (typeof require != "undefined") {
                 "end: TestCase";
 
             runner.run(context).then(function () {
-                buster.assert.equals(expected, events.join("\n"));
+                buster.assert.equals(events.join("\n"), expected);
                 test.end();
             });
         }

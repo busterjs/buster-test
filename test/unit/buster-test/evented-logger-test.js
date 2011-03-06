@@ -29,7 +29,7 @@ testCase("EventedLoggerTest", {
         this.logger.log("Hey", {}, [2, 3], "There");
 
         buster.assert(this.listener.calledOnce);
-        buster.assert.equals("Hey {} [2,3] There", this.listener.args[0][0].message);
+        buster.assert.equals(this.listener.args[0][0].message, "Hey {} [2,3] There");
     },
 
     "should emit log event when warning": function () {
@@ -71,7 +71,7 @@ testCase("EventedLoggerTest", {
         this.logger.error("Hey");
 
         buster.assert(this.listener.calledOnce);
-        buster.assert.equals("error", this.listener.args[0][0].level);
+        buster.assert.equals(this.listener.args[0][0].level, "error");
     },
 
     "should emit errors and warnings when level is warn": function () {
@@ -83,8 +83,8 @@ testCase("EventedLoggerTest", {
         this.logger.error("Hey");
 
         buster.assert(this.listener.calledTwice);
-        buster.assert.equals("warn", this.listener.args[0][0].level);
-        buster.assert.equals("error", this.listener.args[1][0].level);
+        buster.assert.equals(this.listener.args[0][0].level, "warn");
+        buster.assert.equals(this.listener.args[1][0].level, "error");
     },
 
     "should emit log, errors and warnings when level is log": function () {
@@ -96,9 +96,9 @@ testCase("EventedLoggerTest", {
         this.logger.error("Hey");
 
         buster.assert(this.listener.calledThrice);
-        buster.assert.equals("log", this.listener.args[0][0].level);
-        buster.assert.equals("warn", this.listener.args[1][0].level);
-        buster.assert.equals("error", this.listener.args[2][0].level);
+        buster.assert.equals(this.listener.args[0][0].level, "log");
+        buster.assert.equals(this.listener.args[1][0].level, "warn");
+        buster.assert.equals(this.listener.args[2][0].level, "error");
     },
 
     "should emit everything when level is debug": function () {
@@ -109,7 +109,7 @@ testCase("EventedLoggerTest", {
         this.logger.warn("Hey");
         this.logger.error("Hey");
 
-        buster.assert.equals(4, this.listener.callCount);
+        buster.assert.equals(this.listener.callCount, 4);
     }
 });
 

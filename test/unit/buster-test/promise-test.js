@@ -127,7 +127,7 @@ testCase("PromiseThenableTest", {
         var promise = buster.promise.thenable({ id: 42 });
 
         promise.then(function (value) {
-            buster.assert.equals({ id: 42 }, value);
+            buster.assert.equals(value, { id: 42 });
         });
     }
 });
