@@ -1,40 +1,10 @@
 #!/usr/bin/env node
-var sys = require("sys");
-var fs = require("fs");
-var path = require("path");
+require("buster-assert").format = require("buster-format").ascii;
 
 require("sinon").config = {
     useFakeTimers: true,
     useFakeServer: false
 };
 
-require("buster-assert").format = require("buster-object-format").ascii;
-testDir("test");
-var filter = !!process.argv[2] ? new RegExp(process.argv[2]) : null;
-
-function testDir(dir) {
-    fs.readdir(dir, function (err, files) {
-        if (!files) {
-            return;
-        }
-
-        files.forEach(function (file) {
-            var fullPath = path.join(dir, file);
-
-            fs.stat(fullPath, function (err, stat) {
-                if (!stat) {
-                    return;
-                }
-
-                if (stat.isDirectory()) {
-                    testDir(fullPath);
-                } else {
-                    if (/\.js$/.test(file) && !/browser/.test(fullPath) &&
-                        (!filter || filter.test(fullPath))) {
-                        require("./" + fullPath.replace(/\.js$/, ""));
-                    }
-                }
-            });
-        });
-    });
-}
+var testDir = require("buster-test/runner");
+testDir("test", process.argv[2] && new RegExp(process.argv[2]));
