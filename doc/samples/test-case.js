@@ -1,5 +1,5 @@
 var buster = require("../../lib/buster-test");
-buster.promise = require("../../lib/buster-test/promise");
+buster.promise = require("buster-promise");
 
 var testCase = buster.testCase("Sample test", {
     setUp: function () {
