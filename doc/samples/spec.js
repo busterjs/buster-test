@@ -73,7 +73,7 @@ var spec3 = describe("Third one", function (it) {
 
 spec2.specPrefix = "";
 
-var runner = buster.util.create(buster.testRunner);
+var runner = buster.create(buster.testRunner);
 runner.failOnNoAssertions = false;
 runner.timeout = 1500;
 
