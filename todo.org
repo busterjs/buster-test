@@ -36,4 +36,4 @@ buster.testCase("Something", {
 * DONE Catch unexpected exceptions (No, catch in runner setup)
 * DONE "Disarm" promises after timeout
 * DONE Sinon integration
-* TODO buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);
+* DONE buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);
