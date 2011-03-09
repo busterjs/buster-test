@@ -1,7 +1,7 @@
 var buster = require("../../lib/buster-test");
 buster.promise = require("buster-promise");
 
-var testCase = buster.testCase("Sample test", {
+buster.testCase("Sample test", {
     setUp: function () {
         this.a = 1;
     },
@@ -108,54 +108,3 @@ var testCase2 = buster.testCase("Another test", {
         }
     }
 });
-
-var runner = buster.testRunner.create({
-    timeout: 750,
-    failOnNoAssertions: false
-});
-
-// var log = function (event) {
-//     return function () {
-//         sys.puts(ind() + event + " (" + arguments[0].name + ")");
-//     };
-// };
-
-// var indent = 0;
-
-// function ind() {
-//     var str = "";
-
-//     for (var i = 0; i < indent; ++i) {
-//         str += " ";
-//     }
-
-//     return str;
-// }
-
-// runner.bind({}, {
-//     "suite:start": log("suite:start"),
-
-//     "context:start": function () {
-//         log("context:start").apply(null, arguments);
-//         indent = indent + 4;
-//     },
-
-//     "test:setUp": log("test:setUp"),
-//     "test:tearDown": log("test:tearDown"),
-//     "test:start": log("test:start"),
-//     "test:success": log("test:success"),
-//     "test:failure": log("test:failure"),
-//     "test:error": log("test:error"),
-//     "test:timeout": log("test:timeout"),
-
-//     "context:end": function () {
-//         indent -= 4;
-//         log("context:end").apply(null, arguments);
-//     },
-
-//     "suite:end": log("suite:end")
-// });
-
-var reporter = buster.xUnitConsoleReporter.create(runner, { color: true, bright: true });
-runner.runSuite([testCase, testCase2]);
-//runner.run(testCase2);

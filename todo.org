@@ -8,7 +8,7 @@
 * TODO Dot matrix reporter ala http://vowsjs.org/
 * TODO Separate stats reporter into separate object
 ** Bind events in bindToRunner method
-* INPR Flatten test contexts immediately
+* DONE Flatten test contexts immediately
 * TODO Allow node my-test.js to automatically run tests
 * TODO Allow exports["should do this"] = function () {}; testRunner.run(module);
 ** Test runner: if object does not have "tests" and "contexts" properties: pass it to testCase

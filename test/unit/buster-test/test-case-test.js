@@ -66,14 +66,13 @@ testCase("BusterTestCaseTest", {
         buster.assert.equals(testCase.setUp, setUp);
     },
 
-    "should emit create event when a test case is created": function () {
-        var callback = sinon.spy();
-        buster.testCase.on("create", callback);
+    "should call create callback when a test case is created": function () {
+        buster.testCase.onCreate = sinon.spy();
 
         var testCase = buster.testCase("Some test", {});
 
-        buster.assert(callback.calledOnce);
-        buster.assert.equals(callback.args[0][0], testCase);
+        buster.assert(buster.testCase.onCreate.calledOnce);
+        buster.assert.equals(buster.testCase.onCreate.args[0][0], testCase);
     }
 });
 

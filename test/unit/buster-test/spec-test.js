@@ -53,14 +53,13 @@ testCase("SpecTest", {
         buster.assert.isUndefined(spec.setUp);
     },
 
-    "should emit create event when a spec is created": function () {
-        var callback = sinon.spy();
-        buster.describe.on("create", callback);
+    "should call create callback when a spec is created": function () {
+        buster.describe.onCreate = sinon.spy();
 
         var spec = buster.describe("Some test", function () {});
 
-        buster.assert(callback.calledOnce);
-        buster.assert.equals(spec, callback.args[0][0]);
+        buster.assert(buster.describe.onCreate.calledOnce);
+        buster.assert.equals(buster.describe.onCreate.args[0][0], spec);
     }
 });
 

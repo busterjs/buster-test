@@ -1,5 +1,5 @@
 var buster = require("../../lib/buster-test");
-buster.promise = require("../../lib/buster-test/promise");
+buster.promise = require("buster-promise");
 var describe = buster.describe;
 var assert = require("assert");
 
@@ -72,15 +72,3 @@ var spec3 = describe("Third one", function (it) {
 });
 
 spec2.specPrefix = "";
-
-var runner = buster.create(buster.testRunner);
-runner.failOnNoAssertions = false;
-runner.timeout = 1500;
-
-var quietReporter = require("../../lib/buster-test/reporters/quiet-console");
-var reporter = quietReporter.create(runner, { color: true });
-
-// var xUnitConsoleReporter = require("../../lib/buster-test/reporters/xunit-console");
-// var reporter = xUnitConsoleReporter.create(runner, { color: true, bright: true });
-
-runner.runSuite([spec, spec2, spec3]);
