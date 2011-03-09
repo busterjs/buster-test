@@ -353,7 +353,7 @@ testCase("TestRunnerRunTest", {
             "context": { setUp: setUp, test1: testFn }
         });
 
-        context.contexts()[0].testCase.id = 42;
+        context.contexts[0].testCase.id = 42;
 
         this.runner.run(context).then(function () {
             buster.assert(setUp.calledOnce);

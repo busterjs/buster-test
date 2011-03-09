@@ -49,8 +49,8 @@ testCase("SpecTest", {
 
         buster.assert.isObject(spec);
         buster.assert.equals("Some test", spec.name);
-        buster.assert.equals(0, spec.tests().length);
-        buster.assert.isUndefined(spec.getSetUp());
+        buster.assert.equals(0, spec.tests.length);
+        buster.assert.isUndefined(spec.setUp);
     },
 
     "should emit create event when a spec is created": function () {
@@ -83,7 +83,7 @@ testCase("SpecCallbackTest", {
         var contextCallback = sinon.spy();
 
         var spec = buster.describe("Stuff", contextCallback);
-        spec.run();
+        spec.parse();
 
         buster.assert(contextCallback.calledOnce);
         buster.assert.isFunction(contextCallback.args[0][0]);
@@ -95,19 +95,18 @@ testCase("SpecCallbackTest", {
 
         var spec = buster.describe("Stuff", contextCallback);
 
-        buster.assert.equals(1, spec.tests().length);
-        buster.assert.equals("should do it", spec.tests()[0].name);
-        buster.assert.equals(test, spec.tests()[0].func);
+        buster.assert.equals(1, spec.tests.length);
+        buster.assert.equals("should do it", spec.tests[0].name);
+        buster.assert.equals(test, spec.tests[0].func);
     },
 
     "should give test custom prefix": function () {
         var test = function () {};
         var contextCallback = sinon.stub().yields("do it", test);
 
-        var spec = buster.describe("Stuff", contextCallback);
-        spec.specPrefix = "";
+        var spec = buster.describe("Stuff", contextCallback, { specPrefix: "" });
 
-        buster.assert.equals("do it", spec.tests()[0].name);
+        buster.assert.equals("do it", spec.tests[0].name);
     },
 
     "should add setUp function by calling this.before": function () {
@@ -117,7 +116,7 @@ testCase("SpecCallbackTest", {
             this.before(setUp);
         });
 
-        buster.assert.equals(setUp, spec.getSetUp());
+        buster.assert.equals(setUp, spec.setUp);
     },
 
     "should add tearDown function by calling this.after": function () {
@@ -127,7 +126,7 @@ testCase("SpecCallbackTest", {
             this.after(tearDown);
         });
 
-        buster.assert.equals(tearDown, spec.getTearDown());
+        buster.assert.equals(tearDown, spec.tearDown);
     },
 
     "should add contextSetUp function by calling this.beforeSpec": function () {
@@ -137,7 +136,7 @@ testCase("SpecCallbackTest", {
             this.beforeSpec(contextSetUp);
         });
 
-        buster.assert.equals(contextSetUp, spec.getContextSetUp());
+        buster.assert.equals(contextSetUp, spec.contextSetUp);
     },
 
     "should add contextTearDown function by calling this.afterSpec": function () {
@@ -147,7 +146,7 @@ testCase("SpecCallbackTest", {
             this.afterSpec(contextTearDown);
         });
 
-        buster.assert.equals(contextTearDown, spec.getContextTearDown());
+        buster.assert.equals(contextTearDown, spec.contextTearDown);
     },
 
     "should add setUp function by calling custom method on this": function () {
@@ -158,7 +157,7 @@ testCase("SpecCallbackTest", {
             this.startWith(setUp);
         });
 
-        buster.assert.equals(setUp, spec.getSetUp());
+        buster.assert.equals(setUp, spec.setUp);
     },
 
     "should add tearDown function by calling custom method on this": function () {
@@ -169,7 +168,7 @@ testCase("SpecCallbackTest", {
             this.endWith(tearDown);
         });
 
-        buster.assert.equals(tearDown, spec.getTearDown());
+        buster.assert.equals(tearDown, spec.tearDown);
     },
 
     "should add contextSetUp function by calling custom method on this": function () {
@@ -180,7 +179,7 @@ testCase("SpecCallbackTest", {
             this.startSpecWith(contextSetUp);
         });
 
-        buster.assert.equals(contextSetUp, spec.getContextSetUp());
+        buster.assert.equals(contextSetUp, spec.contextSetUp);
     },
 
     "should add contextTearDown function by calling custom method on this": function () {
@@ -191,7 +190,7 @@ testCase("SpecCallbackTest", {
             this.endSpecWith(contextTearDown);
         });
 
-        buster.assert.equals(contextTearDown, spec.getContextTearDown());
+        buster.assert.equals(contextTearDown, spec.contextTearDown);
     },
 
     "should add setUp function by calling custom method on instance": function () {
@@ -199,11 +198,21 @@ testCase("SpecCallbackTest", {
 
         var spec = buster.describe("Stuff", function (should) {
             this.startWith(setUp);
-        });
+        }, { setUpName: "startWith" });
 
-        spec.setUpName = "startWith";
+        buster.assert.equals(setUp, spec.setUp);
+    },
 
-        buster.assert.equals(setUp, spec.getSetUp());
+    "should add setUp function by calling custom method in nested context": function () {
+        var setUp = function () {};
+
+        var spec = buster.describe("Stuff", function (should) {
+            this.describe("Something", function (should) {
+                this.startWith(setUp);
+            });
+        }, { setUpName: "startWith" });
+
+        buster.assert.equals(spec.contexts[0].setUp, setUp);
     },
 
     "should add tearDown function by calling custom method on instance": function () {
@@ -211,11 +220,21 @@ testCase("SpecCallbackTest", {
 
         var spec = buster.describe("Stuff", function (should) {
             this.endWith(tearDown);
-        });
+        }, { tearDownName: "endWith" });
 
-        spec.tearDownName = "endWith";
+        buster.assert.equals(tearDown, spec.tearDown);
+    },
 
-        buster.assert.equals(tearDown, spec.getTearDown());
+    "should add tearDown function by calling custom method in nested context": function () {
+        var tearDown = function () {};
+
+        var spec = buster.describe("Stuff", function (should) {
+            this.describe("Stuff", function (should) {
+                this.endWith(tearDown);
+            });
+        }, { tearDownName: "endWith" });
+
+        buster.assert.equals(spec.contexts[0].tearDown, tearDown);
     },
 
     "should add contextSetUp function by calling custom method on instance": function () {
@@ -223,11 +242,21 @@ testCase("SpecCallbackTest", {
 
         var spec = buster.describe("Stuff", function (should) {
             this.startSpecWith(contextSetUp);
-        });
+        }, { contextSetUpName: "startSpecWith" });
 
-        spec.contextSetUpName = "startSpecWith";
+        buster.assert.equals(contextSetUp, spec.contextSetUp);
+    },
 
-        buster.assert.equals(contextSetUp, spec.getContextSetUp());
+    "should add contextSetUp function by calling custom method in nested context": function () {
+        var contextSetUp = function () {};
+
+        var spec = buster.describe("Stuff", function (should) {
+            this.describe("Stuff", function (should) {
+                this.startSpecWith(contextSetUp);
+            });
+        }, { contextSetUpName: "startSpecWith" });
+
+        buster.assert.equals(spec.contexts[0].contextSetUp, contextSetUp);
     },
 
     "should add contextTearDown function by calling custom method on instance": function () {
@@ -235,11 +264,25 @@ testCase("SpecCallbackTest", {
 
         var spec = buster.describe("Stuff", function (should) {
             this.endSpecWith(contextTearDown);
+        }, {
+            contextTearDownName: "endSpecWith"
         });
 
-        spec.contextTearDownName = "endSpecWith";
+        buster.assert.equals(contextTearDown, spec.contextTearDown);
+    },
 
-        buster.assert.equals(contextTearDown, spec.getContextTearDown());
+    "should add contextTearDown function by calling custom method in nested context": function () {
+        var contextTearDown = function () {};
+
+        var spec = buster.describe("Stuff", function (should) {
+            this.describe("Stuff", function (should) {
+                this.endSpecWith(contextTearDown);
+            });
+        }, {
+            contextTearDownName: "endSpecWith"
+        });
+
+        buster.assert.equals(spec.contexts[0].contextTearDown, contextTearDown);
     }
 });
 
@@ -256,7 +299,7 @@ testCase("SpecContextTestsTest", {
             should("test3", funcs[2]);
         });
 
-        var tests = spec.tests();
+        var tests = spec.tests;
 
         buster.assert.equals(3, tests.length);
         buster.assert.equals("should test1", tests[0].name);
@@ -270,7 +313,7 @@ testCase("SpecContextTestsTest", {
             should("test1", function () {});
         });
 
-        var tests = spec.tests();
+        var tests = spec.tests;
 
         buster.assert.equals(spec, tests[0].context);
     }
@@ -282,10 +325,8 @@ testCase("SpecContextContextsTest", {
             this.describe("Some context", function (should) {});
         });
 
-        var contexts = spec.contexts();
-
-        buster.assert.equals(1, contexts.length);
-        buster.assert.equals("Some context", contexts[0].name);
+        buster.assert.equals(1, spec.contexts.length);
+        buster.assert.equals("Some context", spec.contexts[0].name);
     },
 
     "should get contexts with current context as parent": function () {
@@ -293,7 +334,7 @@ testCase("SpecContextContextsTest", {
             this.describe("doingIt", function () {});
         });
 
-        var contexts = spec.contexts();
+        var contexts = spec.contexts;
 
         buster.assert.equals(spec, contexts[0].parent);
     },
@@ -307,7 +348,7 @@ testCase("SpecContextContextsTest", {
             });
         });
 
-        spec.run();
+        spec.parse();
     },
 
     "should get tests from nested context": function () {
@@ -317,7 +358,7 @@ testCase("SpecContextContextsTest", {
             });
         });
 
-        var tests = spec.contexts()[0].tests();
+        var tests = spec.contexts[0].tests;
 
         buster.assert.equals(1, tests.length);
         buster.assert.equals("should do it", tests[0].name);
@@ -328,19 +369,8 @@ testCase("SpecContextContextsTest", {
             this.describe("someContext", function (should) {});
         });
 
-        var contexts = spec.contexts();
+        var contexts = spec.contexts;
 
         buster.assert.notEquals(spec.testCase, contexts[0].testCase);
-    },
-
-    "should return the same context instance each time": function () {
-        var context = buster.describe("Name", function (should) {
-            this.describe("someContext", function () {});
-        });
-
-        var contexts = context.contexts();
-        var contexts2 = context.contexts();
-
-        buster.assert.same(contexts, contexts2);
     }
 });
