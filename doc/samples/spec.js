@@ -1,9 +1,9 @@
 var buster = require("../../lib/buster-test");
 buster.promise = require("buster-promise");
-var describe = buster.describe;
 var assert = require("assert");
+buster.spec.expose(typeof global != "undefined" ? global : this);
 
-var spec = describe("Sample spec", function (should) {
+var spec = describe("Sample spec", function () {
     should("pass simple assertion", function () {
         buster.assert(true);
     });
@@ -16,35 +16,35 @@ var spec = describe("Sample spec", function (should) {
         buster.assert.equals("Something", "Other");
     });
 
-    this.describe("nested", function (should) {
+    describe("nested", function () {
         should("do it", function () {
             buster.assert(true);
         });
     });
 });
 
-var spec2 = describe("Another test", function (it) {
-    this.before(function () {
+var spec2 = describe("Another test", function () {
+    before(function () {
         this.value = 42;
     });
 
-    it("passes simple assertion", function () {
+    should("passes simple assertion", function () {
         buster.assert.equals(42, this.value);
     });
 
-    it("passes true assertion", function () {
+    should("passes true assertion", function () {
         buster.assert(true);
     });
 
-    it("passes node assertion", function () {
+    should("passes node assertion", function () {
         assert.ok(true);
     });
 
-    it("fails node assertion", function () {
+    should("fail node assertion", function () {
         assert.ok(false);
     });
 
-    it("//is asynchronous", function () {
+    shouldEventually("is asynchronous", function () {
         var promise = buster.promise.create(function () {
             setTimeout(function () {
                 console.log("Async");
@@ -55,20 +55,18 @@ var spec2 = describe("Another test", function (it) {
         return promise;
     }),
 
-    it("puts the lotion on its skin or else it gets the hose again", function () {
+    should("puts the lotion on its skin or else it gets the hose again", function () {
         buster.assert(true);
     });
 });
 
-var spec3 = describe("Third one", function (it) {
-    it("should do #1", function () { buster.assert(true); });
-    it("should do #2", function () { buster.assert(true); });
-    it("should do #3", function () { buster.assert(true); });
-    it("should do #4", function () { buster.assert(true); });
-    it("should do #5", function () { buster.assert(true); });
-    it("should do #6", function () { buster.assert(true); });
-    it("should do #7", function () { buster.assert(true); });
-    it("should do #8", function () { buster.assert(true); });
+var spec3 = describe("Third one", function () {
+    should("should do #1", function () { buster.assert(true); });
+    should("should do #2", function () { buster.assert(true); });
+    should("should do #3", function () { buster.assert(true); });
+    should("should do #4", function () { buster.assert(true); });
+    should("should do #5", function () { buster.assert(true); });
+    should("should do #6", function () { buster.assert(true); });
+    should("should do #7", function () { buster.assert(true); });
+    should("should do #8", function () { buster.assert(true); });
 });
-
-spec2.specPrefix = "";

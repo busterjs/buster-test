@@ -6,7 +6,7 @@ if (typeof require != "undefined") {
     buster.extend(buster, {
         assert: require("buster-assert"),
         testCase: require("../../lib/buster-test/test-case"),
-        describe: require("../../lib/buster-test/spec"),
+        describe: require("../../lib/buster-test/spec").describe,
         testRunner: require("../../lib/buster-test/test-runner")
     });
 }
