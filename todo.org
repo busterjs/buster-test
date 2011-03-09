@@ -6,7 +6,7 @@
 ** Runner should understand pending/deferred tests
 ** Reporter should display pending/deferred tests
 * TODO Dot matrix reporter ala http://vowsjs.org/
-* TODO Separate stats reporter into separate object
+* DONE Separate stats reporter into separate object
 ** Bind events in bindToRunner method
 * DONE Flatten test contexts immediately
 * DONE Allow node my-test.js to automatically run tests

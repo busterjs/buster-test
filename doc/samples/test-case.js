@@ -22,7 +22,7 @@ buster.testCase("Sample test", {
         buster.assert.called(obj.meth);
     },
 
-    "should pass simple assertion": function () {
+    "//should pass simple assertion": function () {
         this.console.log("Trying shit out");
         buster.assert(true);
     },

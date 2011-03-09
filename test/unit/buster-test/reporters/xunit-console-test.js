@@ -267,6 +267,13 @@ testCase("XUnitConsoleReporterStatsTest", {
         buster.assert.match(this.io.toString(), expected);
     },
 
+    "should report deferred tests": function () {
+        this.reporter.printStats({ contexts:  1, tests: 1, deferred: 2 });
+
+        var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts, 2 deferred\n";
+        buster.assert.match(this.io.toString(), expected);
+    },
+
     "should print warning when no tests": function () {
         this.reporter.printStats({ contexts:  1, tests: 0, assertions: 0 });
 
