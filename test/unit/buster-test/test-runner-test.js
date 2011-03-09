@@ -535,6 +535,19 @@ testCase("TestRunnerRunTest", {
                                    tearDowns[0], promises[0].resolve);
             test.end();
         });
+    },
+
+    "should skip 'commented out' test": function (test) {
+        var testFn = sinon.spy();
+
+        var context = buster.testCase("Test", {
+            "//should do this": testFn
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!testFn.called);
+            test.end();
+        });
     }
 });
 
@@ -577,7 +590,8 @@ function runnerEventsSetUp() {
         "test:error": sinon.spy(),
         "test:success": sinon.spy(),
         "context:end": sinon.spy(),
-        "suite:end": sinon.spy()
+        "suite:end": sinon.spy(),
+        "test:deferred": sinon.spy()
     };
 
     this.runner.on("suite:start", this.listeners["suite:start"]);
@@ -588,6 +602,7 @@ function runnerEventsSetUp() {
     this.runner.on("test:success", this.listeners["test:success"]);
     this.runner.on("test:failure", this.listeners["test:failure"]);
     this.runner.on("test:error", this.listeners["test:error"]);
+    this.runner.on("test:deferred", this.listeners["test:deferred"]);
     this.runner.on("context:end", this.listeners["context:end"]);
     this.runner.on("suite:end", this.listeners["suite:end"]);
 
@@ -790,6 +805,20 @@ testCase("TestRunnerEventsTest", {
             buster.assert(!this.listeners["test:failure"].called);
             test.end();
         }.bind(this));
+    },
+
+    "should emit test:deferred event": function (test) {
+        var context = buster.testCase("Test", {
+            "// should do this": function () {}
+        });
+
+        var listener = this.listeners["test:deferred"];
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].name, "should do this");
+            test.end();
+        }.bind(this));
     }
 });
 
@@ -927,6 +956,7 @@ testCase("TestRunnerEventDataTest", {
             buster.assert.equals(args[0].failures, 2);
             buster.assert.equals(args[0].assertions, 12);
             buster.assert.equals(args[0].timeouts, 0);
+            buster.assert.equals(args[0].deferred, 0);
             buster.assert(!args[0].ok);
             test.end();
         }.bind(this));
@@ -954,6 +984,35 @@ testCase("TestRunnerEventDataTest", {
             buster.assert.equals(args[0].failures, 0);
             buster.assert.equals(args[0].assertions, 20);
             buster.assert.equals(args[0].timeouts, 0);
+            buster.assert.equals(args[0].deferred, 0);
+            buster.assert(args[0].ok);
+            test.end();
+        }.bind(this));
+    },
+
+    "suite:end event data deferred tests": function (test) {
+        var context = buster.testCase("My case", {
+            setUp: function () {},
+            "//test1": sinon.spy(),
+            test2: sinon.spy(),
+            test3: sinon.spy(),
+            "//test4": sinon.spy(),
+            inner: {
+                test5: sinon.spy()
+            }
+        });
+
+        sinon.stub(this.runner, "assertionCount").returns(2);
+
+        this.runner.runSuite([context]).then(function () {
+            var args = this.listeners["suite:end"].args[0];
+            buster.assert.equals(args[0].contexts, 1);
+            buster.assert.equals(args[0].tests, 3);
+            buster.assert.equals(args[0].errors, 0);
+            buster.assert.equals(args[0].failures, 0);
+            buster.assert.equals(args[0].assertions, 6);
+            buster.assert.equals(args[0].timeouts, 0);
+            buster.assert.equals(args[0].deferred, 2);
             buster.assert(args[0].ok);
             test.end();
         }.bind(this));

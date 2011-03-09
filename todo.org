@@ -2,7 +2,7 @@
 
 * TODO Macros
 * TODO Only run tests where full name matches pattern (string/regexp) (Add module runner)
-* TODO "// should eventually"
+* DONE "// should eventually"
 ** Runner should understand pending/deferred tests
 ** Reporter should display pending/deferred tests
 * TODO Dot matrix reporter ala http://vowsjs.org/
@@ -33,7 +33,7 @@ buster.testCase("Something", {
 
 * TODO Global should/before/after/describe functions?
 ** use export method on object exported from require("buster-xunit") and require("buster-bdd")
-* TODO Catch unexpected exceptions
+* DONE Catch unexpected exceptions (No, catch in runner setup)
 * DONE "Disarm" promises after timeout
 * DONE Sinon integration
 * TODO buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);

@@ -21,6 +21,7 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.stub(buster.xUnitConsoleReporter, "testError");
         this.stub(buster.xUnitConsoleReporter, "testAsync");
         this.stub(buster.xUnitConsoleReporter, "testTimeout");
+        this.stub(buster.xUnitConsoleReporter, "testDeferred");
         this.stub(buster.xUnitConsoleReporter, "log");
 
         this.runner = buster.create(buster.eventEmitter);
@@ -81,6 +82,12 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.runner.console.emit("log");
 
         buster.assert(this.reporter.log.calledOnce);
+    },
+
+    "should map test:deferred to testDeferred": function () {
+        this.runner.emit("test:deferred");
+
+        buster.assert(this.reporter.testDeferred.calledOnce);
     }
 }, "should"));
 
@@ -210,6 +217,15 @@ testCase("XUnitConsoleReporterMessagesTest", {
         this.reporter.printDetails();
 
         buster.assert.noMatch(this.io.toString(), "Passed: Stuff some test");
+    },
+
+    "should print list of deferred tests": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testDeferred({ name: "some test" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        buster.assert.match(this.io.toString(), "Deferred: Stuff some test");
     }
 });
 
