@@ -99,6 +99,15 @@ testCase("SpecCallbackTest", {
         buster.assert.equals(test, spec.tests[0].func);
     },
 
+    "should keep comment-out prefix in front of test name": function () {
+        var test = function () {};
+        var contextCallback = sinon.stub().yields("//do it", test);
+
+        var spec = buster.describe("Stuff", contextCallback);
+
+        buster.assert.equals("//should do it", spec.tests[0].name);
+    },
+
     "should give test custom prefix": function () {
         var test = function () {};
         var contextCallback = sinon.stub().yields("do it", test);

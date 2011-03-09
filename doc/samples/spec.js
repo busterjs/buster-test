@@ -44,7 +44,7 @@ var spec2 = describe("Another test", function (it) {
         assert.ok(false);
     });
 
-    it("is asynchronous", function () {
+    it("//is asynchronous", function () {
         var promise = buster.promise.create(function () {
             setTimeout(function () {
                 console.log("Async");
