@@ -36,7 +36,7 @@ testCase("ContextFilterTest", {
             "should be dropped": function () {}
         });
 
-        var context2 = buster.testContextFilter(context, "test");
+        var context2 = buster.testContextFilter(context, "test ");
 
         buster.assert.equals(context2.tests.length, 2);
         buster.assert.equals(context2.tests[0].name, "test 1");
@@ -55,7 +55,7 @@ testCase("ContextFilterTest", {
             }
         });
 
-        var context2 = buster.testContextFilter(context, "test");
+        var context2 = buster.testContextFilter(context, "test ");
 
         buster.assert.equals(context2.contexts[0].tests.length, 2);
         buster.assert.equals(context2.contexts[0].tests[0].name, "test inner 1");
