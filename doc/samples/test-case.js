@@ -41,7 +41,7 @@ buster.testCase("Sample test", {
             setTimeout(function () {
                 buster.assert(true);
                 promise.resolve();
-            }, 500);
+            }, 200);
         });
 
         return promise;
@@ -51,7 +51,7 @@ buster.testCase("Sample test", {
         buster.assert(true);
 
         setTimeout(function () {
-            done();
+            //done();
         }, 1000);
     },
 
@@ -76,7 +76,7 @@ var testCase2 = buster.testCase("Another test", {
     setUp: function (done) {
         setTimeout(function () {
             done();
-        }, 500);
+        }, 200);
     },
 
     "should pass simple assertion": function () {
@@ -95,13 +95,13 @@ var testCase2 = buster.testCase("Another test", {
         setUp: function (done) {
             setTimeout(function() {
                 done();
-            }, 700);
+            }, 240);
         },
 
         tearDown: function (done) {
             setTimeout(function() {
                 done();
-            }, 500);
+            }, 100);
         },
 
         "some other nested test": function () {

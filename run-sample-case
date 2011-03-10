@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 require.paths.unshift(__dirname + "/lib");
+var buster = require("buster-test");
 require("sinon-buster");
 
-require("./doc/samples/test-case");
+buster.filteredRunner(__dirname + "/doc", {
+    filter: process.argv[2],
+    color: true,
+    bright: true,
+    failOnNoAssertions: false
+});

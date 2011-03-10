@@ -1,7 +1,7 @@
 var buster = require("../../lib/buster-test");
 buster.promise = require("buster-promise");
 var assert = require("assert");
-buster.spec.expose(typeof global != "undefined" ? global : this);
+buster.spec.expose();
 
 var spec = describe("Sample spec", function () {
     should("pass simple assertion", function () {
