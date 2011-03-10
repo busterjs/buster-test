@@ -1,7 +1,7 @@
 #+SEQ_TODO: TODO INPR DONE
 
 * TODO Macros
-* TODO Only run tests where full name matches pattern (string/regexp) (Add module runner)
+* DONE Only run tests where full name matches pattern (string/regexp) (Add module runner)
 ** buster.testFilter(context, filter)
 ** buster.moduleRunner(path)
 * DONE "// should eventually"
@@ -18,3 +18,4 @@
 * DONE "Disarm" promises after timeout
 * DONE Sinon integration
 * DONE buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);
+* TODO Run tests in parallel
