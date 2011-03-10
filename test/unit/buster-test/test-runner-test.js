@@ -6,7 +6,6 @@ if (typeof require != "undefined") {
 
     buster.extend(buster, {
         assert: require("buster-assert"),
-        util: require("buster-util"),
         promise: require("buster-promise"),
         testCase: require("../../../lib/buster-test/test-case"),
         testRunner: require("../../../lib/buster-test/test-runner")
