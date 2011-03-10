@@ -2,6 +2,8 @@
 
 * TODO Macros
 * TODO Only run tests where full name matches pattern (string/regexp) (Add module runner)
+** buster.testFilter(context, filter)
+** buster.moduleRunner(path)
 * DONE "// should eventually"
 ** Runner should understand pending/deferred tests
 ** Reporter should display pending/deferred tests
