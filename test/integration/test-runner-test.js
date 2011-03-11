@@ -6,11 +6,12 @@ if (typeof require != "undefined") {
     buster.extend(buster, {
         assert: require("buster-assert"),
         testCase: require("../../lib/buster-test/test-case"),
-        testRunner: require("../../lib/buster-test/test-runner")
+        testRunner: require("../../lib/buster-test/test-runner"),
+        spec: require("../../lib/buster-test/spec")
     });
-
-    require("../../lib/buster-test/spec").expose();
 }
+
+buster.spec.expose();
 
 (function () {
     function recordEvents(runner) {
