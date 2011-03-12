@@ -16,12 +16,12 @@ testCase("JSONProxyTest", {
         this.proxy = buster.reporterJsonProxy.create().listen(this.runner);
     },
 
-    "should emit serializable context object to context:start": function () {
+    "should emit suite:start": function () {
         var listener = sinon.spy();
-        this.proxy.on("context:start", listener);
-        this.runner.emit("context:start", { name: "Context", meth: function () {} });
+        this.proxy.on("suite:start", listener);
+        this.runner.emit("suite:start");
 
-        buster.assert.equals(listener.args[0][0], { name: "Context" });
+        buster.assert(listener.calledOnce);
     },
 
     "should emit serializable context object to context:end": function () {
