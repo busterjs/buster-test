@@ -1,6 +1,9 @@
-var buster = require("../../lib/buster-test");
-buster.promise = require("buster-promise");
-var assert = require("assert");
+if (typeof require != "undefined") {
+    var buster = require("../../lib/buster-test");
+    buster.promise = require("buster-promise");
+    var assert = require("assert");
+}
+
 buster.spec.expose();
 
 var spec = describe("Sample spec", function () {

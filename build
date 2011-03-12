@@ -1,0 +1,16 @@
+#!/bin/sh
+
+cat node_modules/buster-core/lib/buster-core.js \
+    node_modules/buster-event-emitter/lib/buster-event-emitter.js \
+    node_modules/buster-format/lib/buster-format.js \
+    node_modules/buster-assert/lib/buster-assert.js \
+    node_modules/buster-promise/lib/buster-promise.js \
+    lib/buster-test/evented-logger.js \
+    lib/buster-test/util.js \
+    lib/buster-test/spec.js \
+    lib/buster-test/test-case.js \
+    lib/buster-test/test-runner.js \
+    lib/buster-test/reporters/html.js \
+    lib/buster-test.js > buster-test-browser.js
+
+echo "Generated buster-test-browser.js"
