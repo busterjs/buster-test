@@ -33,6 +33,43 @@
         });
     }
 
+    testCase("HTMLReporterCreateTest", {
+        "should throw without root element": function () {
+            buster.assert.exception(function () {
+                buster.htmlReporter.create();
+            });
+        },
+
+        "should add 'buster-test' class to root element": function () {
+            var element = document.createElement("div");
+
+            buster.htmlReporter.create({ root: element });
+
+            buster.assert.className(element, "buster-test");
+        },
+
+        "should add 'buster-test' class to html element if root is body": function () {
+            buster.htmlReporter.create({ root: document.body });
+
+            buster.assert.className(document.documentElement, "buster-test");
+        },
+
+        "should make page mobile friendly if logging on body": function () {
+            buster.htmlReporter.create({ root: document.body });
+
+            var metas = document.getElementsByTagName("meta"), meta;
+
+            for (var i = 0, l = metas.length; i < l; ++i) {
+                if (metas[i].name == "viewport") {
+                    meta = metas[i];
+                }
+            }
+
+            buster.assert.isNotNull(meta);
+            buster.assert.equals(meta.content, "width=device-width, initial-scale=1.0");
+        }
+    });
+
     testCase("HTMLReporterTestsRunningTest", {
         setUp: reporterSetUp,
 
@@ -42,6 +79,13 @@
             buster.assert.match(this.root.firstChild, {
                 tagName: "h2", innerHTML: "Some context"
             });
+        },
+
+        "should not add context name as h2 when entering nested context": function () {
+            this.reporter.contextStart({ name: "Some context" });
+            this.reporter.contextStart({ name: "Some other context" });
+
+            buster.assert.equals(this.root.getElementsByTagName("h2").length, 1);
         },
 
         "should print passing test name as list item with success class": function () {
