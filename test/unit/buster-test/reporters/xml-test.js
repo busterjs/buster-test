@@ -28,20 +28,26 @@ testCase("XMLReporterTest", sinon.testCase({
         };
     },
 
-    "should print xml prolog on suite:start": function () {
+    "should print xml prolog and testsuites tag on suite:start": function () {
         this.reporter.suiteStart();
 
         buster.assert.equals(this.io.toString(),
-                             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+              "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<testsuites>\n");
+    },
+
+    "should print  testsuites closing tag on suite:end": function () {
+        this.reporter.suiteEnd();
+
+        buster.assert.match(this.io.toString(), "</testsuites>");
     },
 
     "should print testsuite element with stats on context:end": function () {
         this.reporter.contextStart({ name: "Context" });
         this.reporter.contextEnd({ name: "Context" });
 
-        this.assertIO('<testsuite errors="0" tests="0" ' +
+        this.assertIO('    <testsuite errors="0" tests="0" ' +
                       'time="0" failures="0" name="Context">');
-        this.assertIO('</testsuite>');
+        this.assertIO('    </testsuite>');
     },
 
     "should print total time for test suite": function () {
@@ -70,15 +76,15 @@ testCase("XMLReporterTest", sinon.testCase({
     "should print total time for each test case": function () {
         this.reporter.contextStart({ name: "Context" });
         this.clock.tick(100);
-        this.reporter.contextStart({ name: "Context #2" });
+        this.reporter.contextStart({ name: "#2" });
         this.clock.tick(200);
-        this.reporter.contextEnd({ name: "Context #2" });
+        this.reporter.contextEnd({ name: "#2" });
         this.reporter.contextEnd({ name: "Context" });
 
         this.assertIO('<testsuite errors="0" tests="0" ' +
                       'time="0.3" failures="0" name="Context">');
-        this.assertIO('<testcase time="0.1" name="Context">');
-        this.assertIO('<testcase time="0.2" name="Context #2">');
+        this.assertIO('<testcase time="0.1" name="Context"/>');
+        this.assertIO('<testcase time="0.2" name="Context #2"/>');
     },
 
     "should count total successful tests": function () {
@@ -191,9 +197,10 @@ testCase("XMLReporterTest", sinon.testCase({
         } });
         this.reporter.contextEnd({ name: "Context" });
 
-        this.assertIO('        <failure type="AssertionError" ' +
+        this.assertIO('            <failure type="AssertionError" ' +
                       'message="Expected no failure">' +
-                      "\n            STACK\n            STACK\n        </failure>");
+                      "\n                STACK\n                STACK" +
+                      "\n            </failure>");
     },
 
     "should include failure element for all failed tests": function () {
@@ -208,11 +215,13 @@ testCase("XMLReporterTest", sinon.testCase({
         } });
         this.reporter.contextEnd({ name: "Context" });
 
-        this.assertIO('        <failure type="AssertionError" ' +
+        this.assertIO('            <failure type="AssertionError" ' +
                       'message="Expected no failure">' +
-                      "\n            STACK\n            STACK\n        </failure>");
-        this.assertIO('    <failure type="AssertionError" ' +
-                      'message="#2">' + "\n            stack\n        </failure>");
+                      "\n                STACK\n                STACK\n" +
+                      "            </failure>");
+        this.assertIO('        <failure type="AssertionError" ' +
+                      'message="#2">' + "\n                stack" +
+                      "\n            </failure>");
     },
 
     "should include failure element for all errored tests": function () {
@@ -227,24 +236,27 @@ testCase("XMLReporterTest", sinon.testCase({
         } });
         this.reporter.contextEnd({ name: "Context" });
 
-        this.assertIO('        <failure type="TypeError" ' +
+        this.assertIO('            <failure type="TypeError" ' +
                       'message="Expected no failure">' +
-                      "\n            STACK\n            STACK\n        </failure>");
-        this.assertIO('        <failure type="TypeError" ' +
-                      'message="#2">' + "\n            stack\n        </failure>");
+                      "\n                STACK\n                STACK\n" +
+                      "            </failure>");
+        this.assertIO('            <failure type="TypeError" ' +
+                      'message="#2">' + "\n                stack" +
+                      "\n            </failure>");
     },
 
     "should add test case element for outer context": function () {
         this.reporter.contextStart({ name: "Context" });
         this.reporter.contextEnd({ name: "Context" });
 
-        this.assertIO('<testcase time="0" name="Context">');
+        this.assertIO('<testcase time="0" name="Context"/>');
     }
 }, "should"));
 
 testCase("XMLReporterEventMappingTest", sinon.testCase({
     setUp: function () {
         this.stub(buster.xmlReporter, "suiteStart");
+        this.stub(buster.xmlReporter, "suiteEnd");
         this.stub(buster.xmlReporter, "contextStart");
         this.stub(buster.xmlReporter, "contextEnd");
         this.stub(buster.xmlReporter, "testSuccess");
@@ -261,6 +273,12 @@ testCase("XMLReporterEventMappingTest", sinon.testCase({
         this.runner.emit("suite:start");
 
         buster.assert(this.reporter.suiteStart);
+    },
+
+    "should map suite:end to suiteEnd": function () {
+        this.runner.emit("suite:end");
+
+        buster.assert(this.reporter.suiteEnd);
     },
 
     "should map context:start to contextStart": function () {
