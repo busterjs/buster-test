@@ -1181,6 +1181,17 @@ testCase("TestRunnerAsyncTest", {
         });
     },
 
+    "should not emit success when test times out": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 20;
+        this.runner.on("test:success", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(!listener.called);
+            test.end();
+        }.bind(this));
+    },
+
     "should not emit test:success event until test has completed": function (test) {
         var listener = sinon.spy();
         this.runner.timeout = 20;
@@ -1193,7 +1204,8 @@ testCase("TestRunnerAsyncTest", {
 
         setTimeout(function () {
             buster.assert(!listener.called);
-        }, 20);
+            this.promise.resolve();
+        }.bind(this), 10);
     },
 
     "should error test if it rejects it's returned promise": function (test) {
