@@ -7,7 +7,7 @@
 * DONE "// should eventually"
 ** Runner should understand pending/deferred tests
 ** Reporter should display pending/deferred tests
-* TODO Dot matrix reporter ala http://vowsjs.org/
+* DONE Dot matrix reporter ala http://vowsjs.org/
 * DONE Separate stats reporter into separate object
 ** Bind events in bindToRunner method
 * DONE Flatten test contexts immediately
@@ -19,3 +19,5 @@
 * DONE Sinon integration
 * DONE buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);
 * TODO Run tests in parallel
+* TODO Formatted logger
+* TODO Change this.log to buster.log

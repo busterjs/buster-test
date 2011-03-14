@@ -60,17 +60,6 @@ testCase("TestRunnerRunTest", {
         });
     },
 
-    "should run test with this object containing a logger": function (test) {
-        var testFn = sinon.spy();
-        var context = buster.testCase("Test", { test: testFn });
-
-        this.runner.run(context).then(function () {
-            buster.assert.isObject(testFn.thisValues[0].console);
-            buster.assert.isFunction(testFn.thisValues[0].console.log);
-            test.end();
-        });
-    },
-
     "should run test asynchronously": function (test) {
         var testFn = sinon.spy();
         var context = buster.testCase("Test", { test: testFn });
