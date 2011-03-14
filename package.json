@@ -1,7 +1,7 @@
 {
     "name": "buster-test",
     "version": "0.1.0",
-    "description": "Promised based evented xUnit and BDD style test runner for JavaScript"
+    "description": "Promised based evented xUnit and BDD style test runner for JavaScript",
     "homepage": "http://busterjs.org/buster-test",
     "author": {
         "name": "Christian Johansen",
