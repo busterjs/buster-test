@@ -22,11 +22,22 @@ Function.prototype.bind = function (obj) {
 
 testCase("TestRunnerCreateTest", {
     "should emit newly created object to callback": function () {
-        buster.testRunner.onCreate = sinon.spy();
+        var listener = sinon.spy();
+        buster.testRunner.onCreate(listener);
         var runner = buster.testRunner.create();
 
-        buster.assert(buster.testRunner.onCreate.calledOnce);
-        buster.assert(buster.testRunner.onCreate.calledWith(runner));
+        buster.assert(listener.calledOnce);
+        buster.assert(listener.calledWith(runner));
+    },
+
+    "should allow many listeners to onCreate callback": function () {
+        var listeners = [sinon.spy(), sinon.spy()];
+        buster.testRunner.onCreate(listeners[0]);
+        buster.testRunner.onCreate(listeners[1]);
+        var runner = buster.testRunner.create();
+
+        buster.assert(listeners[0].calledOnce);
+        buster.assert(listeners[1].calledOnce);
     }
 });
 
