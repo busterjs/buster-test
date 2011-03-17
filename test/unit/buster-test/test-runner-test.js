@@ -329,6 +329,18 @@ testCase("TestRunnerRunTest", {
         });
     },
 
+    "should not fail without sub contexts": function (test) {
+        var testFn = sinon.spy();
+        var context = { tests: [{ name: "sumptn", func: testFn }] };
+
+        buster.assert.noException(function () {
+            this.runner.run(context).then(function () {
+                buster.assert(testFn.calledOnce);
+                test.end();
+            });
+        }.bind(this));
+    },
+
     "should run tests in all sub contexts": function (test) {
         var tests = [sinon.spy(), sinon.spy()];
 
