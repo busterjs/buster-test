@@ -130,6 +130,26 @@ testCase("JSONProxyTest", {
             contexts: 2, tests: 3, errors: 0, failures: 1, assertions: 12,
             timeouts: 0, deferred: 0, ok: false
         });
+    },
+
+    "should emit serializable error to uncaughtException": function () {
+        var listener = sinon.spy();
+        this.proxy.on("uncaughtException", listener);
+
+        this.runner.emit("uncaughtException", {
+            name: "Error",
+            message: "Something went wrong",
+            stack: "Trouble@here",
+            toString: function () {}
+        });
+
+        buster.assert(listener.calledOnce);
+
+        buster.assert.equals(listener.args[0][0], {
+            name: "Error",
+            message: "Something went wrong",
+            stack: "Trouble@here"
+        });
     }
 });
 

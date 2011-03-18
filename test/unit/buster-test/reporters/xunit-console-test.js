@@ -23,6 +23,7 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.stub(buster.xUnitConsoleReporter, "testTimeout");
         this.stub(buster.xUnitConsoleReporter, "testDeferred");
         this.stub(buster.xUnitConsoleReporter, "log");
+        this.stub(buster.xUnitConsoleReporter, "uncaughtException");
 
         this.runner = buster.create(buster.eventEmitter);
         this.runner.console = buster.create(buster.eventEmitter);
@@ -88,6 +89,12 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.runner.emit("test:deferred");
 
         buster.assert(this.reporter.testDeferred.calledOnce);
+    },
+
+    "should map uncaughtException to uncaughtException": function () {
+        this.runner.emit("uncaughtException");
+
+        buster.assert(this.reporter.uncaughtException.calledOnce);
     }
 }, "should"));
 
@@ -406,6 +413,49 @@ testCase("XUnitConsoleReporterErrorTest", {
 
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printErrors();
+
+        buster.assert.match(this.io.toString(), "\n    at Object");
+    }
+});
+
+testCase("XUnitConsoleReporterUncaughtExceptionTest", {
+    setUp: reporterSetUp,
+
+    "should print label": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.uncaughtException({ name: "should do stuff" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printUncaughtExceptions();
+
+        buster.assert.match(this.io.toString(), "Uncaught exception!");
+    },
+
+    "should print error message": function () {
+        this.reporter.startContext({ name: "Stuff" });
+
+        this.reporter.uncaughtException({
+            message: "Expected a to be equal to b"
+        });
+
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printUncaughtExceptions();
+
+        buster.assert.match(this.io.toString(), "    Expected a to be equal to b");
+    },
+
+    "should print stack trace": function () {
+        var error = new Error("Expected a to be equal to b");
+        error.name = "AssertionError";
+        try { throw error; } catch (e) { error = e; }
+        this.reporter.startContext({ name: "Stuff" });
+
+        this.reporter.uncaughtException({
+            message: "Expected a to be equal to b",
+            stack: error.stack
+        });
+
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printUncaughtExceptions();
 
         buster.assert.match(this.io.toString(), "\n    at Object");
     }
