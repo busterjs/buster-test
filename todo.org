@@ -19,6 +19,6 @@
 * DONE Sinon integration
 * DONE buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);
 * TODO Run tests in parallel
-* TODO Formatted logger
+* DONE Formatted logger
 * DONE Catch run-away exceptions
 * DONE Change this.log to buster.log
