@@ -20,4 +20,5 @@
 * DONE buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);
 * TODO Run tests in parallel
 * TODO Formatted logger
-* TODO Change this.log to buster.log
+* DONE Catch run-away exceptions
+* DONE Change this.log to buster.log

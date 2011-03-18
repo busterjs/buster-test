@@ -602,7 +602,8 @@ function runnerEventsSetUp() {
         "test:success": sinon.spy(),
         "context:end": sinon.spy(),
         "suite:end": sinon.spy(),
-        "test:deferred": sinon.spy()
+        "test:deferred": sinon.spy(),
+        "uncaughtException": sinon.spy()
     };
 
     this.runner.on("suite:start", this.listeners["suite:start"]);
@@ -616,6 +617,7 @@ function runnerEventsSetUp() {
     this.runner.on("test:deferred", this.listeners["test:deferred"]);
     this.runner.on("context:end", this.listeners["context:end"]);
     this.runner.on("suite:end", this.listeners["suite:end"]);
+    this.runner.on("uncaughtException", this.listeners["uncaughtException"]);
 
     this.myCase = buster.testCase("My case", {});
     this.otherCase = buster.testCase("Other", {});
@@ -1027,6 +1029,27 @@ testCase("TestRunnerEventDataTest", {
             buster.assert(args[0].ok);
             test.end();
         }.bind(this));
+    },
+
+    "uncaughtException event data": function (test) {
+        var context = buster.testCase("My case", {
+            "test1": function (done) {
+                setTimeout(function () {
+                    throw new Error("Damnit");
+                }, 5);
+            }
+        });
+
+        this.runner.timeout = 3;
+        var listener = this.listeners["uncaughtException"];
+
+        this.runner.runSuite([context]).then(function () {
+            setTimeout(function () {
+                buster.assert(listener.calledOnce);
+                buster.assert.equals(listener.args[0][0].message, "Damnit");
+                test.end();
+            }, 10);
+        });
     }
 });
 
@@ -1684,6 +1707,30 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
             test.end();
+        });
+    }
+});
+
+testCase("RunnerRunAwayExceptionsTest", {
+    "should catch uncaught asynchronous errors": function (test) {
+        var runner = buster.testRunner.create();
+        runner.timeout = 20;
+        var listener = sinon.spy();
+        runner.on("uncaughtException", listener);
+
+        var context = buster.testCase("Test", {
+            "should not fail, ever": function (done) {
+                 setTimeout(function () {
+                     throw new Error("Oops!");
+                }, 30);
+            }
+        });
+
+        runner.run(context).then(function () {
+            setTimeout(function () {
+                buster.assert(listener.calledOnce);
+                test.end();
+            }, 15);
         });
     }
 });
