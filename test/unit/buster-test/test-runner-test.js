@@ -1790,3 +1790,82 @@ testCase("RunnerRunAwayExceptionsTest", {
         });
     }
 });
+
+testCase("TestRunnerEventedAssertionsTest", {
+    setUp: function () {
+        var runner = this.runner = buster.testRunner.create({
+            handleUncaughtExceptions: false
+        });
+
+        this.assert = function (val) {
+            if (!val) {
+                var err = new Error("Assertion failed");
+                err.name = "AssertionError";
+
+                try {
+                    throw err;
+                } catch (e) {
+                    runner.assertionFailure(e);
+                }
+            }
+        };
+    },
+
+    "should emit failure event": function (test) {
+        var assert = this.assert;
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            "test it": function () {
+                assert(false);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            var args = listener.args;
+            buster.assert.equals(args[0][0].name, "test it");
+            buster.assert.equals(args[0][0].error.message, "Assertion failed");
+            test.end();
+        });
+    },
+
+    "should only emit failure event once per test": function (test) {
+        var assert = this.assert;
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            "test it": function () {
+                assert(false);
+                assert(false);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should not emit error event after failures": function (test) {
+        var assert = this.assert;
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.on("test:failure", listeners[0]);
+        this.runner.on("test:error", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "test it": function () {
+                assert(false);
+                throw new Error("WTF!");
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listeners[0].calledOnce);
+            buster.assert(!listeners[1].called);
+            test.end();
+        });
+    }
+});
