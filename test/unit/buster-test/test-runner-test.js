@@ -1036,14 +1036,15 @@ testCase("TestRunnerEventDataTest", {
             "test1": function (done) {
                 setTimeout(function () {
                     throw new Error("Damnit");
-                }, 5);
+                }, 15);
             }
         });
 
-        this.runner.timeout = 3;
+        this.runner.handleUncaughtExceptions = true;
+        this.runner.timeout = 5;
         var listener = this.listeners["uncaughtException"];
 
-        this.runner.runSuite([context]).then(function () {
+        this.runner.run(context).then(function () {
             setTimeout(function () {
                 buster.assert(listener.calledOnce);
                 buster.assert.equals(listener.args[0][0].message, "Damnit");
@@ -1731,6 +1732,61 @@ testCase("RunnerRunAwayExceptionsTest", {
                 buster.assert(listener.calledOnce);
                 test.end();
             }, 15);
+        });
+    },
+
+    "should not handle asynchronous failure as uncaught exception": function (test) {
+        var runner = buster.testRunner.create();
+        var listeners = [sinon.spy(), sinon.spy()];
+        runner.on("uncaughtException", listeners[0]);
+        runner.on("test:failure", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "should fail with regular AssertionError": function (done) {
+                 setTimeout(function () {
+                     var error = new Error("Failed assertion asynchronously");
+                     error.name = "AssertionError";
+                     throw error;
+                }, 10);
+            }
+        });
+
+        runner.run(context).then(function () {
+            buster.assert(!listeners[0].called);
+            buster.assert(listeners[1].calledOnce);
+            test.end();
+        });
+    },
+
+    "should keep handling uncaught exceptions after async failure": function (test) {
+        var runner = buster.testRunner.create({ timeout: 15 });
+        var listeners = [sinon.spy(), sinon.spy()];
+        runner.on("uncaughtException", listeners[0]);
+        runner.on("test:failure", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "should fail with regular AssertionError": function (done) {
+                 setTimeout(function () {
+                     var error = new Error("Failed assertion asynchronously");
+                     error.name = "AssertionError";
+                     throw error;
+                }, 10);
+            },
+
+            "should throw async error": function (done) {
+                 setTimeout(function () {
+                     throw new Error("Failed something asynchronously");
+                }, 20);
+            }
+        });
+
+        runner.run(context).then(function () {
+            setTimeout(function () {
+                buster.assert(listeners[0].called);
+                buster.assert(listeners[1].called);
+
+                test.end();
+            }, 10);
         });
     }
 });
