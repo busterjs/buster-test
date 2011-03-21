@@ -1867,5 +1867,46 @@ testCase("TestRunnerEventedAssertionsTest", {
             buster.assert(!listeners[1].called);
             test.end();
         });
+    },
+
+    "should not emit timeout event after failures": function (test) {
+        var assert = this.assert;
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.on("test:failure", listeners[0]);
+        this.runner.on("test:timeout", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "test it": function (done) {
+                assert(false);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listeners[0].calledOnce);
+            buster.assert(!listeners[1].called);
+            test.end();
+        });
+    },
+
+    "should not emit failure after timeout": function (test) {
+        var assert = this.assert;
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.timeout = 5;
+        this.runner.on("test:failure", listeners[0]);
+        this.runner.on("test:timeout", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "test it": function (done) {
+                setTimeout(function () {
+                    assert(false);
+                }, 10);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!listeners[0].called);
+            buster.assert(listeners[1].calledOnce);
+            test.end();
+        });
     }
 });
