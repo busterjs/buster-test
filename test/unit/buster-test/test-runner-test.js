@@ -1325,7 +1325,7 @@ testCase("TestRunnerImplicitAsyncTest", {
         });
     },
 
-    "should emit test:failure when test calls passed argument with AssertionError":
+    "should emit test:failure when AssertionError is thrown in done callback":
     function (test) {
         var listener = sinon.spy();
         this.runner.on("test:failure", listener);
@@ -1333,9 +1333,11 @@ testCase("TestRunnerImplicitAsyncTest", {
         var context = buster.testCase("Test", {
             test: function (done) {
                 buster.nextTick(function () {
-                    var error = new Error("Oops");
-                    error.name = "AssertionError";
-                    done(error);
+                    done(function () {
+                        var error = new Error("Oops");
+                        error.name = "AssertionError";
+                        throw error;
+                    });
                 });
             }
         });
@@ -1347,7 +1349,7 @@ testCase("TestRunnerImplicitAsyncTest", {
         });
     },
 
-    "should emit test:error when test calls passed argument with Error":
+    "should emit test:error when Error is thrown in done callback":
     function (test) {
         var listener = sinon.spy();
         this.runner.on("test:error", listener);
@@ -1355,7 +1357,9 @@ testCase("TestRunnerImplicitAsyncTest", {
         var context = buster.testCase("Test", {
             test: function (done) {
                 buster.nextTick(function () {
-                    done(new Error("Oops"));
+                    done(function () {
+                        throw new Error("Oops");
+                    });
                 });
             }
         });
@@ -1456,7 +1460,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
         });
     },
 
-    "should emit test:failure when setUp calls passed argument with AssertionError":
+    "should emit test:failure when setUp done callback throws AssertionError":
     function (test) {
         var listener = sinon.spy();
         this.runner.on("test:failure", listener);
@@ -1464,9 +1468,11 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
         var context = buster.testCase("Test", {
             setUp: function (done) {
                 buster.nextTick(function () {
-                    var error = new Error("Oops");
-                    error.name = "AssertionError";
-                    done(error);
+                    done(function () {
+                        var error = new Error("Oops");
+                        error.name = "AssertionError";
+                        throw error;
+                    });
                 });
             },
 
@@ -1480,7 +1486,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
         });
     },
 
-    "should emit test:error when setUp calls passed argument with Error":
+    "should emit test:error when setUp done callback throws Error":
     function (test) {
         var listener = sinon.spy();
         this.runner.on("test:error", listener);
@@ -1488,7 +1494,9 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
         var context = buster.testCase("Test", {
             setUp: function (done) {
                 buster.nextTick(function () {
-                    done(new Error("Oops"));
+                    done(function () {
+                        throw new Error("Oops");
+                    });
                 });
             },
 
@@ -1619,7 +1627,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
         });
     },
 
-    "should emit test:failure when tearDown calls passed argument with AssertionError":
+    "should emit test:failure when tearDown done callback throws AssertionError":
     function (test) {
         var listener = sinon.spy();
         this.runner.on("test:failure", listener);
@@ -1627,9 +1635,11 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
         var context = buster.testCase("Test", {
             tearDown: function (done) {
                 buster.nextTick(function () {
-                    var error = new Error("Oops");
-                    error.name = "AssertionError";
-                    done(error);
+                    done(function () {
+                        var error = new Error("Oops");
+                        error.name = "AssertionError";
+                        throw error;
+                    });
                 });
             },
 
@@ -1643,7 +1653,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
         });
     },
 
-    "should emit test:error when tearDown calls passed argument with Error":
+    "should emit test:error when tearDown done callback throws Error":
     function (test) {
         var listener = sinon.spy();
         this.runner.on("test:error", listener);
@@ -1651,7 +1661,9 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
         var context = buster.testCase("Test", {
             tearDown: function (done) {
                 buster.nextTick(function () {
-                    done(new Error("Oops"));
+                    done(function () {
+                        throw new Error("Oops")
+                    });
                 });
             },
 
