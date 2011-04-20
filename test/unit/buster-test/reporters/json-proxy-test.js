@@ -132,6 +132,18 @@ testCase("JSONProxyTest", {
         });
     },
 
+    "should emit log messages": function () {
+        var listener = sinon.spy();
+        this.proxy.on("log", listener);
+        this.runner.bind(this.proxy, ["log"]);
+
+        this.runner.emit("log", { level: "log", message: "Hey!" });
+
+        buster.assert(listener.calledOnce);
+        buster.assert.equals(listener.args[0][0],
+                             { level: "log", message: "Hey!" });
+    },
+
     "should emit serializable error to uncaughtException": function () {
         var listener = sinon.spy();
         this.proxy.on("uncaughtException", listener);
