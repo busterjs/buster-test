@@ -123,6 +123,13 @@ testCase("XUnitConsoleReporterTestsRunningTest", {
         buster.assert.equals(this.io.toString(), ".");
     },
 
+    "should not print dot when test passes if not printing progress": function () {
+        this.reporter.displayProgress = false;
+        this.reporter.testSuccess({ name: "Stuff" });
+
+        buster.assert.equals(this.io.toString(), "");
+    },
+
     "should print capital E when test errors": function () {
         this.reporter.testError({ name: "Stuff" });
 
