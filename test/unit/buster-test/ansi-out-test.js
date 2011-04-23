@@ -51,6 +51,16 @@ testCase("AnsiOutLabeledListTest", sinon.testCase({
                         "S+U2+F19+.R+"), s(this.io.out));
     },
 
+    "should print three markers in alternating lines": function () {
+        var list = this.out.labeledList(this.io, "Internet Explorer", "Firefox");
+        list.print("Internet Explorer", ".");
+        list.print("Firefox", ".");
+        list.print("Internet Explorer", "E");
+
+        assert.equals(s("Internet Explorer: \nFirefox:           \n" +
+                        "S+U2+F19+.R+S+U1+F19+.R+S+U2+F20+ER+"), s(this.io.out));
+    },
+
     "should add label": function () {
         var list = this.out.labeledList(this.io);
         list.add("Internet Explorer");
@@ -71,5 +81,18 @@ testCase("AnsiOutLabeledListTest", sinon.testCase({
 
         assert.equals("Firefox: \nS+U1+Firefox:           R+Internet Explorer: \n",
                       this.io.out);
+    },
+
+    "should save contents when adding and refitting labels": function () {
+        var list = this.out.labeledList(this.io);
+        list.add("Firefox");
+        list.print("Firefox", ".");
+        list.print("Firefox", ".");
+        list.add("Internet Explorer");
+        list.add("Chrome");
+        list.print("Firefox", "F");
+        list.print("Internet Explorer", ".");
+
+        assert.equals("Firefox: \nS+U1+F9+.R+S+U1+F10+.R+S+U1+Firefox:           ..R+Internet Explorer: \nChrome:            \nS+U3+F21+FR+S+U2+F19+.R+", this.io.out);
     }
 }, "should"));
