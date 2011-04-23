@@ -11,7 +11,12 @@ if (typeof require != "undefined") {
     var assert = buster.assert;
 }
 
-testCase("AnsiOutLabeledListTest", {
+// For debugging when comparing space padded strings: visualizes all whitespace
+function s(str) {
+    return str.replace(/\n/g, "\\n").replace(/ /g, "\\s");
+}
+
+testCase("AnsiOutLabeledListTest", sinon.testCase({
     setUp: function () {
         this.io = {
             out: "",
@@ -25,6 +30,11 @@ testCase("AnsiOutLabeledListTest", {
         };
 
         this.out = buster.ansiOut.create();
+
+        this.stub(buster.ansiOut, "save", function () { return "S+"; });
+        this.stub(buster.ansiOut, "restore", function () { return "R+"; });
+        this.stub(buster.ansiOut, "up", function (n) { return n == 0 ? "" : "U" + n + "+"; });
+        this.stub(buster.ansiOut, "fwd", function (n) { return n == 0 ? "" : "F" + n + "+"; });
     },
 
     "should print labels in equally spaced cells": function () {
@@ -37,7 +47,29 @@ testCase("AnsiOutLabeledListTest", {
         var list = this.out.labeledList(this.io, "Internet Explorer", "Firefox");
         list.print("Internet Explorer", ".");
 
-        assert.equals("Internet Explorer: \nFirefox:           \n" +
-                      "\033[s\033[2A\033[19C.\033[u", this.io.out);
+        assert.equals(s("Internet Explorer: \nFirefox:           \n" +
+                        "S+U2+F19+.R+"), s(this.io.out));
+    },
+
+    "should add label": function () {
+        var list = this.out.labeledList(this.io);
+        list.add("Internet Explorer");
+        list.add("Firefox");
+        list.print("Internet Explorer", ".");
+
+        assert.equals(s("Internet Explorer: \nFirefox:           \nS+U2+F19+.R+"),
+                      s(this.io.out));
+    },
+
+    "should refit labels when adding a wider one": function () {
+        var list = this.out.labeledList(this.io);
+        list.add("Firefox");
+
+        assert.equals("Firefox: \n", this.io.out);
+
+        list.add("Internet Explorer");
+
+        assert.equals("Firefox: \nS+U1+Firefox:           R+Internet Explorer: \n",
+                      this.io.out);
     }
-});
+}, "should"));
