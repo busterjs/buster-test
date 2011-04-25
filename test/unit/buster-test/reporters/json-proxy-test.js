@@ -48,6 +48,14 @@ testCase("JSONProxyTest", {
         buster.assert.equals(listener.args[0][0], { name: "should go" });
     },
 
+    "should emit serializable test object to test:deferred": function () {
+        var listener = sinon.spy();
+        this.proxy.on("test:deferred", listener);
+        this.runner.emit("test:deferred", { name: "should go", func: function () {} });
+
+        buster.assert.equals(listener.args[0][0], { name: "should go" });
+    },
+
     "should emit serializable test object to test:start": function () {
         var listener = sinon.spy();
         this.proxy.on("test:start", listener);
