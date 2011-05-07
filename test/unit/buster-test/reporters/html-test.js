@@ -97,6 +97,14 @@
                 media: "all",
                 href: "/some/path/buster-test.css"
             });
+        },
+
+        "should inject h1 if logging on body": function () {
+            buster.reporters.html.create({ root: document.body });
+
+            var h1 = document.getElementsByTagName("h1")[0];
+
+            buster.assert.match(h1, { innerHTML: "Buster.JS Test case" });
         }
     });
 
