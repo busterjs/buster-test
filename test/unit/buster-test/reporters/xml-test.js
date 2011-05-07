@@ -1,16 +1,16 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
     var buster = require("buster-core");
 
     buster.extend(buster, {
         assert: require("buster-assert"),
-        eventEmitter: require("buster-event-emitter"),
         xmlReporter: require("../../../../lib/buster-test/reporters/xml")
     });
+
+    buster.util = require("buster-util");
 }
 
-testCase("XMLReporterTest", sinon.testCase({
+buster.util.testCase("XMLReporterTest", sinon.testCase({
     setUp: function () {
         this.io = {
             content: "",
@@ -253,7 +253,7 @@ testCase("XMLReporterTest", sinon.testCase({
     }
 }, "should"));
 
-testCase("XMLReporterEventMappingTest", sinon.testCase({
+buster.util.testCase("XMLReporterEventMappingTest", sinon.testCase({
     setUp: function () {
         this.stub(buster.xmlReporter, "suiteStart");
         this.stub(buster.xmlReporter, "suiteEnd");

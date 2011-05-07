@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sys = require("sys");
     var sinon = require("sinon");
 
@@ -7,9 +6,11 @@ if (typeof require != "undefined") {
         assert: require("buster-assert"),
         spec: require("../../../lib/buster-test/spec")
     };
+
+    buster.util = require("buster-util");
 }
 
-testCase("SpecTest", {
+buster.util.testCase("SpecTest", {
     "should throw without name": function () {
         buster.assert.exception(function () {
             var spec = buster.spec.describe();
@@ -59,7 +60,7 @@ testCase("SpecTest", {
     }
 });
 
-testCase("SpecCallbackTest", {
+buster.util.testCase("SpecCallbackTest", {
     "should add test function by calling should": function () {
         var test = function () {};
 
@@ -145,7 +146,7 @@ testCase("SpecCallbackTest", {
     }
 });
 
-testCase("SpecContextTestsTest", {
+buster.util.testCase("SpecContextTestsTest", {
     "should extract only test functions": function () {
         var funcs = [function () {}, function () {}, function () {}];
 
@@ -178,7 +179,7 @@ testCase("SpecContextTestsTest", {
     }
 });
 
-testCase("SpecContextContextsTest", {
+buster.util.testCase("SpecContextContextsTest", {
     "should get contexts as list of context objects": function () {
         var spec = buster.spec.describe("Spec", function (should) {
             buster.spec.describe("Some context", function (should) {});
@@ -220,7 +221,7 @@ testCase("SpecContextContextsTest", {
         buster.assert.equals("should do it", tests[0].name);
     },
 
-    "should give contexts different testCase instances": function () {
+    "should give contexts different buster.util.testCase instances": function () {
         var spec = buster.spec.describe("Name", function () {
             buster.spec.describe("someContext", function () {});
         });
@@ -229,7 +230,7 @@ testCase("SpecContextContextsTest", {
     }
 });
 
-testCase("SpecExposeTest", {
+buster.util.testCase("SpecExposeTest", {
     setUp: function () {
         this.env = {};
         buster.spec.expose(this.env);

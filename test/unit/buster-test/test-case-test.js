@@ -1,14 +1,15 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
 
     var buster = {
         assert: require("buster-assert"),
         testCase: require("../../../lib/buster-test/test-case")
     };
+
+    buster.util = require("buster-util");
 }
 
-testCase("BusterTestCaseTest", {
+buster.util.testCase("BusterTestCaseTest", {
     tearDown: function () {
         delete buster.testCase.listeners;
     },
@@ -76,7 +77,7 @@ testCase("BusterTestCaseTest", {
     }
 });
 
-testCase("TestCaseContextTest", {
+buster.util.testCase("TestCaseContextTest", {
     "should have name property": function () {
         var context = buster.testCase("Name", {});
 
@@ -84,7 +85,7 @@ testCase("TestCaseContextTest", {
     }
 });
 
-testCase("TestContextTestsTest", {
+buster.util.testCase("TestContextTestsTest", {
     tearDown: function () {
         buster.testCase.context.setUpName = "setUp";
         buster.testCase.context.contextSetUpName = "contextSetUp";
@@ -278,7 +279,7 @@ testCase("TestContextTestsTest", {
     }
 });
 
-testCase("TestContextContextsTest", {
+buster.util.testCase("TestContextContextsTest", {
     "should get contexts as list of context objects": function () {
         var context = buster.testCase("Name", {
             test: function () {},
@@ -335,7 +336,7 @@ testCase("TestContextContextsTest", {
     }
 });
 
-testCase("TestContextSetUpTearDownTest", {
+buster.util.testCase("TestContextSetUpTearDownTest", {
     tearDown: function () {
         buster.testCase.context.setUpName = "setUp";
         buster.testCase.context.contextSetUpName = "contextSetUp";

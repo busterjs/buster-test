@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sys = require("sys");
     var sinon = require("sinon");
 
@@ -9,6 +8,7 @@ if (typeof require != "undefined") {
     };
 
     var assert = buster.assert;
+    buster.util = require("buster-util");
 }
 
 // For debugging when comparing space padded strings: visualizes all whitespace
@@ -16,7 +16,7 @@ function s(str) {
     return str.replace(/\n/g, "\\n").replace(/ /g, "\\s");
 }
 
-testCase("AnsiOutLabeledListTest", sinon.testCase({
+buster.util.testCase("AnsiOutLabeledListTest", sinon.testCase({
     setUp: function () {
         this.io = {
             out: "",

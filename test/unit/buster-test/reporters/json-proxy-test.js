@@ -1,16 +1,16 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
     var buster = require("buster-core");
 
     buster.extend(buster, {
         assert: require("buster-assert"),
-        eventEmitter: require("buster-event-emitter"),
         reporterJsonProxy: require("../../../../lib/buster-test/reporters/json-proxy")
     });
+
+    buster.util = require("buster-util");
 }
 
-testCase("JSONProxyTest", {
+buster.util.testCase("JSONProxyTest", {
     setUp: function () {
         this.runner = buster.create(buster.eventEmitter);
         this.proxy = buster.reporterJsonProxy.create().listen(this.runner);
@@ -173,7 +173,7 @@ testCase("JSONProxyTest", {
     }
 });
 
-testCase("JsonProxyCustomEmitterTest", {
+buster.util.testCase("JsonProxyCustomEmitterTest", {
     setUp: function () {
         this.runner = buster.create(buster.eventEmitter);
         this.emitter = buster.create(buster.eventEmitter);

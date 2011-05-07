@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sys = require("sys");
     var sinon = require("sinon");
     var buster = require("buster-core");
@@ -8,7 +7,8 @@ if (typeof require != "undefined") {
         assert: require("buster-assert"),
         promise: require("buster-promise"),
         testCase: require("../../../lib/buster-test/test-case"),
-        testRunner: require("../../../lib/buster-test/test-runner")
+        testRunner: require("../../../lib/buster-test/test-runner"),
+        util: require("buster-util")
     });
 }
 
@@ -20,7 +20,9 @@ Function.prototype.bind = function (obj) {
     };
 };
 
-testCase("TestRunnerCreateTest", {
+buster.util.testCase.silent = true;
+
+buster.util.testCase("TestRunnerCreateTest", {
     "should emit newly created object to callback": function () {
         var listener = sinon.spy();
         buster.testRunner.onCreate(listener);
@@ -41,7 +43,7 @@ testCase("TestRunnerCreateTest", {
     }
 });
 
-testCase("TestRunnerRunTest", {
+buster.util.testCase("TestRunnerRunTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
     },
@@ -562,7 +564,7 @@ testCase("TestRunnerRunTest", {
     }
 });
 
-testCase("TestRunnerRunSuiteTest", {
+buster.util.testCase("TestRunnerRunSuiteTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
     },
@@ -628,7 +630,7 @@ function runnerEventsSetUp() {
     });
 }
 
-testCase("TestRunnerEventsTest", {
+buster.util.testCase("TestRunnerEventsTest", {
     setUp: runnerEventsSetUp,
 
     "should emit event when starting suite": function (test) {
@@ -835,7 +837,7 @@ testCase("TestRunnerEventsTest", {
     }
 });
 
-testCase("TestRunnerEventDataTest", {
+buster.util.testCase("TestRunnerEventDataTest", {
     setUp: runnerEventsSetUp,
 
     "context:start event data": function (test) {
@@ -1054,7 +1056,7 @@ testCase("TestRunnerEventDataTest", {
     }
 });
 
-testCase("TestRunnerAssertionCountTest", {
+buster.util.testCase("TestRunnerAssertionCountTest", {
     setUp: function () {
         this.context = buster.testCase("Test + Assertions", {
             test1: function () {}
@@ -1149,7 +1151,7 @@ testCase("TestRunnerAssertionCountTest", {
     }
 });
 
-testCase("TestRunnerAsyncTest", {
+buster.util.testCase("TestRunnerAsyncTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
         this.promise = buster.promise.create();
@@ -1275,7 +1277,7 @@ testCase("TestRunnerAsyncTest", {
     }
 });
 
-testCase("TestRunnerImplicitAsyncTest", {
+buster.util.testCase("TestRunnerImplicitAsyncTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
     },
@@ -1408,7 +1410,7 @@ testCase("TestRunnerImplicitAsyncTest", {
     }
 });
 
-testCase("TestRunnerImplicitAsyncSetUpTest", {
+buster.util.testCase("TestRunnerImplicitAsyncSetUpTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
     },
@@ -1575,7 +1577,7 @@ testCase("TestRunnerImplicitAsyncSetUpTest", {
     }
 });
 
-testCase("TestRunnerImplicitAsyncTearDownTest", {
+buster.util.testCase("TestRunnerImplicitAsyncTearDownTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
     },
@@ -1724,7 +1726,7 @@ testCase("TestRunnerImplicitAsyncTearDownTest", {
     }
 });
 
-testCase("RunnerRunAwayExceptionsTest", {
+buster.util.testCase("RunnerRunAwayExceptionsTest", {
     "should catch uncaught asynchronous errors": function (test) {
         var runner = buster.testRunner.create();
         runner.timeout = 20;
@@ -1803,7 +1805,7 @@ testCase("RunnerRunAwayExceptionsTest", {
     }
 });
 
-testCase("TestRunnerEventedAssertionsTest", {
+buster.util.testCase("TestRunnerEventedAssertionsTest", {
     setUp: function () {
         var runner = this.runner = buster.testRunner.create({
             handleUncaughtExceptions: false

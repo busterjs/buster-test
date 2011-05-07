@@ -1,16 +1,16 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
     var buster = require("buster-core");
 
     buster.extend(buster, {
         assert: require("buster-assert"),
-        eventEmitter: require("buster-event-emitter"),
         xUnitConsoleReporter: require("../../../../lib/buster-test/reporters/xunit-console")
     });
+
+    buster.util = require("buster-util");
 }
 
-testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
+buster.util.testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
     setUp: function () {
         this.stub(buster.xUnitConsoleReporter, "reset");
         this.stub(buster.xUnitConsoleReporter, "printDetails");
@@ -114,7 +114,7 @@ function reporterSetUp() {
     this.reporter = buster.xUnitConsoleReporter.create({ io: this.io }).listen(this.runner);
 }
 
-testCase("XUnitConsoleReporterTestsRunningTest", {
+buster.util.testCase("XUnitConsoleReporterTestsRunningTest", {
     setUp: reporterSetUp,
 
     "should print dot when test passes": function () {
@@ -204,7 +204,7 @@ testCase("XUnitConsoleReporterTestsRunningTest", {
     }
 });
 
-testCase("XUnitConsoleReporterMessagesTest", {
+buster.util.testCase("XUnitConsoleReporterMessagesTest", {
     setUp: function () {
         reporterSetUp.call(this);
         sinon.stub(this.reporter, "printStats");
@@ -243,7 +243,7 @@ testCase("XUnitConsoleReporterMessagesTest", {
     }
 });
 
-testCase("XUnitConsoleReporterStatsTest", {
+buster.util.testCase("XUnitConsoleReporterStatsTest", {
     setUp: reporterSetUp,
 
     "should print for one test case with one test": function () {
@@ -307,7 +307,7 @@ testCase("XUnitConsoleReporterStatsTest", {
     }
 });
 
-testCase("XUnitConsoleReporterFailureTest", {
+buster.util.testCase("XUnitConsoleReporterFailureTest", {
     setUp: reporterSetUp,
 
     "should print full test name": function () {
@@ -365,7 +365,7 @@ testCase("XUnitConsoleReporterFailureTest", {
     }
 });
 
-testCase("XUnitConsoleReporterErrorTest", {
+buster.util.testCase("XUnitConsoleReporterErrorTest", {
     setUp: reporterSetUp,
 
     "should print full test name": function () {
@@ -425,7 +425,7 @@ testCase("XUnitConsoleReporterErrorTest", {
     }
 });
 
-testCase("XUnitConsoleReporterUncaughtExceptionTest", {
+buster.util.testCase("XUnitConsoleReporterUncaughtExceptionTest", {
     setUp: reporterSetUp,
 
     "should print label": function () {
@@ -468,7 +468,7 @@ testCase("XUnitConsoleReporterUncaughtExceptionTest", {
     }
 });
 
-testCase("XUnitConsoleReporterColorOutputTest", {
+buster.util.testCase("XUnitConsoleReporterColorOutputTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -515,7 +515,7 @@ testCase("XUnitConsoleReporterColorOutputTest", {
     }
 });
 
-testCase("XUnitConsoleReporterColorizedMessagesTest", {
+buster.util.testCase("XUnitConsoleReporterColorizedMessagesTest", {
     setUp: function () {
         reporterSetUp.call(this);
 
@@ -540,7 +540,7 @@ testCase("XUnitConsoleReporterColorizedMessagesTest", {
     }
 });
 
-testCase("XUnitConsoleReporterColorizedStatsTest", {
+buster.util.testCase("XUnitConsoleReporterColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -598,7 +598,7 @@ testCase("XUnitConsoleReporterColorizedStatsTest", {
     }
 });
 
-testCase("XUnitConsoleReporterColorizedExceptionTest", {
+buster.util.testCase("XUnitConsoleReporterColorizedExceptionTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -627,7 +627,7 @@ testCase("XUnitConsoleReporterColorizedExceptionTest", {
     }
 });
 
-testCase("XUnitConsoleReporterBrightColorOutputTest", {
+buster.util.testCase("XUnitConsoleReporterBrightColorOutputTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -669,7 +669,7 @@ testCase("XUnitConsoleReporterBrightColorOutputTest", {
     }
 });
 
-testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
+buster.util.testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -728,7 +728,7 @@ testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
     }
 });
 
-testCase("XUnitConsoleReporterBrightlyColorizedExceptionTest", {
+buster.util.testCase("XUnitConsoleReporterBrightlyColorizedExceptionTest", {
     setUp: function () {
         runnerSetUp.call(this);
 

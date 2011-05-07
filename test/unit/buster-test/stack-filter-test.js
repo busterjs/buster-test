@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sys = require("sys");
     var sinon = require("sinon");
 
@@ -7,9 +6,11 @@ if (typeof require != "undefined") {
         assert: require("buster-assert"),
         stackFilter: require("../../../lib/buster-test/stack-filter")
     };
+
+    buster.util = require("buster-util");
 }
 
-testCase("Stack filter test", {
+buster.util.testCase("Stack filter test", {
     setUp: function () {
         this.filters = buster.stackFilter.filters;
         this.stack = '("expected meth to have been called at least once but was never called")@http://localhost:1111/sessions/1/resources/buster/bundle-0.1.0-1303409904724.js:467' + "\n" +

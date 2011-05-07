@@ -33,7 +33,7 @@
         });
     }
 
-    testCase("HTMLReporterCreateTest", {
+    buster.util.testCase("HTMLReporterCreateTest", {
         "should throw without root element": function () {
             buster.assert.exception(function () {
                 buster.htmlReporter.create();
@@ -70,7 +70,7 @@
         }
     });
 
-    testCase("HTMLReporterTestsRunningTest", {
+    buster.util.testCase("HTMLReporterTestsRunningTest", {
         setUp: reporterSetUp,
 
         "should add context name as h2 when entering top-level context": function () {
@@ -300,7 +300,7 @@
         }
     });
 
-    testCase("HTMLReporterStatsTest", {
+    buster.util.testCase("HTMLReporterStatsTest", {
         setUp: function () {
             reporterSetUp.call(this);
             this.reporter.contextStart({ name: "Some context" });
@@ -351,7 +351,7 @@
         }
     });
 
-    testCase("HTMLReporterEventMappingTest", sinon.testCase({
+    buster.util.testCase("HTMLReporterEventMappingTest", sinon.testCase({
         setUp: function () {
             this.stub(buster.htmlReporter, "contextStart");
             this.stub(buster.htmlReporter, "contextEnd");
