@@ -67,6 +67,36 @@
 
             buster.assert.isNotNull(meta);
             buster.assert.equals(meta.content, "width=device-width, initial-scale=1.0");
+        },
+
+        "should inject CSS file from same directory if buster-test.js is not found":
+        function () {
+            buster.reporters.html.create({ root: document.body });
+
+            var links = document.getElementsByTagName("link");
+            var link = links[links.length - 1];
+
+            buster.assert.match(link, {
+                rel: "stylesheet",
+                type: "text/css",
+                media: "all",
+                href: "buster-test.css"
+            });
+        },
+
+        "should inject CSS file if logging on body": function () {
+            document.body.innerHTML += "<script src=\"/some/path/buster-test.js\"></script>";
+            buster.reporters.html.create({ root: document.body });
+
+            var links = document.getElementsByTagName("link");
+            var link = links[links.length - 1];
+
+            buster.assert.match(link, {
+                rel: "stylesheet",
+                type: "text/css",
+                media: "all",
+                href: "/some/path/buster-test.css"
+            });
         }
     });
 
