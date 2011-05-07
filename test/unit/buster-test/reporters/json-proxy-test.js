@@ -4,7 +4,7 @@ if (typeof require != "undefined") {
 
     buster.extend(buster, {
         assert: require("buster-assert"),
-        reporterJsonProxy: require("../../../../lib/buster-test/reporters/json-proxy")
+        reporters: require("../../../../lib/buster-test/reporters")
     });
 
     buster.util = require("buster-util");
@@ -13,7 +13,7 @@ if (typeof require != "undefined") {
 buster.util.testCase("JSONProxyTest", {
     setUp: function () {
         this.runner = buster.create(buster.eventEmitter);
-        this.proxy = buster.reporterJsonProxy.create().listen(this.runner);
+        this.proxy = buster.reporters.jsonProxy.create().listen(this.runner);
     },
 
     "should emit suite:start": function () {
@@ -177,7 +177,7 @@ buster.util.testCase("JsonProxyCustomEmitterTest", {
     setUp: function () {
         this.runner = buster.create(buster.eventEmitter);
         this.emitter = buster.create(buster.eventEmitter);
-        this.proxy = buster.reporterJsonProxy.create(this.emitter).listen(this.runner);
+        this.proxy = buster.reporters.jsonProxy.create(this.emitter).listen(this.runner);
     },
 
     "should emit events on custom emitter": function () {
