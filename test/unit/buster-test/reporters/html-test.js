@@ -34,6 +34,16 @@
     }
 
     buster.util.testCase("HTMLReporterCreateTest", {
+        tearDown: function () {
+            var h1s = document.getElementsByTagName("h1");
+
+            for (var i = 0, l = h1s.length; i < l; ++i) {
+                if (h1s[i]) {
+                    h1s[i].parentNode.removeChild(h1s[i]);
+                }
+            }
+        },
+
         "should throw without root element": function () {
             buster.assert.exception(function () {
                 buster.reporters.html.create();
@@ -100,11 +110,33 @@
         },
 
         "should inject h1 if logging on body": function () {
+            document.title = "";
             buster.reporters.html.create({ root: document.body });
 
             var h1 = document.getElementsByTagName("h1")[0];
 
             buster.assert.match(h1, { innerHTML: "Buster.JS Test case" });
+        },
+
+        "should not inject h1 if one already exists": function () {
+            var h1 = document.createElement("h1");
+            h1.innerHTML = "Hey";
+            document.body.appendChild(h1);
+            buster.reporters.html.create({ root: document.body });
+
+            var h1s = document.getElementsByTagName("h1");
+
+            buster.assert.equals(h1s.length, 1);
+            buster.assert.match(h1s[0], { innerHTML: "Hey" });
+        },
+
+        "should use document.title in h1": function () {
+            document.title = "Use it";
+            buster.reporters.html.create({ root: document.body });
+
+            var h1 = document.getElementsByTagName("h1")[0];
+
+            buster.assert.match(h1, { innerHTML: "Use it" });
         }
     });
 
