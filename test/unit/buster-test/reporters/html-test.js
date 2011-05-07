@@ -7,7 +7,7 @@
         this.runner = buster.create(buster.eventEmitter);
         this.root = document.createElement("div");
 
-        this.reporter = buster.htmlReporter.create({
+        this.reporter = buster.reporters.html.create({
             root: this.root
         }).listen(this.runner);
 
@@ -36,26 +36,26 @@
     buster.util.testCase("HTMLReporterCreateTest", {
         "should throw without root element": function () {
             buster.assert.exception(function () {
-                buster.htmlReporter.create();
+                buster.reporters.html.create();
             });
         },
 
         "should add 'buster-test' class to root element": function () {
             var element = document.createElement("div");
 
-            buster.htmlReporter.create({ root: element });
+            buster.reporters.html.create({ root: element });
 
             buster.assert.className(element, "buster-test");
         },
 
         "should add 'buster-test' class to html element if root is body": function () {
-            buster.htmlReporter.create({ root: document.body });
+            buster.reporters.html.create({ root: document.body });
 
             buster.assert.className(document.documentElement, "buster-test");
         },
 
         "should make page mobile friendly if logging on body": function () {
-            buster.htmlReporter.create({ root: document.body });
+            buster.reporters.html.create({ root: document.body });
 
             var metas = document.getElementsByTagName("meta"), meta;
 
@@ -353,19 +353,19 @@
 
     buster.util.testCase("HTMLReporterEventMappingTest", sinon.testCase({
         setUp: function () {
-            this.stub(buster.htmlReporter, "contextStart");
-            this.stub(buster.htmlReporter, "contextEnd");
-            this.stub(buster.htmlReporter, "testSuccess");
-            this.stub(buster.htmlReporter, "testFailure");
-            this.stub(buster.htmlReporter, "testError");
-            this.stub(buster.htmlReporter, "testTimeout");
-            this.stub(buster.htmlReporter, "testDeferred");
-            this.stub(buster.htmlReporter, "log");
-            this.stub(buster.htmlReporter, "addStats");
+            this.stub(buster.reporters.html, "contextStart");
+            this.stub(buster.reporters.html, "contextEnd");
+            this.stub(buster.reporters.html, "testSuccess");
+            this.stub(buster.reporters.html, "testFailure");
+            this.stub(buster.reporters.html, "testError");
+            this.stub(buster.reporters.html, "testTimeout");
+            this.stub(buster.reporters.html, "testDeferred");
+            this.stub(buster.reporters.html, "log");
+            this.stub(buster.reporters.html, "addStats");
 
             this.runner = buster.create(buster.eventEmitter);
             this.runner.console = buster.create(buster.eventEmitter);
-            this.reporter = buster.htmlReporter.create({
+            this.reporter = buster.reporters.html.create({
                 root: document.createElement("div")
             }).listen(this.runner);
         },
