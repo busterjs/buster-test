@@ -286,6 +286,40 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
         this.assertIO('            <failure type="TypeError" ' +
                       'message="#2">' + "\n                stack" +
                       "\n            </failure>");
+    },
+
+    "should escape quotes in error message": function () {
+        this.reporter.contextStart({ name: "Context" });
+        this.reporter.testError({ name: "#1", error: {
+            name: "Error",
+            message: '"Oops" is quoted'
+        }});
+        this.reporter.contextEnd({ name: "Context" });
+
+        this.assertIO('<failure type="Error" message="&quot;Oops&quot; is quoted">');
+    },
+
+    "should escape brackets and ampersands in error message": function () {
+        this.reporter.contextStart({ name: "Context" });
+        this.reporter.testError({ name: "#1", error: {
+            name: "Error",
+            message: '<Oops> & stuff'
+        }});
+        this.reporter.contextEnd({ name: "Context" });
+
+        this.assertIO('<failure type="Error" message="&lt;Oops&gt; &amp; stuff">');
+    },
+
+    "should escape stack trace": function () {
+        this.reporter.contextStart({ name: "Context" });
+        this.reporter.testError({ name: "#1", error: {
+            name: "Error",
+            message: '<Oops> & stuff',
+            stack: 'Stack: &<>"'
+        }});
+        this.reporter.contextEnd({ name: "Context" });
+
+        this.assertIO('Stack: &amp;&lt;&gt;&quot;');
     }
 }, "should"));
 
