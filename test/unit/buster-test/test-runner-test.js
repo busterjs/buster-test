@@ -1930,5 +1930,27 @@ buster.util.testCase("TestRunnerEventedAssertionsTest", {
                 test.end();
             }, 30);
         });
+    },
+
+    "should not emit success after failure": function (test) {
+        var assert = this.assert;
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.timeout = 20;
+        this.runner.on("test:failure", listeners[0]);
+        this.runner.on("test:success", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "test it": function () {
+                assert(false);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            setTimeout(function () {
+                buster.assert(listeners[0].calledOnce);
+                buster.assert(!listeners[1].called);
+                test.end();
+            }, 30);
+        });
     }
 });
