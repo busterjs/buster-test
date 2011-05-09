@@ -106,7 +106,7 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
         this.assertIO('<testcase time="0.02" classname="Context" name="should #2"/>');
     },
 
-    "should use dot after first context in classname to indicate package": function () {
+    "should add nested context names to test names": function () {
         this.reporter.contextStart({ name: "Context" });
         this.reporter.contextStart({ name: "Some behavior" });
         this.reporter.testStart({ name: "should #1" });
@@ -116,10 +116,27 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
         this.reporter.contextEnd({ name: "Some behavior" });
         this.reporter.contextEnd({ name: "Context" });
 
-        this.assertIO('<testsuite errors="0" tests="2" ' +
-                      'time="0" failures="0" name="Context">');
-        this.assertIO('<testcase time="0" classname="Context.Some behavior" name="should #1"/>');
-        this.assertIO('<testcase time="0" classname="Context.Some behavior" name="should #2"/>');
+        this.assertIO('<testsuite errors="0" tests="2" time="0" failures="0" name="Context">');
+        this.assertIO('<testcase time="0" classname="Context" name="Some behavior should #1"/>');
+        this.assertIO('<testcase time="0" classname="Context" name="Some behavior should #2"/>');
+    },
+
+    "should control number of contexts to keep in classname": function () {
+        this.reporter.contextsInPackageName = 2;
+        this.reporter.contextStart({ name: "Firefox 4.0 Linux" });
+        this.reporter.contextStart({ name: "Form controller" });
+        this.reporter.contextStart({ name: "add" });
+        this.reporter.testStart({ name: "should clear form" });
+        this.reporter.testSuccess({ name: "should clear form" });
+        this.reporter.testStart({ name: "should save item on server" });
+        this.reporter.testSuccess({ name: "should save item on server" });
+        this.reporter.contextEnd({ name: "add" });
+        this.reporter.contextEnd({ name: "Form controller" });
+        this.reporter.contextEnd({ name: "Firefox 4.0 Linux" });
+
+        this.assertIO(/<testsuite .* name="Firefox 4.0 Linux">/);
+        this.assertIO('classname="Firefox 4.0 Linux.Form controller" name="add should clear form"/>');
+        this.assertIO('classname="Firefox 4.0 Linux.Form controller" name="add should save item on server"/>');
     },
 
     "should count total successful tests": function () {
