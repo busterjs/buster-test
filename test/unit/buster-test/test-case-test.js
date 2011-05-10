@@ -428,3 +428,71 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
         buster.assert.isFunction(context.contextTearDown);
     }
 });
+
+buster.util.testCase("TestContextRequiresSupportTest", {
+    "should keep reference to requiresSupportForAll": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportForAll: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.requiresSupportForAll, { featureA: true });
+    },
+
+    "should not use requiresSupportForAll as context": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportForAll: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.contexts.length, 0);
+    },
+
+    "should alias requiresSupportFor as requiresSupportForAll": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportFor: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.requiresSupportForAll, { featureA: true });
+    },
+
+    "should not use requiresSupportFor as context": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportFor: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.contexts.length, 0);
+    },
+
+    "should keep reference to requiresSupportForAny": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportForAny: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.requiresSupportForAny, { featureA: true });
+    },
+
+    "should not use requiresSupportForAny as context": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportForAny: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.contexts.length, 0);
+    }
+});

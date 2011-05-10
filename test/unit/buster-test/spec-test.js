@@ -275,3 +275,26 @@ buster.util.testCase("SpecExposeTest", {
         buster.assert.equals(spec.contexts[0].tests.length, 1);
     }
 });
+
+buster.util.testCase("SpecRequiresSupportForTest", {
+    "should set requiresSupportForAll property": function () {
+        var spec = buster.spec.ifSupported({ "feature A": true }).describe("some cross-platform feature", function () {
+        });
+
+        buster.assert.equals(spec.requiresSupportForAll, { "feature A": true });
+    },
+
+    "should explicitly set requiresSupportForAll property": function () {
+        var spec = buster.spec.ifAllSupported({ "feature A": true }).describe("some cross-platform feature", function () {
+        });
+
+        buster.assert.equals(spec.requiresSupportForAll, { "feature A": true });
+    },
+
+    "should set requiresSupportForAny property": function () {
+        var spec = buster.spec.ifAnySupported({ "feature A": true }).describe("some cross-platform feature", function () {
+        });
+
+        buster.assert.equals(spec.requiresSupportForAny, { "feature A": true });
+    }
+});
