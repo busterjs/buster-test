@@ -16,6 +16,7 @@ buster.util.testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.stub(buster.xUnitConsoleReporter, "printDetails");
         this.stub(buster.xUnitConsoleReporter, "startContext");
         this.stub(buster.xUnitConsoleReporter, "endContext");
+        this.stub(buster.xUnitConsoleReporter, "unsupportedContext");
         this.stub(buster.xUnitConsoleReporter, "testSuccess");
         this.stub(buster.xUnitConsoleReporter, "testFailure");
         this.stub(buster.xUnitConsoleReporter, "testError");
@@ -47,6 +48,12 @@ buster.util.testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.runner.emit("context:start");
 
         buster.assert(this.reporter.startContext.calledOnce);
+    },
+
+    "should map context:end to endContext": function () {
+        this.runner.emit("context:end");
+
+        buster.assert(this.reporter.endContext.calledOnce);
     },
 
     "should map test:success to testSuccess": function () {
@@ -245,6 +252,51 @@ buster.util.testCase("XUnitConsoleReporterMessagesTest", {
 
 buster.util.testCase("XUnitConsoleReporterStatsTest", {
     setUp: reporterSetUp,
+
+    "should not print unsupported context during run": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.unsupportedContext({
+            context: { name: "Second" },
+            unsupported: ["localStorage"]
+        });
+
+        buster.assert.noMatch(this.io.toString(), "localStorage");
+    },
+
+    "should print warning when skipping unsupported context": function () {
+        this.reporter.unsupportedContext({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        this.reporter.printDetails();
+
+        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
+    },
+
+    "should print warning when skipping nested unsupported context": function () {
+        this.reporter.startContext({ name: "Test" });
+
+        this.reporter.unsupportedContext({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        this.reporter.printDetails();
+
+        buster.assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
+    },
+
+    "should print all unsupported features": function () {
+        this.reporter.unsupportedContext({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage", "document"]
+        });
+
+        this.reporter.printDetails();
+
+        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
+    },
 
     "should print for one test case with one test": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, assertions: 1, failures: 0, errors: 0 });

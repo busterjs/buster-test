@@ -296,5 +296,13 @@ buster.util.testCase("SpecRequiresSupportForTest", {
         });
 
         buster.assert.equals(spec.requiresSupportForAny, { "feature A": true });
+    },
+
+    "should set requiresSupportForAny property on nested context": function () {
+        var spec = buster.spec.describe("some cross-platform feature", function () {
+            buster.spec.ifAnySupported({ "feature A": true }).describe("Something", function () {});
+        });
+
+        buster.assert.equals(spec.contexts[0].requiresSupportForAny, { "feature A": true });
     }
 });

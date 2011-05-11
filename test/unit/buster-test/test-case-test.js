@@ -494,5 +494,19 @@ buster.util.testCase("TestContextRequiresSupportTest", {
         });
 
         buster.assert.equals(context.contexts.length, 0);
+    },
+
+    "should set requiresSupportForAll on nested context": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            someContext: {
+                requiresSupportForAny: { featureA: true},
+                test: function () {}
+            }
+        });
+
+        buster.assert.equals(context.contexts[0].requiresSupportForAny, { featureA: true });
+        buster.assert.equals(context.contexts[0].contexts.length, 0);
     }
 });

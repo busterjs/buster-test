@@ -24,12 +24,38 @@ buster.util.testCase("JSONProxyTest", {
         buster.assert(listener.calledOnce);
     },
 
+    "should emit serializable context object to context:start": function () {
+        var listener = sinon.spy();
+        this.proxy.on("context:start", listener);
+        this.runner.emit("context:start", { name: "Context", meth: function () {} });
+
+        buster.assert.equals(listener.args[0][0], { name: "Context" });
+    },
+
     "should emit serializable context object to context:end": function () {
         var listener = sinon.spy();
         this.proxy.on("context:end", listener);
         this.runner.emit("context:end", { name: "Context", meth: function () {} });
 
         buster.assert.equals(listener.args[0][0], { name: "Context" });
+    },
+
+    "should emit serializable context object to context:unsupported": function () {
+        var listener = sinon.spy();
+        this.proxy.on("context:unsupported", listener);
+
+        this.runner.emit("context:unsupported", {
+            context: {
+                name: "Context",
+                meth: function () {}
+            },
+            unsupported: ["A"]
+        });
+
+        buster.assert.equals(listener.args[0][0], {
+            context: { name: "Context" },
+            unsupported: ["A"]
+        });
     },
 
     "should emit serializable test object to test:setUp": function () {
