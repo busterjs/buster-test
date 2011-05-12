@@ -186,6 +186,35 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.testTimeout({ name: "should go again" });
 
         buster.assert.match(this.io.toString(), "go again\n    [WARN] Is other");
+    },
+
+    "should print warning when skipping unsupported context": function () {
+        this.reporter.contextUnsupported({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
+    },
+
+    "should print warning when skipping nested unsupported context": function () {
+        this.reporter.contextStart({ name: "Test" });
+
+        this.reporter.contextUnsupported({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        buster.assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
+    },
+
+    "should print all unsupported features": function () {
+        this.reporter.contextUnsupported({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage", "document"]
+        });
+
+        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
     }
 });
 
