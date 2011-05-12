@@ -510,3 +510,29 @@ buster.util.testCase("TestContextRequiresSupportTest", {
         buster.assert.equals(context.contexts[0].contexts.length, 0);
     }
 });
+
+buster.util.testCase("TestContextTestDeferredTest", {
+    "should set deferred flag when name starts with //": function () {
+        var context = buster.testCase("Name", {
+            "//test": function () {}
+        });
+
+        buster.assert(context.tests[0].deferred);
+    },
+
+    "should set deferred flag when // is the first non-white-space characters in name": function () {
+        var context = buster.testCase("Name", {
+            "   // test": function () {}
+        });
+
+        buster.assert(context.tests[0].deferred);
+    },
+
+    "should clean cruft from name": function () {
+        var context = buster.testCase("Name", {
+            "   // test": function () {}
+        });
+
+        buster.assert.equals(context.tests[0].name, "test");
+    }
+});

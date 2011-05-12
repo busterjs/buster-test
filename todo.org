@@ -22,4 +22,5 @@
 * DONE Formatted logger
 * DONE Catch run-away exceptions
 * DONE Change this.log to buster.log
-* TODO Test context data model should have deferred boolean, not support "//should"
+* DONE Test context data model should have deferred boolean, not support "//should"
+* TODO Unsupported contexts in all reporters

@@ -85,24 +85,25 @@ buster.util.testCase("SpecCallbackTest", {
         buster.assert.equals(test, spec.tests[0].func);
     },
 
-    "should convert shouldEventually test to commented out test": function () {
+    "should convert shouldEventually test to deferred test": function () {
         var test = function () {};
 
         var spec = buster.spec.describe("Stuff", function () {
             buster.spec.shouldEventually("do it", test);
         });
 
-        buster.assert.equals("//should do it", spec.tests[0].name);
+        buster.assert.equals("should do it", spec.tests[0].name);
+        buster.assert(spec.tests[0].deferred);
     },
 
-    "should convert this.shouldEventually test to commented out test": function () {
+    "should convert this.shouldEventually test to deferred test": function () {
         var test = function () {};
 
         var spec = buster.spec.describe("Stuff", function () {
             this.shouldEventually("do it", test);
         });
 
-        buster.assert.equals("//should do it", spec.tests[0].name);
+        buster.assert(spec.tests[0].deferred);
     },
 
     "should add setUp function by calling buster.spec.before": function () {
