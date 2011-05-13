@@ -204,7 +204,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
             context: { name: "Stuff" },
             unsupported: ["localStorage"]
         });
-
+ 
         buster.assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
     },
 
