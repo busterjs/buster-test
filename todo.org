@@ -24,3 +24,42 @@
 * DONE Change this.log to buster.log
 * DONE Test context data model should have deferred boolean, not support "//should"
 * TODO Unsupported contexts in all reporters
+* TODO Timeout in test and teardown causes double timeout
+* TODO Async setup that never calls done -> times out, but still runs test and teardown
+        setUp: function (done) {
+            this.server = this.cli.createServer();
+            this.server.listen(9999);
+        },
+
+        tearDown: function (done) {
+            this.server.on("close", function () {
+                buster.log("Hmm");
+                done();
+            });
+            this.server.close();
+        },
+
+        "should process requests with buster server": function (done) {
+            this.stub(buster.server, "respond");
+            var server = this.cli.createServer();
+
+            http.get({ host: "localhost", port: 9999 }, function () {
+                buster.log(buster.server.respond.callCount);
+                assert.calledOnce(buster.server.respond);
+                done();
+            });
+        }
+* TODO Async test + teardown = A marker is not removed
+        setUp: function () {
+            this.server = this.cli.createServer();
+            this.server.listen(9999);
+        },
+
+        tearDown: function (done) {
+            this.server.on("close", done);
+            this.server.close();
+        },
+
+        "should process requests with buster server": function (done) {
+* TODO Missing assertion count wiring -> NaN assertions
+* TODO Possible to not get red report for 0 assertions
