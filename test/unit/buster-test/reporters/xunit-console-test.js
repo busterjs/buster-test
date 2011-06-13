@@ -56,6 +56,12 @@ buster.util.testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         buster.assert(this.reporter.endContext.calledOnce);
     },
 
+    "should map context:unsupported to unsupportedContext": function () {
+        this.runner.emit("context:unsupported");
+
+        buster.assert(this.reporter.unsupportedContext.calledOnce);
+    },
+
     "should map test:success to testSuccess": function () {
         this.runner.emit("test:success");
 
