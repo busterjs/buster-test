@@ -811,6 +811,22 @@ buster.util.testCase("TestRunnerAsyncTest", {
         var error = new Error("Oh no");
         error.name = "AssertionError";
         this.promise.reject(error);
+    },
+
+    "should only emit one test:async event": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+        var promise = buster.promise.create();
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) { done(); },
+            test: function (done) { done(); }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
     }
 });
 
