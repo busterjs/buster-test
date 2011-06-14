@@ -1276,6 +1276,29 @@ buster.util.testCase("TestRunnerImplicitAsyncTearDownTest", {
             buster.assert(listener.calledOnce);
             test.end();
         });
+    },
+
+    "should not emit test:async after test failure": function (test) {
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.on("test:async", listeners[0]);
+        this.runner.on("test:failure", listeners[1]);
+        var runner = this.runner;
+
+        var context = buster.testCase("Test", {
+            setUp: function () {},
+            tearDown: function (done) { done(); },
+            test: function (done) {
+                var e = new Error();
+                e.name = "AssertionError";
+                runner.assertionFailure(e);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listeners[1].calledOnce);
+            buster.assert(!listeners[0].called);
+            test.end();
+        });
     }
 });
 
