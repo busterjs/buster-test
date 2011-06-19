@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
     var buster = require("buster-core");
 
@@ -7,7 +6,8 @@ if (typeof require != "undefined") {
         assert: require("buster-assert"),
         testCase: require("../../lib/buster-test/test-case"),
         testRunner: require("../../lib/buster-test/test-runner"),
-        spec: require("../../lib/buster-test/spec")
+        spec: require("../../lib/buster-test/spec"),
+        util: require("buster-util")
     });
 }
 
@@ -55,7 +55,7 @@ buster.spec.expose();
         return events;
     }
 
-    testCase("TestRunnerIntegrationTest", {
+    buster.util.testCase("TestRunnerIntegrationTest", {
         "should emit all test case events in proper order": function (test) {
             var assertionError = new Error("Test failed");
             assertionError.name = "AssertionError";

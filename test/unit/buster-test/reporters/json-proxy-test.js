@@ -1,19 +1,19 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
     var buster = require("buster-core");
 
     buster.extend(buster, {
         assert: require("buster-assert"),
-        eventEmitter: require("buster-event-emitter"),
-        reporterJsonProxy: require("../../../../lib/buster-test/reporters/json-proxy")
+        reporters: require("../../../../lib/buster-test/reporters")
     });
+
+    buster.util = require("buster-util");
 }
 
-testCase("JSONProxyTest", {
+buster.util.testCase("JSONProxyTest", {
     setUp: function () {
         this.runner = buster.create(buster.eventEmitter);
-        this.proxy = buster.reporterJsonProxy.create().listen(this.runner);
+        this.proxy = buster.reporters.jsonProxy.create().listen(this.runner);
     },
 
     "should emit suite:start": function () {
@@ -24,12 +24,38 @@ testCase("JSONProxyTest", {
         buster.assert(listener.calledOnce);
     },
 
+    "should emit serializable context object to context:start": function () {
+        var listener = sinon.spy();
+        this.proxy.on("context:start", listener);
+        this.runner.emit("context:start", { name: "Context", meth: function () {} });
+
+        buster.assert.equals(listener.args[0][0], { name: "Context" });
+    },
+
     "should emit serializable context object to context:end": function () {
         var listener = sinon.spy();
         this.proxy.on("context:end", listener);
         this.runner.emit("context:end", { name: "Context", meth: function () {} });
 
         buster.assert.equals(listener.args[0][0], { name: "Context" });
+    },
+
+    "should emit serializable context object to context:unsupported": function () {
+        var listener = sinon.spy();
+        this.proxy.on("context:unsupported", listener);
+
+        this.runner.emit("context:unsupported", {
+            context: {
+                name: "Context",
+                meth: function () {}
+            },
+            unsupported: ["A"]
+        });
+
+        buster.assert.equals(listener.args[0][0], {
+            context: { name: "Context" },
+            unsupported: ["A"]
+        });
     },
 
     "should emit serializable test object to test:setUp": function () {
@@ -44,6 +70,14 @@ testCase("JSONProxyTest", {
         var listener = sinon.spy();
         this.proxy.on("test:tearDown", listener);
         this.runner.emit("test:tearDown", { name: "should go", func: function () {} });
+
+        buster.assert.equals(listener.args[0][0], { name: "should go" });
+    },
+
+    "should emit serializable test object to test:deferred": function () {
+        var listener = sinon.spy();
+        this.proxy.on("test:deferred", listener);
+        this.runner.emit("test:deferred", { name: "should go", func: function () {} });
 
         buster.assert.equals(listener.args[0][0], { name: "should go" });
     },
@@ -132,6 +166,18 @@ testCase("JSONProxyTest", {
         });
     },
 
+    "should emit log messages": function () {
+        var listener = sinon.spy();
+        this.proxy.on("log", listener);
+        this.runner.bind(this.proxy, ["log"]);
+
+        this.runner.emit("log", { level: "log", message: "Hey!" });
+
+        buster.assert(listener.calledOnce);
+        buster.assert.equals(listener.args[0][0],
+                             { level: "log", message: "Hey!" });
+    },
+
     "should emit serializable error to uncaughtException": function () {
         var listener = sinon.spy();
         this.proxy.on("uncaughtException", listener);
@@ -153,11 +199,11 @@ testCase("JSONProxyTest", {
     }
 });
 
-testCase("JsonProxyCustomEmitterTest", {
+buster.util.testCase("JsonProxyCustomEmitterTest", {
     setUp: function () {
         this.runner = buster.create(buster.eventEmitter);
         this.emitter = buster.create(buster.eventEmitter);
-        this.proxy = buster.reporterJsonProxy.create(this.emitter).listen(this.runner);
+        this.proxy = buster.reporters.jsonProxy.create(this.emitter).listen(this.runner);
     },
 
     "should emit events on custom emitter": function () {

@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sys = require("sys");
     var sinon = require("sinon");
 
@@ -7,9 +6,11 @@ if (typeof require != "undefined") {
         assert: require("buster-assert"),
         spec: require("../../../lib/buster-test/spec")
     };
+
+    buster.util = require("buster-util");
 }
 
-testCase("SpecTest", {
+buster.util.testCase("SpecTest", {
     "should throw without name": function () {
         buster.assert.exception(function () {
             var spec = buster.spec.describe();
@@ -59,7 +60,7 @@ testCase("SpecTest", {
     }
 });
 
-testCase("SpecCallbackTest", {
+buster.util.testCase("SpecCallbackTest", {
     "should add test function by calling should": function () {
         var test = function () {};
 
@@ -84,24 +85,25 @@ testCase("SpecCallbackTest", {
         buster.assert.equals(test, spec.tests[0].func);
     },
 
-    "should convert shouldEventually test to commented out test": function () {
+    "should convert shouldEventually test to deferred test": function () {
         var test = function () {};
 
         var spec = buster.spec.describe("Stuff", function () {
             buster.spec.shouldEventually("do it", test);
         });
 
-        buster.assert.equals("//should do it", spec.tests[0].name);
+        buster.assert.equals("should do it", spec.tests[0].name);
+        buster.assert(spec.tests[0].deferred);
     },
 
-    "should convert this.shouldEventually test to commented out test": function () {
+    "should convert this.shouldEventually test to deferred test": function () {
         var test = function () {};
 
         var spec = buster.spec.describe("Stuff", function () {
             this.shouldEventually("do it", test);
         });
 
-        buster.assert.equals("//should do it", spec.tests[0].name);
+        buster.assert(spec.tests[0].deferred);
     },
 
     "should add setUp function by calling buster.spec.before": function () {
@@ -145,7 +147,7 @@ testCase("SpecCallbackTest", {
     }
 });
 
-testCase("SpecContextTestsTest", {
+buster.util.testCase("SpecContextTestsTest", {
     "should extract only test functions": function () {
         var funcs = [function () {}, function () {}, function () {}];
 
@@ -178,7 +180,7 @@ testCase("SpecContextTestsTest", {
     }
 });
 
-testCase("SpecContextContextsTest", {
+buster.util.testCase("SpecContextContextsTest", {
     "should get contexts as list of context objects": function () {
         var spec = buster.spec.describe("Spec", function (should) {
             buster.spec.describe("Some context", function (should) {});
@@ -220,7 +222,7 @@ testCase("SpecContextContextsTest", {
         buster.assert.equals("should do it", tests[0].name);
     },
 
-    "should give contexts different testCase instances": function () {
+    "should give contexts different buster.util.testCase instances": function () {
         var spec = buster.spec.describe("Name", function () {
             buster.spec.describe("someContext", function () {});
         });
@@ -229,7 +231,7 @@ testCase("SpecContextContextsTest", {
     }
 });
 
-testCase("SpecExposeTest", {
+buster.util.testCase("SpecExposeTest", {
     setUp: function () {
         this.env = {};
         buster.spec.expose(this.env);
@@ -272,5 +274,36 @@ testCase("SpecExposeTest", {
         buster.assert.equals(spec.tests.length, 3);
         buster.assert.equals(spec.contexts.length, 1);
         buster.assert.equals(spec.contexts[0].tests.length, 1);
+    }
+});
+
+buster.util.testCase("SpecRequiresSupportForTest", {
+    "should set requiresSupportForAll property": function () {
+        var spec = buster.spec.ifSupported({ "feature A": true }).describe("some cross-platform feature", function () {
+        });
+
+        buster.assert.equals(spec.requiresSupportForAll, { "feature A": true });
+    },
+
+    "should explicitly set requiresSupportForAll property": function () {
+        var spec = buster.spec.ifAllSupported({ "feature A": true }).describe("some cross-platform feature", function () {
+        });
+
+        buster.assert.equals(spec.requiresSupportForAll, { "feature A": true });
+    },
+
+    "should set requiresSupportForAny property": function () {
+        var spec = buster.spec.ifAnySupported({ "feature A": true }).describe("some cross-platform feature", function () {
+        });
+
+        buster.assert.equals(spec.requiresSupportForAny, { "feature A": true });
+    },
+
+    "should set requiresSupportForAny property on nested context": function () {
+        var spec = buster.spec.describe("some cross-platform feature", function () {
+            buster.spec.ifAnySupported({ "feature A": true }).describe("Something", function () {});
+        });
+
+        buster.assert.equals(spec.contexts[0].requiresSupportForAny, { "feature A": true });
     }
 });

@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
     var buster = require("buster-core");
 
@@ -8,6 +7,8 @@ if (typeof require != "undefined") {
         testCase: require("../../../lib/buster-test/test-case"),
         testContextFilter: require("../../../lib/buster-test/test-context-filter")
     });
+
+    buster.util = require("buster-util");
 }
 
 Function.prototype.bind = function (obj) {
@@ -18,7 +19,7 @@ Function.prototype.bind = function (obj) {
     };
 };
 
-testCase("ContextFilterTest", {
+buster.util.testCase("ContextFilterTest", {
     "should return unfiltered context": function () {
         var context = buster.testCase("Some tests", {
             "test": function () {}

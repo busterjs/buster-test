@@ -1,14 +1,15 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
 
     var buster = {
         assert: require("buster-assert"),
         testCase: require("../../../lib/buster-test/test-case")
     };
+
+    buster.util = require("buster-util");
 }
 
-testCase("BusterTestCaseTest", {
+buster.util.testCase("BusterTestCaseTest", {
     tearDown: function () {
         delete buster.testCase.listeners;
     },
@@ -76,7 +77,7 @@ testCase("BusterTestCaseTest", {
     }
 });
 
-testCase("TestCaseContextTest", {
+buster.util.testCase("TestCaseContextTest", {
     "should have name property": function () {
         var context = buster.testCase("Name", {});
 
@@ -84,7 +85,7 @@ testCase("TestCaseContextTest", {
     }
 });
 
-testCase("TestContextTestsTest", {
+buster.util.testCase("TestContextTestsTest", {
     tearDown: function () {
         buster.testCase.context.setUpName = "setUp";
         buster.testCase.context.contextSetUpName = "contextSetUp";
@@ -278,7 +279,7 @@ testCase("TestContextTestsTest", {
     }
 });
 
-testCase("TestContextContextsTest", {
+buster.util.testCase("TestContextContextsTest", {
     "should get contexts as list of context objects": function () {
         var context = buster.testCase("Name", {
             test: function () {},
@@ -335,7 +336,7 @@ testCase("TestContextContextsTest", {
     }
 });
 
-testCase("TestContextSetUpTearDownTest", {
+buster.util.testCase("TestContextSetUpTearDownTest", {
     tearDown: function () {
         buster.testCase.context.setUpName = "setUp";
         buster.testCase.context.contextSetUpName = "contextSetUp";
@@ -425,5 +426,113 @@ testCase("TestContextSetUpTearDownTest", {
         buster.assert.isFunction(context.tearDown);
         buster.assert.isFunction(context.contextSetUp);
         buster.assert.isFunction(context.contextTearDown);
+    }
+});
+
+buster.util.testCase("TestContextRequiresSupportTest", {
+    "should keep reference to requiresSupportForAll": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportForAll: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.requiresSupportForAll, { featureA: true });
+    },
+
+    "should not use requiresSupportForAll as context": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportForAll: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.contexts.length, 0);
+    },
+
+    "should alias requiresSupportFor as requiresSupportForAll": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportFor: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.requiresSupportForAll, { featureA: true });
+    },
+
+    "should not use requiresSupportFor as context": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportFor: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.contexts.length, 0);
+    },
+
+    "should keep reference to requiresSupportForAny": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportForAny: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.requiresSupportForAny, { featureA: true });
+    },
+
+    "should not use requiresSupportForAny as context": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            requiresSupportForAny: { featureA: true },
+            test: function () {}
+        });
+
+        buster.assert.equals(context.contexts.length, 0);
+    },
+
+    "should set requiresSupportForAll on nested context": function () {
+        var setUp = function () {};
+
+        var context = buster.testCase("Name", {
+            someContext: {
+                requiresSupportForAny: { featureA: true},
+                test: function () {}
+            }
+        });
+
+        buster.assert.equals(context.contexts[0].requiresSupportForAny, { featureA: true });
+        buster.assert.equals(context.contexts[0].contexts.length, 0);
+    }
+});
+
+buster.util.testCase("TestContextTestDeferredTest", {
+    "should set deferred flag when name starts with //": function () {
+        var context = buster.testCase("Name", {
+            "//test": function () {}
+        });
+
+        buster.assert(context.tests[0].deferred);
+    },
+
+    "should set deferred flag when // is the first non-white-space characters in name": function () {
+        var context = buster.testCase("Name", {
+            "   // test": function () {}
+        });
+
+        buster.assert(context.tests[0].deferred);
+    },
+
+    "should clean cruft from name": function () {
+        var context = buster.testCase("Name", {
+            "   // test": function () {}
+        });
+
+        buster.assert.equals(context.tests[0].name, "test");
     }
 });

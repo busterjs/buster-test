@@ -1,21 +1,22 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
     var buster = require("buster-core");
 
     buster.extend(buster, {
         assert: require("buster-assert"),
-        eventEmitter: require("buster-event-emitter"),
         xUnitConsoleReporter: require("../../../../lib/buster-test/reporters/xunit-console")
     });
+
+    buster.util = require("buster-util");
 }
 
-testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
+buster.util.testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
     setUp: function () {
         this.stub(buster.xUnitConsoleReporter, "reset");
         this.stub(buster.xUnitConsoleReporter, "printDetails");
         this.stub(buster.xUnitConsoleReporter, "startContext");
         this.stub(buster.xUnitConsoleReporter, "endContext");
+        this.stub(buster.xUnitConsoleReporter, "unsupportedContext");
         this.stub(buster.xUnitConsoleReporter, "testSuccess");
         this.stub(buster.xUnitConsoleReporter, "testFailure");
         this.stub(buster.xUnitConsoleReporter, "testError");
@@ -47,6 +48,18 @@ testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.runner.emit("context:start");
 
         buster.assert(this.reporter.startContext.calledOnce);
+    },
+
+    "should map context:end to endContext": function () {
+        this.runner.emit("context:end");
+
+        buster.assert(this.reporter.endContext.calledOnce);
+    },
+
+    "should map context:unsupported to unsupportedContext": function () {
+        this.runner.emit("context:unsupported");
+
+        buster.assert(this.reporter.unsupportedContext.calledOnce);
     },
 
     "should map test:success to testSuccess": function () {
@@ -114,13 +127,20 @@ function reporterSetUp() {
     this.reporter = buster.xUnitConsoleReporter.create({ io: this.io }).listen(this.runner);
 }
 
-testCase("XUnitConsoleReporterTestsRunningTest", {
+buster.util.testCase("XUnitConsoleReporterTestsRunningTest", {
     setUp: reporterSetUp,
 
     "should print dot when test passes": function () {
         this.reporter.testSuccess({ name: "Stuff" });
 
         buster.assert.equals(this.io.toString(), ".");
+    },
+
+    "should not print dot when test passes if not printing progress": function () {
+        this.reporter.displayProgress = false;
+        this.reporter.testSuccess({ name: "Stuff" });
+
+        buster.assert.equals(this.io.toString(), "");
     },
 
     "should print capital E when test errors": function () {
@@ -197,7 +217,7 @@ testCase("XUnitConsoleReporterTestsRunningTest", {
     }
 });
 
-testCase("XUnitConsoleReporterMessagesTest", {
+buster.util.testCase("XUnitConsoleReporterMessagesTest", {
     setUp: function () {
         reporterSetUp.call(this);
         sinon.stub(this.reporter, "printStats");
@@ -236,8 +256,53 @@ testCase("XUnitConsoleReporterMessagesTest", {
     }
 });
 
-testCase("XUnitConsoleReporterStatsTest", {
+buster.util.testCase("XUnitConsoleReporterStatsTest", {
     setUp: reporterSetUp,
+
+    "should not print unsupported context during run": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.unsupportedContext({
+            context: { name: "Second" },
+            unsupported: ["localStorage"]
+        });
+
+        buster.assert.noMatch(this.io.toString(), "localStorage");
+    },
+
+    "should print warning when skipping unsupported context": function () {
+        this.reporter.unsupportedContext({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        this.reporter.printDetails();
+
+        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
+    },
+
+    "should print warning when skipping nested unsupported context": function () {
+        this.reporter.startContext({ name: "Test" });
+
+        this.reporter.unsupportedContext({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        this.reporter.printDetails();
+
+        buster.assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
+    },
+
+    "should print all unsupported features": function () {
+        this.reporter.unsupportedContext({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage", "document"]
+        });
+
+        this.reporter.printDetails();
+
+        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
+    },
 
     "should print for one test case with one test": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, assertions: 1, failures: 0, errors: 0 });
@@ -300,7 +365,7 @@ testCase("XUnitConsoleReporterStatsTest", {
     }
 });
 
-testCase("XUnitConsoleReporterFailureTest", {
+buster.util.testCase("XUnitConsoleReporterFailureTest", {
     setUp: reporterSetUp,
 
     "should print full test name": function () {
@@ -358,7 +423,7 @@ testCase("XUnitConsoleReporterFailureTest", {
     }
 });
 
-testCase("XUnitConsoleReporterErrorTest", {
+buster.util.testCase("XUnitConsoleReporterErrorTest", {
     setUp: reporterSetUp,
 
     "should print full test name": function () {
@@ -418,7 +483,7 @@ testCase("XUnitConsoleReporterErrorTest", {
     }
 });
 
-testCase("XUnitConsoleReporterUncaughtExceptionTest", {
+buster.util.testCase("XUnitConsoleReporterUncaughtExceptionTest", {
     setUp: reporterSetUp,
 
     "should print label": function () {
@@ -461,7 +526,7 @@ testCase("XUnitConsoleReporterUncaughtExceptionTest", {
     }
 });
 
-testCase("XUnitConsoleReporterColorOutputTest", {
+buster.util.testCase("XUnitConsoleReporterColorOutputTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -508,7 +573,7 @@ testCase("XUnitConsoleReporterColorOutputTest", {
     }
 });
 
-testCase("XUnitConsoleReporterColorizedMessagesTest", {
+buster.util.testCase("XUnitConsoleReporterColorizedMessagesTest", {
     setUp: function () {
         reporterSetUp.call(this);
 
@@ -533,7 +598,7 @@ testCase("XUnitConsoleReporterColorizedMessagesTest", {
     }
 });
 
-testCase("XUnitConsoleReporterColorizedStatsTest", {
+buster.util.testCase("XUnitConsoleReporterColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -591,7 +656,7 @@ testCase("XUnitConsoleReporterColorizedStatsTest", {
     }
 });
 
-testCase("XUnitConsoleReporterColorizedExceptionTest", {
+buster.util.testCase("XUnitConsoleReporterColorizedExceptionTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -620,7 +685,7 @@ testCase("XUnitConsoleReporterColorizedExceptionTest", {
     }
 });
 
-testCase("XUnitConsoleReporterBrightColorOutputTest", {
+buster.util.testCase("XUnitConsoleReporterBrightColorOutputTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -662,7 +727,7 @@ testCase("XUnitConsoleReporterBrightColorOutputTest", {
     }
 });
 
-testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
+buster.util.testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
@@ -721,7 +786,7 @@ testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
     }
 });
 
-testCase("XUnitConsoleReporterBrightlyColorizedExceptionTest", {
+buster.util.testCase("XUnitConsoleReporterBrightlyColorizedExceptionTest", {
     setUp: function () {
         runnerSetUp.call(this);
 

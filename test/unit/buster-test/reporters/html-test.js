@@ -7,7 +7,7 @@
         this.runner = buster.create(buster.eventEmitter);
         this.root = document.createElement("div");
 
-        this.reporter = buster.htmlReporter.create({
+        this.reporter = buster.reporters.html.create({
             root: this.root
         }).listen(this.runner);
 
@@ -33,29 +33,39 @@
         });
     }
 
-    testCase("HTMLReporterCreateTest", {
+    buster.util.testCase("HTMLReporterCreateTest", {
+        tearDown: function () {
+            var h1s = document.getElementsByTagName("h1");
+
+            for (var i = 0, l = h1s.length; i < l; ++i) {
+                if (h1s[i]) {
+                    h1s[i].parentNode.removeChild(h1s[i]);
+                }
+            }
+        },
+
         "should throw without root element": function () {
             buster.assert.exception(function () {
-                buster.htmlReporter.create();
+                buster.reporters.html.create();
             });
         },
 
         "should add 'buster-test' class to root element": function () {
             var element = document.createElement("div");
 
-            buster.htmlReporter.create({ root: element });
+            buster.reporters.html.create({ root: element });
 
             buster.assert.className(element, "buster-test");
         },
 
         "should add 'buster-test' class to html element if root is body": function () {
-            buster.htmlReporter.create({ root: document.body });
+            buster.reporters.html.create({ root: document.body });
 
             buster.assert.className(document.documentElement, "buster-test");
         },
 
         "should make page mobile friendly if logging on body": function () {
-            buster.htmlReporter.create({ root: document.body });
+            buster.reporters.html.create({ root: document.body });
 
             var metas = document.getElementsByTagName("meta"), meta;
 
@@ -67,10 +77,70 @@
 
             buster.assert.isNotNull(meta);
             buster.assert.equals(meta.content, "width=device-width, initial-scale=1.0");
+        },
+
+        "should inject CSS file from same directory if buster-test.js is not found":
+        function () {
+            buster.reporters.html.create({ root: document.body });
+
+            var links = document.getElementsByTagName("link");
+            var link = links[links.length - 1];
+
+            buster.assert.match(link, {
+                rel: "stylesheet",
+                type: "text/css",
+                media: "all",
+                href: "buster-test.css"
+            });
+        },
+
+        "should inject CSS file if logging on body": function () {
+            document.body.innerHTML += "<script src=\"/some/path/buster-test.js\"></script>";
+            buster.reporters.html.create({ root: document.body });
+
+            var links = document.getElementsByTagName("link");
+            var link = links[links.length - 1];
+
+            buster.assert.match(link, {
+                rel: "stylesheet",
+                type: "text/css",
+                media: "all",
+                href: "/some/path/buster-test.css"
+            });
+        },
+
+        "should inject h1 if logging on body": function () {
+            document.title = "";
+            buster.reporters.html.create({ root: document.body });
+
+            var h1 = document.getElementsByTagName("h1")[0];
+
+            buster.assert.match(h1, { innerHTML: "Buster.JS Test case" });
+        },
+
+        "should not inject h1 if one already exists": function () {
+            var h1 = document.createElement("h1");
+            h1.innerHTML = "Hey";
+            document.body.appendChild(h1);
+            buster.reporters.html.create({ root: document.body });
+
+            var h1s = document.getElementsByTagName("h1");
+
+            buster.assert.equals(h1s.length, 1);
+            buster.assert.match(h1s[0], { innerHTML: "Hey" });
+        },
+
+        "should use document.title in h1": function () {
+            document.title = "Use it";
+            buster.reporters.html.create({ root: document.body });
+
+            var h1 = document.getElementsByTagName("h1")[0];
+
+            buster.assert.match(h1, { innerHTML: "Use it" });
         }
     });
 
-    testCase("HTMLReporterTestsRunningTest", {
+    buster.util.testCase("HTMLReporterTestsRunningTest", {
         setUp: reporterSetUp,
 
         "should add context name as h2 when entering top-level context": function () {
@@ -300,7 +370,7 @@
         }
     });
 
-    testCase("HTMLReporterStatsTest", {
+    buster.util.testCase("HTMLReporterStatsTest", {
         setUp: function () {
             reporterSetUp.call(this);
             this.reporter.contextStart({ name: "Some context" });
@@ -351,21 +421,21 @@
         }
     });
 
-    testCase("HTMLReporterEventMappingTest", sinon.testCase({
+    buster.util.testCase("HTMLReporterEventMappingTest", sinon.testCase({
         setUp: function () {
-            this.stub(buster.htmlReporter, "contextStart");
-            this.stub(buster.htmlReporter, "contextEnd");
-            this.stub(buster.htmlReporter, "testSuccess");
-            this.stub(buster.htmlReporter, "testFailure");
-            this.stub(buster.htmlReporter, "testError");
-            this.stub(buster.htmlReporter, "testTimeout");
-            this.stub(buster.htmlReporter, "testDeferred");
-            this.stub(buster.htmlReporter, "log");
-            this.stub(buster.htmlReporter, "addStats");
+            this.stub(buster.reporters.html, "contextStart");
+            this.stub(buster.reporters.html, "contextEnd");
+            this.stub(buster.reporters.html, "testSuccess");
+            this.stub(buster.reporters.html, "testFailure");
+            this.stub(buster.reporters.html, "testError");
+            this.stub(buster.reporters.html, "testTimeout");
+            this.stub(buster.reporters.html, "testDeferred");
+            this.stub(buster.reporters.html, "log");
+            this.stub(buster.reporters.html, "addStats");
 
             this.runner = buster.create(buster.eventEmitter);
             this.runner.console = buster.create(buster.eventEmitter);
-            this.reporter = buster.htmlReporter.create({
+            this.reporter = buster.reporters.html.create({
                 root: document.createElement("div")
             }).listen(this.runner);
         },

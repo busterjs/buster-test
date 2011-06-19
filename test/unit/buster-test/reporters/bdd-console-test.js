@@ -1,13 +1,13 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sinon = require("sinon");
     var buster = require("buster-core");
 
     buster.extend(buster, {
         assert: require("buster-assert"),
-        eventEmitter: require("buster-event-emitter"),
         bddConsoleReporter: require("../../../../lib/buster-test/reporters/bdd-console")
     });
+
+    buster.util = require("buster-util");
 }
 
 function runnerSetUp() {
@@ -32,7 +32,7 @@ function generateError(message, type) {
     try { throw error; } catch (e) { return e; }
 }
 
-testCase("BDDConsoleReporterTestsRunningTest", {
+buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
     setUp: reporterSetUp,
 
     "should print context name when entering top-level context": function () {
@@ -186,10 +186,39 @@ testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.testTimeout({ name: "should go again" });
 
         buster.assert.match(this.io.toString(), "go again\n    [WARN] Is other");
+    },
+
+    "should print warning when skipping unsupported context": function () {
+        this.reporter.contextUnsupported({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
+    },
+
+    "should print warning when skipping nested unsupported context": function () {
+        this.reporter.contextStart({ name: "Test" });
+
+        this.reporter.contextUnsupported({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+ 
+        buster.assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
+    },
+
+    "should print all unsupported features": function () {
+        this.reporter.contextUnsupported({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage", "document"]
+        });
+
+        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
     }
 });
 
-testCase("BDDConsoleReporterEventMappingTest", sinon.testCase({
+buster.util.testCase("BDDConsoleReporterEventMappingTest", sinon.testCase({
     setUp: function () {
         this.stub(buster.bddConsoleReporter, "contextStart");
         this.stub(buster.bddConsoleReporter, "contextEnd");
@@ -261,7 +290,7 @@ testCase("BDDConsoleReporterEventMappingTest", sinon.testCase({
     }
 }, "should"));
 
-testCase("BDDConsoleReporterColoredTestsRunningTest", {
+buster.util.testCase("BDDConsoleReporterColoredTestsRunningTest", {
     setUp: function () {
         runnerSetUp.call(this);
 

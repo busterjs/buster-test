@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var testCase = require("buster-util").testCase;
     var sys = require("sys");
     var sinon = require("sinon");
     var buster = require("buster-core");
@@ -8,7 +7,8 @@ if (typeof require != "undefined") {
         assert: require("buster-assert"),
         promise: require("buster-promise"),
         testCase: require("../../../lib/buster-test/test-case"),
-        testRunner: require("../../../lib/buster-test/test-runner")
+        testRunner: require("../../../lib/buster-test/test-runner"),
+        util: require("buster-util")
     });
 }
 
@@ -20,7 +20,9 @@ Function.prototype.bind = function (obj) {
     };
 };
 
-testCase("TestRunnerCreateTest", {
+buster.util.testCase.silent = true;
+
+buster.util.testCase("TestRunnerCreateTest", {
     "should emit newly created object to callback": function () {
         var listener = sinon.spy();
         buster.testRunner.onCreate(listener);
@@ -41,7 +43,7 @@ testCase("TestRunnerCreateTest", {
     }
 });
 
-testCase("TestRunnerRunTest", {
+buster.util.testCase("TestRunnerRunTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
     },
@@ -420,6 +422,7 @@ testCase("TestRunnerRunTest", {
             sinon.assert.callOrder(setUps[0], promises[0].resolve,
                                    setUps[1], promises[1].resolve,
                                    testFn);
+
             test.end();
         });
     },
@@ -562,7 +565,7 @@ testCase("TestRunnerRunTest", {
     }
 });
 
-testCase("TestRunnerRunSuiteTest", {
+buster.util.testCase("TestRunnerRunSuiteTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
     },
@@ -585,6 +588,1078 @@ testCase("TestRunnerRunSuiteTest", {
     }
 });
 
+buster.util.testCase("TestRunnerAssertionCountTest", {
+    setUp: function () {
+        this.context = buster.testCase("Test + Assertions", {
+            test1: function () {}
+        });
+
+        this.runner = buster.testRunner.create();
+        this.listener = sinon.spy();
+        this.runner.on("test:failure", this.listener);
+    },
+
+    "should fail test if 0 assertions": function (test) {
+        sinon.stub(this.runner, "assertionCount").returns(0);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(this.listener.calledOnce);
+            test.end();
+        }.bind(this));
+    },
+
+    "should not fail test if 1 assertion": function (test) {
+        sinon.stub(this.runner, "assertionCount").returns(1);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(!this.listener.called);
+            test.end();
+        }.bind(this));
+    },
+
+    "should configure to not fail test if 0 assertions": function (test) {
+        sinon.stub(this.runner, "assertionCount").returns(0);
+        this.runner.failOnNoAssertions = false;
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(!this.listener.called);
+            test.end();
+        }.bind(this));
+    },
+
+    "should fail for unexpected number of assertions": function (test) {
+        sinon.stub(this.runner, "assertionCount").returns(3);
+
+        var context = buster.testCase("Test Assertions", {
+            test1: function () {
+                this.expectedAssertions = 2;
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(this.listener.calledOnce);
+            buster.assert.equals(this.listener.args[0][0].error.message,
+                                 "Expected 2 assertions, ran 3");
+            test.end();
+        }.bind(this));
+    },
+
+    "should only check expected assertions for tests that explicitly define it": function (test) {
+        sinon.stub(this.runner, "assertionCount").returns(3);
+
+        var context = buster.testCase("Test Assertions", {
+            test1: function () {
+                this.expectedAssertions = 2;
+            },
+
+            test2: function () {}
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(this.listener.calledOnce);
+            buster.assert.equals(this.listener.args[0][0].name, "test1");
+            test.end();
+        }.bind(this));
+    },
+
+    "should clear expected assertions when test fails for other reasons": function (test) {
+        sinon.stub(this.runner, "assertionCount").returns(3);
+        this.runner.on("test:error", this.listener);
+
+        var context = buster.testCase("Test Assertions", {
+            test1: function () {
+                this.expectedAssertions = 2;
+                throw new Error();
+            },
+
+            test2: function () {}
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(this.listener.calledOnce);
+            buster.assert.equals(this.listener.args[0][0].name, "test1");
+            test.end();
+        }.bind(this));
+    }
+});
+
+buster.util.testCase("TestRunnerAsyncTest", {
+    setUp: function () {
+        this.runner = buster.testRunner.create();
+        this.promise = buster.promise.create();
+        this.testFn = sinon.stub().returns(this.promise);
+        this.context = buster.testCase("Test", { test: this.testFn });
+    },
+
+    "should resolve run when test has resolved": function (test) {
+        this.runner.run(this.context).then(function () {
+            test.end();
+        });
+
+        buster.nextTick(function () {
+            this.promise.resolve();
+        }.bind(this));
+    },
+
+    "should emit test:async event": function (test) {
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.on("test:async", listeners[0]);
+        this.runner.on("test:success", listeners[1]);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listeners[0].calledOnce);
+            buster.assert.equals(listeners[0].args[0], [{ name: "test" }]);
+            buster.assert(listeners[0].calledBefore(listeners[1]));
+            test.end();
+        });
+
+        this.promise.resolve();
+    },
+
+    "should time out after 250ms": function (test) {
+        var runnerResolution = sinon.spy();
+        var promise = this.promise;
+        this.runner.run(this.context).then(runnerResolution);
+
+        setTimeout(function () {
+            try {
+                buster.assert(runnerResolution.called);
+                buster.assert(!promise.resolve.called);
+            } catch (e) {
+                buster.util.puts(e.message);
+            }
+
+            test.end();
+        }, 350); // Timers in browsers are inaccurate beasts
+    },
+
+    "should time out after custom timeout": function (test) {
+        var runnerResolution = sinon.spy();
+        this.runner.timeout = 100;
+        this.runner.run(this.context).then(runnerResolution);
+
+        setTimeout(function () {
+            buster.assert(runnerResolution.called);
+            test.end();
+        }, 200);
+    },
+
+    "should emit timeout event": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 20;
+        this.runner.on("test:timeout", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listener.called);
+            buster.assert.equals(listener.args[0], [{ name: "test" }]);
+            test.end();
+        });
+    },
+
+    "should not emit success when test times out": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 20;
+        this.runner.on("test:success", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(!listener.called);
+            test.end();
+        }.bind(this));
+    },
+
+    "should not emit test:success event until test has completed": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 20;
+        this.runner.on("test:success", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+
+        setTimeout(function () {
+            buster.assert(!listener.called);
+            this.promise.resolve();
+        }.bind(this), 10);
+    },
+
+    "should error test if it rejects it's returned promise": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 20;
+        this.runner.on("test:error", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].error.message, "Oh no");
+            test.end();
+        });
+
+        this.promise.reject(new Error("Oh no"));
+    },
+
+    "should fail test if it rejects with an AssertionError": function (test) {
+        var listener = sinon.spy();
+        this.runner.timeout = 20;
+        this.runner.on("test:failure", listener);
+
+        this.runner.run(this.context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].error.message, "Oh no");
+            test.end();
+        });
+
+        var error = new Error("Oh no");
+        error.name = "AssertionError";
+        this.promise.reject(error);
+    },
+
+    "should only emit one test:async event": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+        var promise = buster.promise.create();
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) { done(); },
+            test: function (done) { done(); }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    }
+});
+
+buster.util.testCase("TestRunnerImplicitAsyncTest", {
+    setUp: function () {
+        this.runner = buster.testRunner.create();
+    },
+
+    "should resolve run when test calls passed argument": function (test) {
+        var callback, listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            test: function (done) {
+                callback = done;
+
+                buster.nextTick(function () {
+                    callback.called = true;
+                    callback();
+                });
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.called);
+            buster.assert.isNotUndefined(callback);
+            buster.assert(callback.called);
+            test.end();
+        });
+    },
+
+    "should emit test:success when test calls passed argument": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:success", listener);
+
+        var context = buster.testCase("Test", {
+            test: function (done) {
+                buster.nextTick(function () {
+                    done();
+                });
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+
+        buster.nextTick(function () {
+            buster.assert(!listener.called);
+        });
+    },
+
+    "should emit test:failure when AssertionError is thrown in done callback":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            test: function (done) {
+                buster.nextTick(function () {
+                    done(function () {
+                        var error = new Error("Oops");
+                        error.name = "AssertionError";
+                        throw error;
+                    });
+                });
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
+            test.end();
+        });
+    },
+
+    "should emit test:error when Error is thrown in done callback":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:error", listener);
+
+        var context = buster.testCase("Test", {
+            test: function (done) {
+                buster.nextTick(function () {
+                    done(function () {
+                        throw new Error("Oops");
+                    });
+                });
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
+            test.end();
+        });
+    },
+
+    "should include timeouts in suite:end results": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("suite:end", listener);
+
+        var context = buster.testCase("My case", {
+            test1: function (done) {}
+        });
+
+        sinon.stub(this.runner, "assertionCount").returns(2);
+
+        this.runner.runSuite([context]).then(function () {
+            buster.assert.equals(listener.args[0][0].timeouts, 1);
+            test.end();
+        });
+    },
+
+    "should disarm callback when test times out": function (test) {
+        var callback;
+
+        var context = buster.testCase("My case", {
+            test1: function (done) {
+                callback = done;
+            }
+        });
+
+        sinon.stub(this.runner, "assertionCount").returns(2);
+
+        this.runner.runSuite([context]).then(function () {
+            buster.assert.noException(function () {
+                callback();
+            });
+
+            test.end();
+        });
+    }
+});
+
+buster.util.testCase("TestRunnerImplicitAsyncSetUpTest", {
+    setUp: function () {
+        this.runner = buster.testRunner.create();
+    },
+
+    "should resolve run when setUp calls passed argument": function (test) {
+        var callback;
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {
+                callback = done;
+
+                buster.nextTick(function () {
+                    callback.called = true;
+                    callback();
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert.isNotUndefined(callback);
+            buster.assert(callback.called);
+            test.end();
+        });
+    },
+
+    "should emit test:start when setUp calls passed argument": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:start", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {
+                buster.nextTick(function () {
+                    done();
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+
+        buster.nextTick(function () {
+            buster.assert(!listener.called);
+        });
+    },
+
+    "should emit test:failure when setUp done callback throws AssertionError":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {
+                buster.nextTick(function () {
+                    done(function () {
+                        var error = new Error("Oops");
+                        error.name = "AssertionError";
+                        throw error;
+                    });
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
+            test.end();
+        });
+    },
+
+    "should emit test:error when setUp done callback throws Error":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:error", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {
+                buster.nextTick(function () {
+                    done(function () {
+                        throw new Error("Oops");
+                    });
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
+            test.end();
+        });
+    },
+
+    "should time out async setUp": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:timeout", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) {},
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should emit test:async when setUp is async": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) { done(); },
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should not emit test:async twice": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) { done(); },
+            test: function (done) { done(); }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should not emit test:async more than once in nested async context": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) { done(); },
+
+            context1: {
+                setUp: function (done) { done(); },
+                test: function (done) { done(); }
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    }
+});
+
+buster.util.testCase("TestRunnerImplicitAsyncTearDownTest", {
+    setUp: function () {
+        this.runner = buster.testRunner.create();
+    },
+
+    "should resolve run when tearDown calls passed argument": function (test) {
+        var callback;
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {
+                callback = done;
+
+                buster.nextTick(function () {
+                    callback.called = true;
+                    callback();
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert.isNotUndefined(callback);
+            buster.assert(callback.called);
+            test.end();
+        });
+    },
+
+    "should emit test:success when tearDown calls passed argument": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:success", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {
+                buster.nextTick(function () {
+                    done();
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+
+        buster.nextTick(function () {
+            buster.assert(!listener.called);
+        });
+    },
+
+    "should emit test:failure when tearDown done callback throws AssertionError":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {
+                buster.nextTick(function () {
+                    done(function () {
+                        var error = new Error("Oops");
+                        error.name = "AssertionError";
+                        throw error;
+                    });
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
+            test.end();
+        });
+    },
+
+    "should emit test:error when tearDown done callback throws Error":
+    function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:error", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {
+                buster.nextTick(function () {
+                    done(function () {
+                        throw new Error("Oops")
+                    });
+                });
+            },
+
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            buster.assert.equals(listener.args[0][0].error.message, "Oops");
+            test.end();
+        });
+    },
+
+    "should time out async tearDown": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:timeout", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) {},
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should emit test:async when tearDown is async": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            tearDown: function (done) { done(); },
+            test: sinon.spy()
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should not emit test:async more than once": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:async", listener);
+
+        var context = buster.testCase("Test", {
+            setUp: function (done) { done(); },
+            tearDown: function (done) { done(); },
+            test: function (done) { done(); }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should not emit test:async after test failure": function (test) {
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.on("test:async", listeners[0]);
+        this.runner.on("test:failure", listeners[1]);
+        var runner = this.runner;
+
+        var context = buster.testCase("Test", {
+            setUp: function () {},
+            tearDown: function (done) { done(); },
+            test: function (done) {
+                var e = new Error();
+                e.name = "AssertionError";
+                runner.assertionFailure(e);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listeners[1].calledOnce);
+            buster.assert(!listeners[0].called);
+            test.end();
+        });
+    }
+});
+
+buster.util.testCase("RunnerRunAwayExceptionsTest", {
+    "should catch uncaught asynchronous errors": function (test) {
+        var runner = buster.testRunner.create();
+        runner.timeout = 20;
+        var listener = sinon.spy();
+        runner.on("uncaughtException", listener);
+
+        var context = buster.testCase("Test", {
+            "should not fail, ever": function (done) {
+                 setTimeout(function () {
+                     throw new Error("Oops!");
+                }, 30);
+            }
+        });
+
+        runner.run(context).then(function () {
+            setTimeout(function () {
+                buster.assert(listener.calledOnce);
+                test.end();
+            }, 50);
+        });
+    },
+
+    "should not handle asynchronous failure as uncaught exception": function (test) {
+        var runner = buster.testRunner.create();
+        var listeners = [sinon.spy(), sinon.spy()];
+        runner.on("uncaughtException", listeners[0]);
+        runner.on("test:failure", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "should fail with regular AssertionError": function (done) {
+                 setTimeout(function () {
+                     var error = new Error("[assert] Failed assertion asynchronously");
+                     error.name = "AssertionError";
+                     throw error;
+                }, 10);
+            }
+        });
+
+        runner.run(context).then(function () {
+            buster.assert(!listeners[0].called);
+            buster.assert(listeners[1].calledOnce);
+            test.end();
+        });
+    },
+
+    "should keep handling uncaught exceptions after async failure": function (test) {
+        var runner = buster.testRunner.create({ timeout: 15 });
+        var listeners = [sinon.spy(), sinon.spy()];
+        runner.on("uncaughtException", listeners[0]);
+        runner.on("test:failure", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "should fail with regular AssertionError": function (done) {
+                 setTimeout(function () {
+                     var error = new Error("[assert] Failed assertion asynchronously");
+                     error.name = "AssertionError";
+                     throw error;
+                }, 10);
+            },
+
+            "should throw async error": function (done) {
+                 setTimeout(function () {
+                     throw new Error("Failed something asynchronously");
+                }, 20);
+            }
+        });
+
+        runner.run(context).then(function () {
+            setTimeout(function () {
+                buster.assert(listeners[0].called);
+                buster.assert(listeners[1].called);
+
+                test.end();
+            }, 50);
+        });
+    }
+});
+
+buster.util.testCase("TestRunnerEventedAssertionsTest", {
+    setUp: function () {
+        var runner = this.runner = buster.testRunner.create({
+            handleUncaughtExceptions: false
+        });
+
+        this.assert = function (val) {
+            if (!val) {
+                var err = new Error("Assertion failed");
+                err.name = "AssertionError";
+
+                try {
+                    throw err;
+                } catch (e) {
+                    runner.assertionFailure(e);
+                }
+            }
+        };
+    },
+
+    "should emit failure event": function (test) {
+        var assert = this.assert;
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            "test it": function () {
+                assert(false);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            var args = listener.args;
+            buster.assert.equals(args[0][0].name, "test it");
+            buster.assert.equals(args[0][0].error.message, "Assertion failed");
+            test.end();
+        });
+    },
+
+    "should only emit failure event once per test": function (test) {
+        var assert = this.assert;
+        var listener = sinon.spy();
+        this.runner.on("test:failure", listener);
+
+        var context = buster.testCase("Test", {
+            "test it": function () {
+                assert(false);
+                assert(false);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listener.calledOnce);
+            test.end();
+        });
+    },
+
+    "should not emit error event after failures": function (test) {
+        var assert = this.assert;
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.on("test:failure", listeners[0]);
+        this.runner.on("test:error", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "test it": function () {
+                assert(false);
+                throw new Error("WTF!");
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listeners[0].calledOnce);
+            buster.assert(!listeners[1].called);
+            test.end();
+        });
+    },
+
+    "should not emit timeout event after failures": function (test) {
+        var assert = this.assert;
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.on("test:failure", listeners[0]);
+        this.runner.on("test:timeout", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "test it": function (done) {
+                assert(false);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(listeners[0].calledOnce);
+            buster.assert(!listeners[1].called);
+            test.end();
+        });
+    },
+
+    "should not emit failure after timeout": function (test) {
+        var assert = this.assert;
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.timeout = 20;
+        this.runner.on("test:failure", listeners[0]);
+        this.runner.on("test:timeout", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "test it": function (done) {
+                setTimeout(function () {
+                    assert(false);
+                }, 40);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            setTimeout(function () {
+                buster.assert(!listeners[0].called);
+                buster.assert(listeners[1].calledOnce);
+                test.end();
+            }, 30);
+        });
+    },
+
+    "should not emit success after failure": function (test) {
+        var assert = this.assert;
+        var listeners = [sinon.spy(), sinon.spy()];
+        this.runner.timeout = 20;
+        this.runner.on("test:failure", listeners[0]);
+        this.runner.on("test:success", listeners[1]);
+
+        var context = buster.testCase("Test", {
+            "test it": function () {
+                assert(false);
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            setTimeout(function () {
+                buster.assert(listeners[0].calledOnce);
+                buster.assert(!listeners[1].called);
+                test.end();
+            }, 30);
+        });
+    }
+});
+
+buster.util.testCase("TestRunnerSupportRequirementsTest", {
+    setUp: function () {
+        this.runner = buster.testRunner.create({
+            handleUncaughtExceptions: false
+        });
+
+        this.test = sinon.spy();
+    },
+
+    "should execute test normally when support is present": function (test) {
+        var context = buster.testCase("Test", {
+            requiresSupportFor: { A: true },
+            "should run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(this.test.calledOnce);
+            test.end();
+        }.bind(this));
+    },
+
+    "should not execute test when support is present": function (test) {
+        var context = buster.testCase("Test", {
+            requiresSupportFor: { A: false },
+            "should not run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!this.test.called);
+            test.end();
+        }.bind(this));
+    },
+
+    "should not execute test when support function returns falsy": function (test) {
+        var context = buster.testCase("Test", {
+            requiresSupportFor: { A: function () { return; } },
+            "should not run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!this.test.called);
+            test.end();
+        }.bind(this));
+    },
+
+    "should execute test when support function returns truthy": function (test) {
+        var context = buster.testCase("Test", {
+            requiresSupportFor: { A: function () { return "Ok"; } },
+            "should run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(this.test.calledOnce);
+            test.end();
+        }.bind(this));
+    },
+
+    "should not run test when not all support requirements are met": function (test) {
+        var context = buster.testCase("Test", {
+            requiresSupportFor: {
+                A: function () { return "Ok"; },
+                B: function () { return false; }
+            },
+            "should not run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!this.test.called);
+            test.end();
+        }.bind(this));
+    },
+
+    "should not run test when no support requirements are met": function (test) {
+        var context = buster.testCase("Test", {
+            requiresSupportForAny: {
+                A: function () { return; },
+                B: function () { return false; }
+            },
+            "should not run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!this.test.called);
+            test.end();
+        }.bind(this));
+    },
+
+    "should run test when at least one support requirement is met": function (test) {
+        var context = buster.testCase("Test", {
+            requiresSupportForAny: {
+                A: function () { return true; },
+                B: function () { return false; }
+            },
+            "should run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(this.test.calledOnce);
+            test.end();
+        }.bind(this));
+    },
+
+    "should not emit context:start event for unsupported context": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("context:start", listener);
+
+        var context = buster.testCase("Test", {
+            requiresSupportFor: { B: function () { return false; } },
+            "should run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!listener.called);
+            test.end();
+        }.bind(this));
+    },
+
+    "should not run nested contexts in unsupported context": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("context:start", listener);
+        var context = buster.testCase("Test", {
+            requiresSupportFor: { B: function () { return false; } },
+            something: {
+                "should run this": this.test
+            }
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(!listener.called);
+            buster.assert(!this.test.called);
+            test.end();
+        }.bind(this));
+    }
+});
+
 function runnerEventsSetUp() {
     this.runner = buster.testRunner.create();
     this.runner.failOnNoAssertions = false;
@@ -594,6 +1669,7 @@ function runnerEventsSetUp() {
     this.listeners = {
         "suite:start": sinon.spy(),
         "context:start": sinon.spy(),
+        "context:unsupported": sinon.spy(),
         "test:setUp": sinon.spy(),
         "test:start": sinon.spy(),
         "test:tearDown": sinon.spy(),
@@ -616,6 +1692,7 @@ function runnerEventsSetUp() {
     this.runner.on("test:error", this.listeners["test:error"]);
     this.runner.on("test:deferred", this.listeners["test:deferred"]);
     this.runner.on("context:end", this.listeners["context:end"]);
+    this.runner.on("context:unsupported", this.listeners["context:unsupported"]);
     this.runner.on("suite:end", this.listeners["suite:end"]);
     this.runner.on("uncaughtException", this.listeners["uncaughtException"]);
 
@@ -628,7 +1705,7 @@ function runnerEventsSetUp() {
     });
 }
 
-testCase("TestRunnerEventsTest", {
+buster.util.testCase("TestRunnerEventsTest", {
     setUp: runnerEventsSetUp,
 
     "should emit event when starting suite": function (test) {
@@ -832,10 +1909,22 @@ testCase("TestRunnerEventsTest", {
             buster.assert.equals(listener.args[0][0].name, "should do this");
             test.end();
         }.bind(this));
+    },
+
+    "should emit context:unsupported event": function (test) {
+        var context = buster.testCase("Test", {
+            requiresSupportForAny: { A: false },
+            "should not run this": this.test
+        });
+
+        this.runner.run(context).then(function () {
+            buster.assert(this.listeners["context:unsupported"].calledOnce);
+            test.end();
+        }.bind(this));
     }
 });
 
-testCase("TestRunnerEventDataTest", {
+buster.util.testCase("TestRunnerEventDataTest", {
     setUp: runnerEventsSetUp,
 
     "context:start event data": function (test) {
@@ -854,6 +1943,21 @@ testCase("TestRunnerEventDataTest", {
         this.runner.run(context).then(function () {
             var args = this.listeners["context:end"].args[0];
             buster.assert.equals(args, [context]);
+            test.end();
+        }.bind(this));
+    },
+
+    "context:unsupported event data": function (test) {
+        var context = buster.testCase("My case", {
+            requiresSupportFor: { "Feature A": false }
+        });
+
+        this.runner.run(context).then(function () {
+            var args = this.listeners["context:unsupported"].args[0];
+            buster.assert.equals(args, [{
+                context: context,
+                unsupported: ["Feature A"]
+            }]);
             test.end();
         }.bind(this));
     },
@@ -1047,878 +2151,9 @@ testCase("TestRunnerEventDataTest", {
         this.runner.run(context).then(function () {
             setTimeout(function () {
                 buster.assert(listener.calledOnce);
-                buster.assert.equals(listener.args[0][0].message, "Damnit");
+                buster.assert.match(listener.args[0][0].message, /Damnit/);
                 test.end();
             }, 10);
-        });
-    }
-});
-
-testCase("TestRunnerAssertionCountTest", {
-    setUp: function () {
-        this.context = buster.testCase("Test + Assertions", {
-            test1: function () {}
-        });
-
-        this.runner = buster.testRunner.create();
-        this.listener = sinon.spy();
-        this.runner.on("test:failure", this.listener);
-    },
-
-    "should fail test if 0 assertions": function (test) {
-        sinon.stub(this.runner, "assertionCount").returns(0);
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(this.listener.calledOnce);
-            test.end();
-        }.bind(this));
-    },
-
-    "should not fail test if 1 assertion": function (test) {
-        sinon.stub(this.runner, "assertionCount").returns(1);
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(!this.listener.called);
-            test.end();
-        }.bind(this));
-    },
-
-    "should configure to not fail test if 0 assertions": function (test) {
-        sinon.stub(this.runner, "assertionCount").returns(0);
-        this.runner.failOnNoAssertions = false;
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(!this.listener.called);
-            test.end();
-        }.bind(this));
-    },
-
-    "should fail for unexpected number of assertions": function (test) {
-        sinon.stub(this.runner, "assertionCount").returns(3);
-
-        var context = buster.testCase("Test Assertions", {
-            test1: function () {
-                this.expectedAssertions = 2;
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(this.listener.calledOnce);
-            buster.assert.equals(this.listener.args[0][0].error.message,
-                                 "Expected 2 assertions, ran 3");
-            test.end();
-        }.bind(this));
-    },
-
-    "should only check expected assertions for tests that explicitly define it": function (test) {
-        sinon.stub(this.runner, "assertionCount").returns(3);
-
-        var context = buster.testCase("Test Assertions", {
-            test1: function () {
-                this.expectedAssertions = 2;
-            },
-
-            test2: function () {}
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(this.listener.calledOnce);
-            buster.assert.equals(this.listener.args[0][0].name, "test1");
-            test.end();
-        }.bind(this));
-    },
-
-    "should clear expected assertions when test fails for other reasons": function (test) {
-        sinon.stub(this.runner, "assertionCount").returns(3);
-        this.runner.on("test:error", this.listener);
-
-        var context = buster.testCase("Test Assertions", {
-            test1: function () {
-                this.expectedAssertions = 2;
-                throw new Error();
-            },
-
-            test2: function () {}
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(this.listener.calledOnce);
-            buster.assert.equals(this.listener.args[0][0].name, "test1");
-            test.end();
-        }.bind(this));
-    }
-});
-
-testCase("TestRunnerAsyncTest", {
-    setUp: function () {
-        this.runner = buster.testRunner.create();
-        this.promise = buster.promise.create();
-        this.testFn = sinon.stub().returns(this.promise);
-        this.context = buster.testCase("Test", { test: this.testFn });
-    },
-
-    "should resolve run when test has resolved": function (test) {
-        this.runner.run(this.context).then(function () {
-            test.end();
-        });
-
-        buster.nextTick(function () {
-            this.promise.resolve();
-        }.bind(this));
-    },
-
-    "should emit test:async event": function (test) {
-        var listeners = [sinon.spy(), sinon.spy()];
-        this.runner.on("test:async", listeners[0]);
-        this.runner.on("test:success", listeners[1]);
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(listeners[0].calledOnce);
-            buster.assert.equals(listeners[0].args[0], [{ name: "test" }]);
-            buster.assert(listeners[0].calledBefore(listeners[1]));
-            test.end();
-        });
-
-        this.promise.resolve();
-    },
-
-    "should time out after 250ms": function (test) {
-        var runnerResolution = sinon.spy();
-        var promise = this.promise;
-        this.runner.run(this.context).then(runnerResolution);
-
-        setTimeout(function () {
-            buster.assert(runnerResolution.called);
-            buster.assert(!promise.resolve.called);
-            test.end();
-        }, 265);
-    },
-
-    "should time out after custom timeout": function (test) {
-        var runnerResolution = sinon.spy();
-        this.runner.timeout = 100;
-        this.runner.run(this.context).then(runnerResolution);
-
-        setTimeout(function () {
-            buster.assert(runnerResolution.called);
-            test.end();
-        }, 130);
-    },
-
-    "should emit timeout event": function (test) {
-        var listener = sinon.spy();
-        this.runner.timeout = 20;
-        this.runner.on("test:timeout", listener);
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(listener.called);
-            buster.assert.equals(listener.args[0], [{ name: "test" }]);
-            test.end();
-        });
-    },
-
-    "should not emit success when test times out": function (test) {
-        var listener = sinon.spy();
-        this.runner.timeout = 20;
-        this.runner.on("test:success", listener);
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(!listener.called);
-            test.end();
-        }.bind(this));
-    },
-
-    "should not emit test:success event until test has completed": function (test) {
-        var listener = sinon.spy();
-        this.runner.timeout = 20;
-        this.runner.on("test:success", listener);
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-
-        setTimeout(function () {
-            buster.assert(!listener.called);
-            this.promise.resolve();
-        }.bind(this), 10);
-    },
-
-    "should error test if it rejects it's returned promise": function (test) {
-        var listener = sinon.spy();
-        this.runner.timeout = 20;
-        this.runner.on("test:error", listener);
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals(listener.args[0][0].error.message, "Oh no");
-            test.end();
-        });
-
-        this.promise.reject(new Error("Oh no"));
-    },
-
-    "should fail test if it rejects with an AssertionError": function (test) {
-        var listener = sinon.spy();
-        this.runner.timeout = 20;
-        this.runner.on("test:failure", listener);
-
-        this.runner.run(this.context).then(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals(listener.args[0][0].error.message, "Oh no");
-            test.end();
-        });
-
-        var error = new Error("Oh no");
-        error.name = "AssertionError";
-        this.promise.reject(error);
-    }
-});
-
-testCase("TestRunnerImplicitAsyncTest", {
-    setUp: function () {
-        this.runner = buster.testRunner.create();
-    },
-
-    "should resolve run when test calls passed argument": function (test) {
-        var callback, listener = sinon.spy();
-        this.runner.on("test:async", listener);
-
-        var context = buster.testCase("Test", {
-            test: function (done) {
-                callback = done;
-
-                buster.nextTick(function () {
-                    callback.called = true;
-                    callback();
-                });
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.called);
-            buster.assert.isNotUndefined(callback);
-            buster.assert(callback.called);
-            test.end();
-        });
-    },
-
-    "should emit test:success when test calls passed argument": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:success", listener);
-
-        var context = buster.testCase("Test", {
-            test: function (done) {
-                buster.nextTick(function () {
-                    done();
-                });
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-
-        buster.nextTick(function () {
-            buster.assert(!listener.called);
-        });
-    },
-
-    "should emit test:failure when AssertionError is thrown in done callback":
-    function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:failure", listener);
-
-        var context = buster.testCase("Test", {
-            test: function (done) {
-                buster.nextTick(function () {
-                    done(function () {
-                        var error = new Error("Oops");
-                        error.name = "AssertionError";
-                        throw error;
-                    });
-                });
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals(listener.args[0][0].error.message, "Oops");
-            test.end();
-        });
-    },
-
-    "should emit test:error when Error is thrown in done callback":
-    function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:error", listener);
-
-        var context = buster.testCase("Test", {
-            test: function (done) {
-                buster.nextTick(function () {
-                    done(function () {
-                        throw new Error("Oops");
-                    });
-                });
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals(listener.args[0][0].error.message, "Oops");
-            test.end();
-        });
-    },
-
-    "should include timeouts in suite:end results": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("suite:end", listener);
-
-        var context = buster.testCase("My case", {
-            test1: function (done) {}
-        });
-
-        sinon.stub(this.runner, "assertionCount").returns(2);
-
-        this.runner.runSuite([context]).then(function () {
-            buster.assert.equals(listener.args[0][0].timeouts, 1);
-            test.end();
-        });
-    },
-
-    "should disarm callback when test times out": function (test) {
-        var callback;
-
-        var context = buster.testCase("My case", {
-            test1: function (done) {
-                callback = done;
-            }
-        });
-
-        sinon.stub(this.runner, "assertionCount").returns(2);
-
-        this.runner.runSuite([context]).then(function () {
-            buster.assert.noException(function () {
-                callback();
-            });
-
-            test.end();
-        });
-    }
-});
-
-testCase("TestRunnerImplicitAsyncSetUpTest", {
-    setUp: function () {
-        this.runner = buster.testRunner.create();
-    },
-
-    "should resolve run when setUp calls passed argument": function (test) {
-        var callback;
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) {
-                callback = done;
-
-                buster.nextTick(function () {
-                    callback.called = true;
-                    callback();
-                });
-            },
-
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert.isNotUndefined(callback);
-            buster.assert(callback.called);
-            test.end();
-        });
-    },
-
-    "should emit test:start when setUp calls passed argument": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:start", listener);
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) {
-                buster.nextTick(function () {
-                    done();
-                });
-            },
-
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-
-        buster.nextTick(function () {
-            buster.assert(!listener.called);
-        });
-    },
-
-    "should emit test:failure when setUp done callback throws AssertionError":
-    function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:failure", listener);
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) {
-                buster.nextTick(function () {
-                    done(function () {
-                        var error = new Error("Oops");
-                        error.name = "AssertionError";
-                        throw error;
-                    });
-                });
-            },
-
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals(listener.args[0][0].error.message, "Oops");
-            test.end();
-        });
-    },
-
-    "should emit test:error when setUp done callback throws Error":
-    function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:error", listener);
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) {
-                buster.nextTick(function () {
-                    done(function () {
-                        throw new Error("Oops");
-                    });
-                });
-            },
-
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals(listener.args[0][0].error.message, "Oops");
-            test.end();
-        });
-    },
-
-    "should time out async setUp": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:timeout", listener);
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) {},
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-    },
-
-    "should emit test:async when setUp is async": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:async", listener);
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) { done(); },
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-    },
-
-    "should not emit test:async twice": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:async", listener);
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) { done(); },
-            test: function (done) { done(); }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-    },
-
-    "should not emit test:async more than once in nested async context": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:async", listener);
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) { done(); },
-
-            context1: {
-                setUp: function (done) { done(); },
-                test: function (done) { done(); }
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-    }
-});
-
-testCase("TestRunnerImplicitAsyncTearDownTest", {
-    setUp: function () {
-        this.runner = buster.testRunner.create();
-    },
-
-    "should resolve run when tearDown calls passed argument": function (test) {
-        var callback;
-
-        var context = buster.testCase("Test", {
-            tearDown: function (done) {
-                callback = done;
-
-                buster.nextTick(function () {
-                    callback.called = true;
-                    callback();
-                });
-            },
-
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert.isNotUndefined(callback);
-            buster.assert(callback.called);
-            test.end();
-        });
-    },
-
-    "should emit test:success when tearDown calls passed argument": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:success", listener);
-
-        var context = buster.testCase("Test", {
-            tearDown: function (done) {
-                buster.nextTick(function () {
-                    done();
-                });
-            },
-
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-
-        buster.nextTick(function () {
-            buster.assert(!listener.called);
-        });
-    },
-
-    "should emit test:failure when tearDown done callback throws AssertionError":
-    function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:failure", listener);
-
-        var context = buster.testCase("Test", {
-            tearDown: function (done) {
-                buster.nextTick(function () {
-                    done(function () {
-                        var error = new Error("Oops");
-                        error.name = "AssertionError";
-                        throw error;
-                    });
-                });
-            },
-
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals(listener.args[0][0].error.message, "Oops");
-            test.end();
-        });
-    },
-
-    "should emit test:error when tearDown done callback throws Error":
-    function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:error", listener);
-
-        var context = buster.testCase("Test", {
-            tearDown: function (done) {
-                buster.nextTick(function () {
-                    done(function () {
-                        throw new Error("Oops")
-                    });
-                });
-            },
-
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            buster.assert.equals(listener.args[0][0].error.message, "Oops");
-            test.end();
-        });
-    },
-
-    "should time out async tearDown": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:timeout", listener);
-
-        var context = buster.testCase("Test", {
-            tearDown: function (done) {},
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-    },
-
-    "should emit test:async when tearDown is async": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:async", listener);
-
-        var context = buster.testCase("Test", {
-            tearDown: function (done) { done(); },
-            test: sinon.spy()
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-    },
-
-    "should not emit test:async more than once": function (test) {
-        var listener = sinon.spy();
-        this.runner.on("test:async", listener);
-
-        var context = buster.testCase("Test", {
-            setUp: function (done) { done(); },
-            tearDown: function (done) { done(); },
-            test: function (done) { done(); }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-    }
-});
-
-testCase("RunnerRunAwayExceptionsTest", {
-    "should catch uncaught asynchronous errors": function (test) {
-        var runner = buster.testRunner.create();
-        runner.timeout = 20;
-        var listener = sinon.spy();
-        runner.on("uncaughtException", listener);
-
-        var context = buster.testCase("Test", {
-            "should not fail, ever": function (done) {
-                 setTimeout(function () {
-                     throw new Error("Oops!");
-                }, 30);
-            }
-        });
-
-        runner.run(context).then(function () {
-            setTimeout(function () {
-                buster.assert(listener.calledOnce);
-                test.end();
-            }, 15);
-        });
-    },
-
-    "should not handle asynchronous failure as uncaught exception": function (test) {
-        var runner = buster.testRunner.create();
-        var listeners = [sinon.spy(), sinon.spy()];
-        runner.on("uncaughtException", listeners[0]);
-        runner.on("test:failure", listeners[1]);
-
-        var context = buster.testCase("Test", {
-            "should fail with regular AssertionError": function (done) {
-                 setTimeout(function () {
-                     var error = new Error("Failed assertion asynchronously");
-                     error.name = "AssertionError";
-                     throw error;
-                }, 10);
-            }
-        });
-
-        runner.run(context).then(function () {
-            buster.assert(!listeners[0].called);
-            buster.assert(listeners[1].calledOnce);
-            test.end();
-        });
-    },
-
-    "should keep handling uncaught exceptions after async failure": function (test) {
-        var runner = buster.testRunner.create({ timeout: 15 });
-        var listeners = [sinon.spy(), sinon.spy()];
-        runner.on("uncaughtException", listeners[0]);
-        runner.on("test:failure", listeners[1]);
-
-        var context = buster.testCase("Test", {
-            "should fail with regular AssertionError": function (done) {
-                 setTimeout(function () {
-                     var error = new Error("Failed assertion asynchronously");
-                     error.name = "AssertionError";
-                     throw error;
-                }, 10);
-            },
-
-            "should throw async error": function (done) {
-                 setTimeout(function () {
-                     throw new Error("Failed something asynchronously");
-                }, 20);
-            }
-        });
-
-        runner.run(context).then(function () {
-            setTimeout(function () {
-                buster.assert(listeners[0].called);
-                buster.assert(listeners[1].called);
-
-                test.end();
-            }, 10);
-        });
-    }
-});
-
-testCase("TestRunnerEventedAssertionsTest", {
-    setUp: function () {
-        var runner = this.runner = buster.testRunner.create({
-            handleUncaughtExceptions: false
-        });
-
-        this.assert = function (val) {
-            if (!val) {
-                var err = new Error("Assertion failed");
-                err.name = "AssertionError";
-
-                try {
-                    throw err;
-                } catch (e) {
-                    runner.assertionFailure(e);
-                }
-            }
-        };
-    },
-
-    "should emit failure event": function (test) {
-        var assert = this.assert;
-        var listener = sinon.spy();
-        this.runner.on("test:failure", listener);
-
-        var context = buster.testCase("Test", {
-            "test it": function () {
-                assert(false);
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            var args = listener.args;
-            buster.assert.equals(args[0][0].name, "test it");
-            buster.assert.equals(args[0][0].error.message, "Assertion failed");
-            test.end();
-        });
-    },
-
-    "should only emit failure event once per test": function (test) {
-        var assert = this.assert;
-        var listener = sinon.spy();
-        this.runner.on("test:failure", listener);
-
-        var context = buster.testCase("Test", {
-            "test it": function () {
-                assert(false);
-                assert(false);
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listener.calledOnce);
-            test.end();
-        });
-    },
-
-    "should not emit error event after failures": function (test) {
-        var assert = this.assert;
-        var listeners = [sinon.spy(), sinon.spy()];
-        this.runner.on("test:failure", listeners[0]);
-        this.runner.on("test:error", listeners[1]);
-
-        var context = buster.testCase("Test", {
-            "test it": function () {
-                assert(false);
-                throw new Error("WTF!");
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listeners[0].calledOnce);
-            buster.assert(!listeners[1].called);
-            test.end();
-        });
-    },
-
-    "should not emit timeout event after failures": function (test) {
-        var assert = this.assert;
-        var listeners = [sinon.spy(), sinon.spy()];
-        this.runner.on("test:failure", listeners[0]);
-        this.runner.on("test:timeout", listeners[1]);
-
-        var context = buster.testCase("Test", {
-            "test it": function (done) {
-                assert(false);
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(listeners[0].calledOnce);
-            buster.assert(!listeners[1].called);
-            test.end();
-        });
-    },
-
-    "should not emit failure after timeout": function (test) {
-        var assert = this.assert;
-        var listeners = [sinon.spy(), sinon.spy()];
-        this.runner.timeout = 5;
-        this.runner.on("test:failure", listeners[0]);
-        this.runner.on("test:timeout", listeners[1]);
-
-        var context = buster.testCase("Test", {
-            "test it": function (done) {
-                setTimeout(function () {
-                    assert(false);
-                }, 10);
-            }
-        });
-
-        this.runner.run(context).then(function () {
-            buster.assert(!listeners[0].called);
-            buster.assert(listeners[1].calledOnce);
-            test.end();
         });
     }
 });
