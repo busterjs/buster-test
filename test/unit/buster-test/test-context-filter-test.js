@@ -154,5 +154,15 @@ buster.util.testCase("ContextFilterTest", {
 
         buster.assert.equals(context2.tests.length, 0);
         buster.assert.equals(context2.contexts[0].tests.length, 2);
+    },
+
+    "should apply filter case insensitively": function () {
+        var context = buster.testCase("Some tests", {
+            "test 1": function () {}
+        });
+
+        var context2 = buster.testContextFilter(context, "TEST");
+
+        buster.assert.equals(context2.tests.length, 1);
     }
 });
