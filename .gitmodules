@@ -16,3 +16,6 @@
 [submodule "node_modules/buster-promise"]
 	path = node_modules/buster-promise
 	url = git://gitorious.org/buster/buster-promise.git
+[submodule "node_modules/buster-module-loader"]
+	path = node_modules/buster-module-loader
+	url = git://gitorious.org/buster/buster-module-loader.git
