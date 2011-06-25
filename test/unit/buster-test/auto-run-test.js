@@ -230,6 +230,21 @@
             });
 
             assert.equals(buster.testRunner.runSuite.args[0][0].length, 0);
+        },
+
+        "should not skip contexts if tests are filtered but not sub-contexts":
+        function () {
+            var context = buster.testCase("Some tests", {
+                "test #1": function () {},
+                "test #2": function () {},
+                "something": {}
+            });
+
+            buster.autoRun.run([context], {
+                filters: ["something"]
+            });
+
+            assert.equals(buster.testRunner.runSuite.args[0][0].length, 1);
         }
     });
 }());
