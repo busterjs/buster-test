@@ -164,5 +164,25 @@ buster.util.testCase("ContextFilterTest", {
         var context2 = buster.testContextFilter(context, "TEST");
 
         buster.assert.equals(context2.tests.length, 1);
+    },
+
+    "should exclude empty sub-contexts": function () {
+        var context = buster.testCase("Some tests", {
+            "something": {}
+        });
+
+        var context2 = buster.testContextFilter(context, "something");
+
+        buster.assert.equals(context2.contexts.length, 0);
+    },
+
+    "should not exclude sub-context with tests": function () {
+        var context = buster.testCase("Some tests", {
+            "something": { "test": function () {} }
+        });
+
+        var context2 = buster.testContextFilter(context, "something");
+
+        buster.assert.equals(context2.contexts.length, 1);
     }
 });

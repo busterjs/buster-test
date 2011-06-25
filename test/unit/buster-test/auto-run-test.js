@@ -237,7 +237,7 @@
             var context = buster.testCase("Some tests", {
                 "test #1": function () {},
                 "test #2": function () {},
-                "something": {}
+                "something": { "testIt": function () {} }
             });
 
             buster.autoRun.run([context], {
