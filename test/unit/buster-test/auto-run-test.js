@@ -142,6 +142,7 @@
             this.sandbox = sinon.sandbox.create();
             this.sandbox.spy(buster.testRunner, "create");
             this.sandbox.stub(buster.testRunner, "runSuite");
+            this.context = { tests: [{}] };
         },
 
         tearDown: function () {
@@ -155,7 +156,7 @@
         },
 
         "should create runner with provided runner": function () {
-            buster.autoRun.run([{}], {
+            buster.autoRun.run([this.context], {
                 reporter: "xml",
                 filters: ["should"],
                 color: true,
@@ -176,14 +177,14 @@
 
         "should use specified reporter": function () {
             this.sandbox.spy(buster.reporters.xml, "create");
-            buster.autoRun.run([{}], { reporter: "xml", });
+            buster.autoRun.run([this.context], { reporter: "xml", });
 
             assert(buster.reporters.xml.create.calledOnce);
         },
 
         "should initialize reporter with options": function () {
             this.sandbox.spy(buster.reporters.xUnitConsole, "create");
-            buster.autoRun.run([{}], {
+            buster.autoRun.run([this.context], {
                 color: false,
                 bright: false,
             });
@@ -195,13 +196,14 @@
         },
 
         "should parse contexts": function () {
-            var actual = [{ id: 1 }, { id: 2 }];
-            var contexts = [{ parse: sinon.stub().returns(actual[0]) },
-                            { parse: sinon.stub().returns(actual[1]) }];
+            var tests = [{ tests: [{ id: 1 }] }, { tests: [{ id: 2 }] }];
+            var contexts = [{ parse: sinon.stub().returns(tests[0]) },
+                            { parse: sinon.stub().returns(tests[1]) }];
             buster.autoRun.run(contexts);
 
-            assert.same(actual[0], contexts[0]);
-            assert.same(actual[1], contexts[1]);
+            var actual = buster.testRunner.runSuite.args[0][0];
+            assert.same(actual[0], tests[0]);
+            assert.same(actual[1], tests[1]);
         },
 
         "should filter contexts": function () {
@@ -215,6 +217,19 @@
             });
 
             assert.equals(buster.testRunner.runSuite.args[0][0][0].tests.length, 1);
+        },
+
+        "should skip contexts where all tests are filtered out": function () {
+            var context = buster.testCase("Some tests", {
+                "test #1": function () {},
+                "test #2": function () {}
+            });
+
+            buster.autoRun.run([context], {
+                filters: ["non-existent"]
+            });
+
+            assert.equals(buster.testRunner.runSuite.args[0][0].length, 0);
         }
     });
 }());
