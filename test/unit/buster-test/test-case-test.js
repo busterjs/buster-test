@@ -117,7 +117,7 @@ buster.util.testCase("TestContextTestsTest", {
             tearDown: function () {}
         });
 
-        buster.assert.equals(context.tests, 0);
+        buster.assert.equals(context.tests.length, 0);
     },
 
     "should exclude non-function property": function () {
