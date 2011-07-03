@@ -1,6 +1,10 @@
 (function () {
+    var buster = this.buster || {};
+    var sinon = this.sinon || {};
+    var assert;
+
     if (typeof require == "function") {
-        var buster = {
+        buster = {
             assert: require("buster-assert"),
             autoRun: require("../../../lib/buster-test/auto-run"),
             testCase: require("../../../lib/buster-test/test-case"),
@@ -9,15 +13,21 @@
             moduleLoader: require("buster-module-loader")
         };
 
-        var assert = buster.assert;
+        assert = buster.assert;
         assert.format = require("buster-format").ascii;
         var sinon = require("sinon");
         buster.util = require("buster-util");
+    } else {
+        assert = buster.assert;
     }
 
     function testAutoRunOptions(options) {
-        return function (test) {
+        return function () {
             var env = options.env || {};
+
+            if (typeof process == "undefined" && options.env) {
+                return;
+            }
 
             for (var prop in env) {
                 process.env[prop] = env[prop];
@@ -25,13 +35,10 @@
 
             this.sandbox.stub(buster.autoRun, "run");
             var runner = buster.autoRun(options.autoRunOptions);
-
-            setTimeout(function () {
-                assert.match(buster.autoRun.run.args[0][1], options.options);
-                test.end();
-            }, 8);
-
             runner(buster.testCase("Auto running test case", this.tc));
+            this.clock.tick(0);
+
+            assert.match(buster.autoRun.run.args[0][1], options.options);
         };
     }
 
@@ -39,6 +46,7 @@
         setUp: function () {
             this.tc = { testIt: function () {} };
             this.sandbox = sinon.sandbox.create();
+            this.clock = this.sandbox.useFakeTimers();
             var self = this;
 
             this.sandbox.stub(buster.testRunner, "runSuite", function () {
@@ -50,40 +58,41 @@
             this.sandbox.restore();
         },
 
-        "should run test case automatically": function (test) {
-            this.onRun = test.end;
+        "should run test case automatically": function () {
+            this.onRun = sinon.spy();
             var runner = buster.autoRun();
 
             runner(buster.testCase("Auto running test case", this.tc));
+            this.clock.tick(0);
+
+            assert.isTrue(this.onRun.calledOnce);
         },
 
-        "should not autorun if a runner was already created": function (test) {
+        "should not autorun if a runner was already created": function () {
             var spy = this.onRun = sinon.spy();
             var runner = buster.autoRun();
             var testRunner = buster.testRunner.create();
 
             runner(buster.testCase("Auto running test case", this.tc));
+            this.clock.tick(0);
 
-            setTimeout(function () {
-                assert(!spy.called);
-                test.end();
-            }, 5);
+            assert(!spy.called);
         },
 
-        "should not autorun if a runner was created asynchronously": function (test) {
+        "should not autorun if a runner was created asynchronously": function () {
             var spy = this.onRun = sinon.spy();
-            var runner = buster.autoRun();
 
             setTimeout(function () {
                 var testRunner = buster.testRunner.create();
             }, 0);
 
-            runner(buster.testCase("Auto running test case", this.tc));
-
             setTimeout(function () {
-                assert(!spy.called);
-                test.end();
-            }, 5);
+                var runner = buster.autoRun();
+                runner(buster.testCase("Auto running test case", this.tc));
+            }, 0);
+
+            this.clock.tick(1);
+            assert(!spy.called);
         },
 
         "should default reporter from env.BUSTER_REPORTER": testAutoRunOptions({
@@ -177,13 +186,15 @@
         },
 
         "should use specified reporter": function () {
-            this.sandbox.spy(buster.reporters.xml, "create");
+            var reporter = typeof document == "undefined" ? buster.reporters.xml : buster.reporters.html;
+            this.sandbox.spy(reporter, "create");
             buster.autoRun.run([this.context], { reporter: "xml", });
 
-            assert(buster.reporters.xml.create.calledOnce);
+            assert(reporter.create.calledOnce);
         },
 
         "should use custom reporter": function () {
+            if (typeof document != "undefined") return;
             var reporter = { create: sinon.stub().returns({ listen: sinon.spy() }) };
             this.sandbox.stub(buster.moduleLoader, "load").returns(reporter);
 
@@ -193,13 +204,15 @@
         },
 
         "should initialize reporter with options": function () {
-            this.sandbox.spy(buster.reporters.xUnitConsole, "create");
+            var reporter = typeof document == "undefined" ? buster.reporters.xUnitConsole : buster.reporters.html;
+
+            this.sandbox.spy(reporter, "create");
             buster.autoRun.run([this.context], {
                 color: false,
                 bright: false,
             });
 
-            assert.match(buster.reporters.xUnitConsole.create.args[0][0], {
+            assert.match(reporter.create.args[0][0], {
                 color: false,
                 bright: false,
             });
