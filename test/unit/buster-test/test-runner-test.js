@@ -785,7 +785,7 @@ buster.util.testCase("TestRunnerAsyncTest", {
 
     "should error test if it rejects it's returned promise": function (test) {
         var listener = sinon.spy();
-        this.runner.timeout = 20;
+        this.runner.timeout = 50;
         this.runner.on("test:error", listener);
 
         this.runner.run(this.context).then(function () {
@@ -1415,6 +1415,7 @@ buster.util.testCase("TestRunnerEventedAssertionsTest", {
         this.runner.run(context).then(function () {
             buster.assert(listener.calledOnce);
             var args = listener.args;
+
             buster.assert.equals(args[0][0].name, "test it");
             buster.assert.equals(args[0][0].error.message, "Assertion failed");
             test.end();
