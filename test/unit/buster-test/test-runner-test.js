@@ -1328,6 +1328,14 @@ buster.util.testCase("RunnerRunAwayExceptionsTest", {
     },
 
     "should not handle asynchronous failure as uncaught exception": function (test) {
+        if (typeof document != "undefined") {
+            console.log("'should not handle asynchronous failure as uncaught " +
+                        "exception':\nAborting test, as browsers may not have " +
+                        "enough information for uncaught errors to treat them as " +
+                        "assertion failures");
+            return test.end();
+        }
+
         var runner = buster.testRunner.create();
         var listeners = [sinon.spy(), sinon.spy()];
         runner.on("uncaughtException", listeners[0]);
@@ -1344,13 +1352,21 @@ buster.util.testCase("RunnerRunAwayExceptionsTest", {
         });
 
         runner.run(context).then(function () {
-            assert(!listeners[0].called);
+            refute(listeners[0].called);
             assert(listeners[1].calledOnce);
             test.end();
         });
     },
 
     "should keep handling uncaught exceptions after async failure": function (test) {
+        if (typeof document != "undefined") {
+            console.log("'should keep handling uncaught exceptions after async " +
+                        "failure':\n Aborting test, as browsers may not have " +
+                        "enough information for uncaught errors to treat them as " +
+                        "assertion failures");
+            return test.end();
+        }
+
         var runner = buster.testRunner.create({ timeout: 15 });
         var listeners = [sinon.spy(), sinon.spy()];
         runner.on("uncaughtException", listeners[0]);
@@ -2139,6 +2155,13 @@ buster.util.testCase("TestRunnerEventDataTest", {
     },
 
     "uncaughtException event data": function (test) {
+        if (typeof document != "undefined") {
+            console.log("'uncaughtException event data':\n Aborting test, as " +
+                        "browsers may not have enough information to extract " +
+                        "useful event data");
+            return test.end();
+        }
+
         var context = buster.testCase("My case", {
             "test1": function (done) {
                 setTimeout(function () {
