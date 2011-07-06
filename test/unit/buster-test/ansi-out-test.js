@@ -7,11 +7,11 @@
     var sinon = require("sinon");
 
     var buster = {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         ansiOut: require("../../../lib/buster-test/ansi-out")
     };
 
-    var assert = buster.assert;
+    var assert = buster.assertions.assert;
     buster.util = require("buster-util");
 
     // For debugging when comparing space padded strings: visualizes all whitespace

@@ -2,7 +2,7 @@ if (typeof require == "function") {
     var buster = { reporters: require("../../../lib/buster-test/reporters") };
     buster.util = require("buster-util");
     buster.moduleLoader = require("buster-module-loader");
-    var assert = require("buster-assert");
+    var assert = require("buster-assertions").assert;
     var sinon = require("sinon");
 
     buster.util.testCase("Reporters test", sinon.testCase({

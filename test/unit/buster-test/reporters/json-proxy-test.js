@@ -3,12 +3,14 @@ if (typeof require != "undefined") {
     var buster = require("buster-core");
 
     buster.extend(buster, {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         reporters: require("../../../../lib/buster-test/reporters")
     });
 
     buster.util = require("buster-util");
 }
+
+var assert = buster.assertions.assert;
 
 buster.util.testCase("JSONProxyTest", {
     setUp: function () {
@@ -21,7 +23,7 @@ buster.util.testCase("JSONProxyTest", {
         this.proxy.on("suite:start", listener);
         this.runner.emit("suite:start");
 
-        buster.assert(listener.calledOnce);
+        assert(listener.calledOnce);
     },
 
     "should emit serializable context object to context:start": function () {
@@ -29,7 +31,7 @@ buster.util.testCase("JSONProxyTest", {
         this.proxy.on("context:start", listener);
         this.runner.emit("context:start", { name: "Context", meth: function () {} });
 
-        buster.assert.equals(listener.args[0][0], { name: "Context" });
+        assert.equals(listener.args[0][0], { name: "Context" });
     },
 
     "should emit serializable context object to context:end": function () {
@@ -37,7 +39,7 @@ buster.util.testCase("JSONProxyTest", {
         this.proxy.on("context:end", listener);
         this.runner.emit("context:end", { name: "Context", meth: function () {} });
 
-        buster.assert.equals(listener.args[0][0], { name: "Context" });
+        assert.equals(listener.args[0][0], { name: "Context" });
     },
 
     "should emit serializable context object to context:unsupported": function () {
@@ -52,7 +54,7 @@ buster.util.testCase("JSONProxyTest", {
             unsupported: ["A"]
         });
 
-        buster.assert.equals(listener.args[0][0], {
+        assert.equals(listener.args[0][0], {
             context: { name: "Context" },
             unsupported: ["A"]
         });
@@ -63,7 +65,7 @@ buster.util.testCase("JSONProxyTest", {
         this.proxy.on("test:setUp", listener);
         this.runner.emit("test:setUp", { name: "should go", func: function () {} });
 
-        buster.assert.equals(listener.args[0][0], { name: "should go" });
+        assert.equals(listener.args[0][0], { name: "should go" });
     },
 
     "should emit serializable test object to test:tearDown": function () {
@@ -71,7 +73,7 @@ buster.util.testCase("JSONProxyTest", {
         this.proxy.on("test:tearDown", listener);
         this.runner.emit("test:tearDown", { name: "should go", func: function () {} });
 
-        buster.assert.equals(listener.args[0][0], { name: "should go" });
+        assert.equals(listener.args[0][0], { name: "should go" });
     },
 
     "should emit serializable test object to test:deferred": function () {
@@ -79,7 +81,7 @@ buster.util.testCase("JSONProxyTest", {
         this.proxy.on("test:deferred", listener);
         this.runner.emit("test:deferred", { name: "should go", func: function () {} });
 
-        buster.assert.equals(listener.args[0][0], { name: "should go" });
+        assert.equals(listener.args[0][0], { name: "should go" });
     },
 
     "should emit serializable test object to test:start": function () {
@@ -87,7 +89,7 @@ buster.util.testCase("JSONProxyTest", {
         this.proxy.on("test:start", listener);
         this.runner.emit("test:start", { name: "should go", func: function () {} });
 
-        buster.assert.equals(listener.args[0][0], { name: "should go" });
+        assert.equals(listener.args[0][0], { name: "should go" });
     },
 
     "should emit serializable test object to test:error": function () {
@@ -104,7 +106,7 @@ buster.util.testCase("JSONProxyTest", {
             }
         });
 
-        buster.assert.equals(listener.args[0][0], {
+        assert.equals(listener.args[0][0], {
             name: "should go",
             error: {
                 name: "Error",
@@ -128,7 +130,7 @@ buster.util.testCase("JSONProxyTest", {
             }
         });
 
-        buster.assert.equals(listener.args[0][0], {
+        assert.equals(listener.args[0][0], {
             name: "should go",
             error: {
                 name: "AssertionError",
@@ -146,7 +148,7 @@ buster.util.testCase("JSONProxyTest", {
             name: "should go", func: function () {}, assertions: 13
         });
 
-        buster.assert.equals(listener.args[0][0], {
+        assert.equals(listener.args[0][0], {
             name: "should go", assertions: 13
         });
     },
@@ -160,7 +162,7 @@ buster.util.testCase("JSONProxyTest", {
             timeouts: 0, deferred: 0, ok: false
         });
 
-        buster.assert.equals(listener.args[0][0], {
+        assert.equals(listener.args[0][0], {
             contexts: 2, tests: 3, errors: 0, failures: 1, assertions: 12,
             timeouts: 0, deferred: 0, ok: false
         });
@@ -173,8 +175,8 @@ buster.util.testCase("JSONProxyTest", {
 
         this.runner.emit("log", { level: "log", message: "Hey!" });
 
-        buster.assert(listener.calledOnce);
-        buster.assert.equals(listener.args[0][0],
+        assert(listener.calledOnce);
+        assert.equals(listener.args[0][0],
                              { level: "log", message: "Hey!" });
     },
 
@@ -189,9 +191,9 @@ buster.util.testCase("JSONProxyTest", {
             toString: function () {}
         });
 
-        buster.assert(listener.calledOnce);
+        assert(listener.calledOnce);
 
-        buster.assert.equals(listener.args[0][0], {
+        assert.equals(listener.args[0][0], {
             name: "Error",
             message: "Something went wrong",
             stack: "Trouble@here"
@@ -212,7 +214,7 @@ buster.util.testCase("JsonProxyCustomEmitterTest", {
 
         this.runner.emit("test:start", { name: "should do something" });
 
-        buster.assert(listener.calledOnce);
-        buster.assert.equals(listener.args[0][0], { name: "should do something" });
+        assert(listener.calledOnce);
+        assert.equals(listener.args[0][0], { name: "should do something" });
     }
 });

@@ -5,7 +5,7 @@
 
     if (typeof require == "function") {
         buster = {
-            assert: require("buster-assert"),
+            assertions: require("buster-assertions"),
             autoRun: require("../../../lib/buster-test/auto-run"),
             testCase: require("../../../lib/buster-test/test-case"),
             testRunner: require("../../../lib/buster-test/test-runner"),
@@ -13,12 +13,12 @@
             moduleLoader: require("buster-module-loader")
         };
 
-        assert = buster.assert;
+        assert = buster.assertions.assert;
         assert.format = require("buster-format").ascii;
         var sinon = require("sinon");
         buster.util = require("buster-util");
     } else {
-        assert = buster.assert;
+        assert = buster.assertions.assert;
     }
 
     function testAutoRunOptions(options) {

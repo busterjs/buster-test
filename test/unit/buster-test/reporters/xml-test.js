@@ -3,12 +3,15 @@ if (typeof require != "undefined") {
     var buster = require("buster-core");
 
     buster.extend(buster, {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         xmlReporter: require("../../../../lib/buster-test/reporters/xml")
     });
 
     buster.util = require("buster-util");
 }
+
+var assert = buster.assertions.assert;
+var refute = buster.assertions.refute;
 
 buster.util.testCase("XMLReporterTest", sinon.testCase({
     setUp: function () {
@@ -25,7 +28,7 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
 
         this.assertIO = function (string) {
             try {
-                buster.assert.match(this.io.toString(), string);
+                assert.match(this.io.toString(), string);
             } catch (e) {
                 e.message = "\nassert.match failed\n" +
                     "===================\nIO:\n" +
@@ -40,14 +43,14 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
     "should print xml prolog and testsuites tag on suite:start": function () {
         this.reporter.suiteStart();
 
-        buster.assert.equals(this.io.toString(),
+        assert.equals(this.io.toString(),
               "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<testsuites>\n");
     },
 
     "should print testsuites closing tag on suite:end": function () {
         this.reporter.suiteEnd();
 
-        buster.assert.match(this.io.toString(), "</testsuites>");
+        assert.match(this.io.toString(), "</testsuites>");
     },
 
     "should print testsuite element with stats on context:end": function () {
@@ -64,7 +67,7 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
         this.reporter.contextStart({ name: "Inner" });
         this.reporter.contextEnd({ name: "Inner" });
 
-        buster.assert.equals(this.io.toString(), "");
+        assert.equals(this.io.toString(), "");
     },
 
     "should print total time for test suite": function () {
@@ -231,7 +234,7 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
 
         this.assertIO('<testsuite errors="0" tests="3" ' +
                       'time="0" failures="0" name="Context">');
-        buster.assert.noMatch(this.io.toString(), /<testsuite[^>]+name="Context #2">/);
+        refute.match(this.io.toString(), /<testsuite[^>]+name="Context #2">/);
     },
 
     "should not reset error and failures count for nested context": function () {
@@ -246,7 +249,7 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
 
         this.assertIO('<testsuite errors="2" tests="4" ' +
                       'time="0" failures="2" name="Context">');
-        buster.assert.noMatch(this.io.toString(), /<testsuite[^>]+name="Context #2">/);
+        refute.match(this.io.toString(), /<testsuite[^>]+name="Context #2">/);
     },
 
     "should include failure element for failed test": function () {
@@ -360,54 +363,54 @@ buster.util.testCase("XMLReporterEventMappingTest", sinon.testCase({
     "should map suite:start to suiteStart": function () {
         this.runner.emit("suite:start");
 
-        buster.assert(this.reporter.suiteStart);
+        assert(this.reporter.suiteStart);
     },
 
     "should map suite:end to suiteEnd": function () {
         this.runner.emit("suite:end");
 
-        buster.assert(this.reporter.suiteEnd);
+        assert(this.reporter.suiteEnd);
     },
 
     "should map context:start to contextStart": function () {
         this.runner.emit("context:start");
 
-        buster.assert(this.reporter.contextStart.calledOnce);
+        assert(this.reporter.contextStart.calledOnce);
     },
 
     "should map context:end to contextEnd": function () {
         this.runner.emit("context:end");
 
-        buster.assert(this.reporter.contextEnd.calledOnce);
+        assert(this.reporter.contextEnd.calledOnce);
     },
 
     "should map test:success to testSuccess": function () {
         this.runner.emit("test:success");
 
-        buster.assert(this.reporter.testSuccess.calledOnce);
+        assert(this.reporter.testSuccess.calledOnce);
     },
 
     "should map test:error to testError": function () {
         this.runner.emit("test:error");
 
-        buster.assert(this.reporter.testError.calledOnce);
+        assert(this.reporter.testError.calledOnce);
     },
 
     "should map test:fail to testFailure": function () {
         this.runner.emit("test:failure");
 
-        buster.assert(this.reporter.testFailure.calledOnce);
+        assert(this.reporter.testFailure.calledOnce);
     },
 
     "should map test:timeout to testTimeout": function () {
         this.runner.emit("test:timeout");
 
-        buster.assert(this.reporter.testTimeout.calledOnce);
+        assert(this.reporter.testTimeout.calledOnce);
     },
 
     "should map test:start to testStart": function () {
         this.runner.emit("test:start");
 
-        buster.assert(this.reporter.testStart.calledOnce);
+        assert(this.reporter.testStart.calledOnce);
     }
 }, "should"));

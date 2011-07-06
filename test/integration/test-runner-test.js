@@ -3,7 +3,7 @@ if (typeof require != "undefined") {
     var buster = require("buster-core");
 
     buster.extend(buster, {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         testCase: require("../../lib/buster-test/test-case"),
         testRunner: require("../../lib/buster-test/test-runner"),
         spec: require("../../lib/buster-test/spec"),
@@ -14,6 +14,8 @@ if (typeof require != "undefined") {
 buster.spec.expose();
 
 (function () {
+    var assert = buster.assertions.assert;
+
     function recordEvents(runner) {
         var contexts = [];
         var events = [];
@@ -118,7 +120,7 @@ buster.spec.expose();
                 "end: TestCase";
 
             runner.run(context).then(function () {
-                buster.assert.equals(events.join("\n"), expected);
+                assert.equals(events.join("\n"), expected);
                 test.end();
             });
         },
@@ -185,7 +187,7 @@ buster.spec.expose();
                 "end: TestCase";
 
             runner.run(context).then(function () {
-                buster.assert.equals(events.join("\n"), expected);
+                assert.equals(events.join("\n"), expected);
                 test.end();
             });
         }

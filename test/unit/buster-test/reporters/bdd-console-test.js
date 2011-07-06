@@ -3,7 +3,7 @@ if (typeof require != "undefined") {
     var buster = require("buster-core");
 
     buster.extend(buster, {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         bddConsoleReporter: require("../../../../lib/buster-test/reporters/bdd-console")
     });
 
@@ -32,19 +32,21 @@ function generateError(message, type) {
     try { throw error; } catch (e) { return e; }
 }
 
+var assert = buster.assertions.assert;
+
 buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
     setUp: reporterSetUp,
 
     "should print context name when entering top-level context": function () {
         this.reporter.contextStart({ name: "Some context" });
 
-        buster.assert.equals(this.io.toString(), "Some context\n");
+        assert.equals(this.io.toString(), "Some context\n");
     },
 
     "should print passing test name indented with tick": function () {
         this.reporter.testSuccess({ name: "should do something" });
 
-        buster.assert.match(this.io.toString(), "  ✓ should do something\n");
+        assert.match(this.io.toString(), "  ✓ should do something\n");
     },
 
     "should print passing test name with full contextual name": function () {
@@ -52,7 +54,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.contextStart({ name: "in some state" });
         this.reporter.testSuccess({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "  ✓ in some state should do it\n");
+        assert.match(this.io.toString(), "  ✓ in some state should do it\n");
     },
 
     "should not 'remember' completed contexts": function () {
@@ -62,13 +64,13 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.contextStart({ name: "in some other state" });
         this.reporter.testSuccess({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "  ✓ in some other state should do it\n");
+        assert.match(this.io.toString(), "  ✓ in some other state should do it\n");
     },
 
     "should print failed test name indented with cross": function () {
         this.reporter.testFailure({ name: "should do something" });
 
-        buster.assert.match(this.io.toString(), "  ✖ should do something\n");
+        assert.match(this.io.toString(), "  ✖ should do something\n");
     },
 
     "should print test failure with stack trace": function () {
@@ -77,8 +79,8 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
             error: generateError("Expected a to be equal to b")
         });
 
-        buster.assert.match(this.io.toString(), "    Expected a to be equal to b\n");
-        buster.assert.match(this.io.toString(), "      at Object");
+        assert.match(this.io.toString(), "    Expected a to be equal to b\n");
+        assert.match(this.io.toString(), "      at Object");
     },
 
     "should print failed test name with full contextual name": function () {
@@ -86,13 +88,13 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.contextStart({ name: "in some state" });
         this.reporter.testFailure({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "  ✖ in some state should do it\n");
+        assert.match(this.io.toString(), "  ✖ in some state should do it\n");
     },
 
     "should print errored test name indented with cross": function () {
         this.reporter.testError({ name: "should do something" });
 
-        buster.assert.match(this.io.toString(), "  ✖ should do something\n");
+        assert.match(this.io.toString(), "  ✖ should do something\n");
     },
 
     "should print test error with stack trace": function () {
@@ -101,8 +103,8 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
             error: generateError("Oh shizzle!", "SomeError")
         });
 
-        buster.assert.match(this.io.toString(), "    SomeError: Oh shizzle!\n");
-        buster.assert.match(this.io.toString(), "      at Object");
+        assert.match(this.io.toString(), "    SomeError: Oh shizzle!\n");
+        assert.match(this.io.toString(), "      at Object");
     },
 
     "should print failed test name with full contextual name": function () {
@@ -110,13 +112,13 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.contextStart({ name: "in some state" });
         this.reporter.testError({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "  ✖ in some state should do it\n");
+        assert.match(this.io.toString(), "  ✖ in some state should do it\n");
     },
 
     "should print deferred test with indented dash": function () {
         this.reporter.testDeferred({ name: "should do something" });
 
-        buster.assert.match(this.io.toString(), "  - should do something\n");
+        assert.match(this.io.toString(), "  - should do something\n");
     },
 
     "should print deferred test name with full contextual name": function () {
@@ -124,13 +126,13 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.contextStart({ name: "in some state" });
         this.reporter.testDeferred({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "  - in some state should do it\n");
+        assert.match(this.io.toString(), "  - in some state should do it\n");
     },
 
     "should print timed out test with indented ellipsis": function () {
         this.reporter.testTimeout({ name: "should do something" });
 
-        buster.assert.match(this.io.toString(), "  … should do something\n");
+        assert.match(this.io.toString(), "  … should do something\n");
     },
 
     "should print timed out test name with full contextual name": function () {
@@ -138,7 +140,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.contextStart({ name: "in some state" });
         this.reporter.testTimeout({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "  … in some state should do it\n");
+        assert.match(this.io.toString(), "  … in some state should do it\n");
     },
 
     "should print log message for passing test": function () {
@@ -147,7 +149,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.log({ level: "log", message: "Is message" });
         this.reporter.testSuccess({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "do it\n    [LOG] Is message\n");
+        assert.match(this.io.toString(), "do it\n    [LOG] Is message\n");
     },
 
     "should print log message for failing test": function () {
@@ -156,7 +158,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.log({ level: "log", message: "Is message" });
         this.reporter.testFailure({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "do it\n    [LOG] Is message\n");
+        assert.match(this.io.toString(), "do it\n    [LOG] Is message\n");
     },
 
     "should print log message for errored test": function () {
@@ -165,7 +167,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.log({ level: "log", message: "Is message" });
         this.reporter.testError({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "do it\n    [LOG] Is message\n");
+        assert.match(this.io.toString(), "do it\n    [LOG] Is message\n");
     },
 
     "should print log message for timed out test": function () {
@@ -174,7 +176,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.log({ level: "log", message: "Is message" });
         this.reporter.testTimeout({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "do it\n    [LOG] Is message\n");
+        assert.match(this.io.toString(), "do it\n    [LOG] Is message\n");
     },
 
     "should not re-print previous log messages": function () {
@@ -185,7 +187,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
         this.reporter.log({ level: "warn", message: "Is other message" });
         this.reporter.testTimeout({ name: "should go again" });
 
-        buster.assert.match(this.io.toString(), "go again\n    [WARN] Is other");
+        assert.match(this.io.toString(), "go again\n    [WARN] Is other");
     },
 
     "should print warning when skipping unsupported context": function () {
@@ -194,7 +196,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
             unsupported: ["localStorage"]
         });
 
-        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
+        assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
     },
 
     "should print warning when skipping nested unsupported context": function () {
@@ -205,7 +207,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
             unsupported: ["localStorage"]
         });
  
-        buster.assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
+        assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
     },
 
     "should print all unsupported features": function () {
@@ -214,7 +216,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
             unsupported: ["localStorage", "document"]
         });
 
-        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
+        assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
     }
 });
 
@@ -238,55 +240,55 @@ buster.util.testCase("BDDConsoleReporterEventMappingTest", sinon.testCase({
     "should map suite:end to printStats": function () {
         this.runner.emit("suite:end", {});
 
-        buster.assert(this.reporter.printStats.calledOnce);
+        assert(this.reporter.printStats.calledOnce);
     },
 
     "should map context:start to contextStart": function () {
         this.runner.emit("context:start");
 
-        buster.assert(this.reporter.contextStart.calledOnce);
+        assert(this.reporter.contextStart.calledOnce);
     },
 
     "should map context:end to contextEnd": function () {
         this.runner.emit("context:end");
 
-        buster.assert(this.reporter.contextEnd.calledOnce);
+        assert(this.reporter.contextEnd.calledOnce);
     },
 
     "should map test:success to testSuccess": function () {
         this.runner.emit("test:success");
 
-        buster.assert(this.reporter.testSuccess.calledOnce);
+        assert(this.reporter.testSuccess.calledOnce);
     },
 
     "should map test:error to testError": function () {
         this.runner.emit("test:error");
 
-        buster.assert(this.reporter.testError.calledOnce);
+        assert(this.reporter.testError.calledOnce);
     },
 
     "should map test:fail to testFailure": function () {
         this.runner.emit("test:failure");
 
-        buster.assert(this.reporter.testFailure.calledOnce);
+        assert(this.reporter.testFailure.calledOnce);
     },
 
     "should map test:timeout to testTimeout": function () {
         this.runner.emit("test:timeout");
 
-        buster.assert(this.reporter.testTimeout.calledOnce);
+        assert(this.reporter.testTimeout.calledOnce);
     },
 
     "should map logger log to log": function () {
         this.runner.console.emit("log");
 
-        buster.assert(this.reporter.log.calledOnce);
+        assert(this.reporter.log.calledOnce);
     },
 
     "should map test:deferred to testDeferred": function () {
         this.runner.emit("test:deferred");
 
-        buster.assert(this.reporter.testDeferred.calledOnce);
+        assert(this.reporter.testDeferred.calledOnce);
     }
 }, "should"));
 
@@ -303,13 +305,13 @@ buster.util.testCase("BDDConsoleReporterColoredTestsRunningTest", {
     "should print passing test name in green": function () {
         this.reporter.testSuccess({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "\033[32m  ✓ should do it\033[0m\n");
+        assert.match(this.io.toString(), "\033[32m  ✓ should do it\033[0m\n");
     },
 
     "should print failed test name in red": function () {
         this.reporter.testFailure({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "\033[31m  ✖ should do it\033[0m\n");
+        assert.match(this.io.toString(), "\033[31m  ✖ should do it\033[0m\n");
     },
 
     "should print test failure stack trace in red": function () {
@@ -318,13 +320,13 @@ buster.util.testCase("BDDConsoleReporterColoredTestsRunningTest", {
             error: generateError("Expected a to be equal to b")
         });
 
-        buster.assert.match(this.io.toString(), "    \033[31mExpected a to be equal to b\033[0m\n");
+        assert.match(this.io.toString(), "    \033[31mExpected a to be equal to b\033[0m\n");
     },
 
     "should print errored test name indented with cross": function () {
         this.reporter.testError({ name: "should do it", error: { name: "Error" } });
 
-        buster.assert.match(this.io.toString(), "\033[33m  ✖ Should do it\033[0m\n");
+        assert.match(this.io.toString(), "\033[33m  ✖ Should do it\033[0m\n");
     },
 
     "should print test error stack trace in yellow": function () {
@@ -333,19 +335,19 @@ buster.util.testCase("BDDConsoleReporterColoredTestsRunningTest", {
             error: generateError("Oh shizzle!", "SomeError")
         });
 
-        buster.assert.match(this.io.toString(), "    \033[33mSomeError: Oh shizzle!\033[0m\n");
-        buster.assert.match(this.io.toString(), "      at Object");
+        assert.match(this.io.toString(), "    \033[33mSomeError: Oh shizzle!\033[0m\n");
+        assert.match(this.io.toString(), "      at Object");
     },
 
     "should print deferred test in cyan": function () {
         this.reporter.testDeferred({ name: "should do it" });
 
-        buster.assert.match(this.io.toString(), "\033[36m  - should do it\033[0m\n");
+        assert.match(this.io.toString(), "\033[36m  - should do it\033[0m\n");
     },
 
     "should print timed out test in red": function () {
         this.reporter.testTimeout({ name: "should do something" });
 
-        buster.assert.match(this.io.toString(), "\033[31m  … should do something\033[0m\n");
+        assert.match(this.io.toString(), "\033[31m  … should do something\033[0m\n");
     }
 });

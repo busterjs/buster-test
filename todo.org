@@ -63,3 +63,4 @@
         "should process requests with buster server": function (done) {
 * TODO Missing assertion count wiring -> NaN assertions
 * TODO Possible to not get red report for 0 assertions
+* TODO Flag duplicate test names

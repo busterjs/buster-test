@@ -2,12 +2,15 @@ if (typeof require != "undefined") {
     var sinon = require("sinon");
 
     var buster = {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         testCase: require("../../../lib/buster-test/test-case")
     };
 
     buster.util = require("buster-util");
 }
+
+var assert = buster.assertions.assert;
+var refute = buster.assertions.refute;
 
 buster.util.testCase("BusterTestCaseTest", {
     tearDown: function () {
@@ -15,37 +18,37 @@ buster.util.testCase("BusterTestCaseTest", {
     },
 
     "should throw without name": function () {
-        buster.assert.exception(function () {
+        assert.exception(function () {
             var testCase = buster.testCase();
         });
     },
 
     "should throw if name is not a string": function () {
-        buster.assert.exception(function () {
+        assert.exception(function () {
             var testCase = buster.testCase({});
         });
     },
 
     "should throw if name is empty": function () {
-        buster.assert.exception(function () {
+        assert.exception(function () {
             var testCase = buster.testCase("");
         });
     },
 
     "should throw without tests": function () {
-        buster.assert.exception(function () {
+        assert.exception(function () {
             var testCase = buster.testCase("Some test");
         });
     },
 
     "should throw if tests is not an object": function () {
-        buster.assert.exception(function () {
+        assert.exception(function () {
             var testCase = buster.testCase("Some test", function () {});
         });
     },
 
     "should throw if tests is null": function () {
-        buster.assert.exception(function () {
+        assert.exception(function () {
             var testCase = buster.testCase("Some test", null);
         });
     },
@@ -59,12 +62,12 @@ buster.util.testCase("BusterTestCaseTest", {
             testSomething: test
         });
 
-        buster.assert.isObject(testCase);
-        buster.assert.equals(testCase.name, "Some test");
-        buster.assert.equals(testCase.tests.length, 1);
-        buster.assert.equals(testCase.tests[0].name, "testSomething");
-        buster.assert.equals(testCase.tests[0].func, test);
-        buster.assert.equals(testCase.setUp, setUp);
+        assert.isObject(testCase);
+        assert.equals(testCase.name, "Some test");
+        assert.equals(testCase.tests.length, 1);
+        assert.equals(testCase.tests[0].name, "testSomething");
+        assert.equals(testCase.tests[0].func, test);
+        assert.equals(testCase.setUp, setUp);
     },
 
     "should call create callback when a test case is created": function () {
@@ -72,8 +75,8 @@ buster.util.testCase("BusterTestCaseTest", {
 
         var testCase = buster.testCase("Some test", {});
 
-        buster.assert(buster.testCase.onCreate.calledOnce);
-        buster.assert.equals(buster.testCase.onCreate.args[0][0], testCase);
+        assert(buster.testCase.onCreate.calledOnce);
+        assert.equals(buster.testCase.onCreate.args[0][0], testCase);
     }
 });
 
@@ -81,7 +84,7 @@ buster.util.testCase("TestCaseContextTest", {
     "should have name property": function () {
         var context = buster.testCase("Name", {});
 
-        buster.assert.equals(context.name, "Name");
+        assert.equals(context.name, "Name");
     }
 });
 
@@ -99,9 +102,9 @@ buster.util.testCase("TestContextTestsTest", {
             "test 1": test
         });
 
-        buster.assert.equals(context.tests.length, 1);
-        buster.assert.equals(context.tests[0].name, "test 1");
-        buster.assert.equals(context.tests[0].func, test);
+        assert.equals(context.tests.length, 1);
+        assert.equals(context.tests[0].name, "test 1");
+        assert.equals(context.tests[0].func, test);
     },
 
     "should exclude setUp": function () {
@@ -109,7 +112,7 @@ buster.util.testCase("TestContextTestsTest", {
             setUp: function () {}
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude tearDown": function () {
@@ -117,7 +120,7 @@ buster.util.testCase("TestContextTestsTest", {
             tearDown: function () {}
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude non-function property": function () {
@@ -125,7 +128,7 @@ buster.util.testCase("TestContextTestsTest", {
             id: 42
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude custom setUp and tearDown": function () {
@@ -137,7 +140,7 @@ buster.util.testCase("TestContextTestsTest", {
             after: function () {}
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude custom setUp and tearDown from nested context": function () {
@@ -153,8 +156,8 @@ buster.util.testCase("TestContextTestsTest", {
             }
         });
 
-        buster.assert.equals(context.contexts[0].tests.length, 1);
-        buster.assert.equals(context.contexts[0].tests[0].name, "someTest");
+        assert.equals(context.contexts[0].tests.length, 1);
+        assert.equals(context.contexts[0].tests[0].name, "someTest");
     },
 
     "should exclude instance-custom setUp and tearDown": function () {
@@ -166,7 +169,7 @@ buster.util.testCase("TestContextTestsTest", {
             tearDownName: "after"
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude instance-custom setUp and tearDown from nested context": function () {
@@ -182,8 +185,8 @@ buster.util.testCase("TestContextTestsTest", {
             tearDownName: "after"
         });
 
-        buster.assert.equals(context.contexts[0].tests.length, 1);
-        buster.assert.equals(context.contexts[0].tests[0].name, "someTest");
+        assert.equals(context.contexts[0].tests.length, 1);
+        assert.equals(context.contexts[0].tests[0].name, "someTest");
     },
 
     "should exclude contextSetUp": function () {
@@ -191,7 +194,7 @@ buster.util.testCase("TestContextTestsTest", {
             contextSetUp: function () {}
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude contextTearDown": function () {
@@ -199,7 +202,7 @@ buster.util.testCase("TestContextTestsTest", {
             contextTearDown: function () {}
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude custom contextSetUp": function () {
@@ -209,7 +212,7 @@ buster.util.testCase("TestContextTestsTest", {
             beforeContext: function () {}
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude custom contextTearDown": function () {
@@ -219,7 +222,7 @@ buster.util.testCase("TestContextTestsTest", {
             afterContext: function () {}
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude instance-custom contextSetUp": function () {
@@ -229,7 +232,7 @@ buster.util.testCase("TestContextTestsTest", {
             contextSetUpName: "beforeContext"
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude instance-custom contextSetUp in nested context": function () {
@@ -243,7 +246,7 @@ buster.util.testCase("TestContextTestsTest", {
             contextSetUpName: "beforeContext"
         });
 
-        buster.assert.equals(context.contexts[0].tests.length, 1);
+        assert.equals(context.contexts[0].tests.length, 1);
     },
 
     "should exclude instance-custom contextTearDown": function () {
@@ -253,7 +256,7 @@ buster.util.testCase("TestContextTestsTest", {
             contextTearDownName: "afterContext"
         });
 
-        buster.assert.equals(context.tests.length, 0);
+        assert.equals(context.tests.length, 0);
     },
 
     "should exclude instance-custom contextSetUp in nested context": function () {
@@ -267,7 +270,7 @@ buster.util.testCase("TestContextTestsTest", {
             contextTearDownName: "afterContext"
         });
 
-        buster.assert.equals(context.contexts[0].tests.length, 1);
+        assert.equals(context.contexts[0].tests.length, 1);
     },
 
     "should keep reference to parent context": function () {
@@ -275,7 +278,7 @@ buster.util.testCase("TestContextTestsTest", {
             testIt: function () {}
         });
 
-        buster.assert.equals(context.tests[0].context, context);
+        assert.equals(context.tests[0].context, context);
     }
 });
 
@@ -288,8 +291,8 @@ buster.util.testCase("TestContextContextsTest", {
 
         var contexts = context.contexts;
 
-        buster.assert.equals(contexts.length, 1);
-        buster.assert.equals(contexts[0].name, "doingIt");
+        assert.equals(contexts.length, 1);
+        assert.equals(contexts[0].name, "doingIt");
     },
 
     "should get contexts with context as parent": function () {
@@ -300,7 +303,7 @@ buster.util.testCase("TestContextContextsTest", {
 
         var contexts = context.contexts;
 
-        buster.assert.equals(contexts[0].parent, context);
+        assert.equals(contexts[0].parent, context);
     },
 
     "should not include null properties": function () {
@@ -311,7 +314,7 @@ buster.util.testCase("TestContextContextsTest", {
 
         var contexts = context.contexts;
 
-        buster.assert.equals(contexts.length, 0);
+        assert.equals(contexts.length, 0);
     },
 
     "should get tests from nested context": function () {
@@ -321,8 +324,8 @@ buster.util.testCase("TestContextContextsTest", {
 
         var tests = context.contexts[0].tests;
 
-        buster.assert.equals(tests.length, 1);
-        buster.assert.equals(tests[0].name, "test");
+        assert.equals(tests.length, 1);
+        assert.equals(tests[0].name, "test");
     },
 
     "should give contexts unique test case objects": function () {
@@ -332,7 +335,7 @@ buster.util.testCase("TestContextContextsTest", {
 
         var contexts = context.contexts;
 
-        buster.assert.notSame(contexts[0].testCase, context.testCase);
+        refute.same(contexts[0].testCase, context.testCase);
     }
 });
 
@@ -352,7 +355,7 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.setUp, setUp);
+        assert.equals(context.setUp, setUp);
     },
 
     "should keep reference to tearDown method": function () {
@@ -363,7 +366,7 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.tearDown, tearDown);
+        assert.equals(context.tearDown, tearDown);
     },
 
     "should keep reference to context setUp method": function () {
@@ -374,7 +377,7 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.contextSetUp, contextSetUp);
+        assert.equals(context.contextSetUp, contextSetUp);
     },
 
     "should keep reference to tearDown method": function () {
@@ -385,7 +388,7 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.contextTearDown, contextTearDown);
+        assert.equals(context.contextTearDown, contextTearDown);
     },
 
     "should keep reference to setUp and tearDown methods with custom names": function () {
@@ -402,10 +405,10 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        buster.assert.isFunction(context.setUp);
-        buster.assert.isFunction(context.tearDown);
-        buster.assert.isFunction(context.contextSetUp);
-        buster.assert.isFunction(context.contextTearDown);
+        assert.isFunction(context.setUp);
+        assert.isFunction(context.tearDown);
+        assert.isFunction(context.contextSetUp);
+        assert.isFunction(context.contextTearDown);
     },
 
     "should keep reference to setUp and tearDown methods with instance-level custom names": function () {
@@ -422,10 +425,10 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
             contextTearDownName: "afterContext"
         });
 
-        buster.assert.isFunction(context.setUp);
-        buster.assert.isFunction(context.tearDown);
-        buster.assert.isFunction(context.contextSetUp);
-        buster.assert.isFunction(context.contextTearDown);
+        assert.isFunction(context.setUp);
+        assert.isFunction(context.tearDown);
+        assert.isFunction(context.contextSetUp);
+        assert.isFunction(context.contextTearDown);
     }
 });
 
@@ -438,7 +441,7 @@ buster.util.testCase("TestContextRequiresSupportTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.requiresSupportForAll, { featureA: true });
+        assert.equals(context.requiresSupportForAll, { featureA: true });
     },
 
     "should not use requiresSupportForAll as context": function () {
@@ -449,7 +452,7 @@ buster.util.testCase("TestContextRequiresSupportTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.contexts.length, 0);
+        assert.equals(context.contexts.length, 0);
     },
 
     "should alias requiresSupportFor as requiresSupportForAll": function () {
@@ -460,7 +463,7 @@ buster.util.testCase("TestContextRequiresSupportTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.requiresSupportForAll, { featureA: true });
+        assert.equals(context.requiresSupportForAll, { featureA: true });
     },
 
     "should not use requiresSupportFor as context": function () {
@@ -471,7 +474,7 @@ buster.util.testCase("TestContextRequiresSupportTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.contexts.length, 0);
+        assert.equals(context.contexts.length, 0);
     },
 
     "should keep reference to requiresSupportForAny": function () {
@@ -482,7 +485,7 @@ buster.util.testCase("TestContextRequiresSupportTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.requiresSupportForAny, { featureA: true });
+        assert.equals(context.requiresSupportForAny, { featureA: true });
     },
 
     "should not use requiresSupportForAny as context": function () {
@@ -493,7 +496,7 @@ buster.util.testCase("TestContextRequiresSupportTest", {
             test: function () {}
         });
 
-        buster.assert.equals(context.contexts.length, 0);
+        assert.equals(context.contexts.length, 0);
     },
 
     "should set requiresSupportForAll on nested context": function () {
@@ -506,8 +509,8 @@ buster.util.testCase("TestContextRequiresSupportTest", {
             }
         });
 
-        buster.assert.equals(context.contexts[0].requiresSupportForAny, { featureA: true });
-        buster.assert.equals(context.contexts[0].contexts.length, 0);
+        assert.equals(context.contexts[0].requiresSupportForAny, { featureA: true });
+        assert.equals(context.contexts[0].contexts.length, 0);
     }
 });
 
@@ -517,7 +520,7 @@ buster.util.testCase("TestContextTestDeferredTest", {
             "//test": function () {}
         });
 
-        buster.assert(context.tests[0].deferred);
+        assert(context.tests[0].deferred);
     },
 
     "should set deferred flag when // is the first non-white-space characters in name": function () {
@@ -525,7 +528,7 @@ buster.util.testCase("TestContextTestDeferredTest", {
             "   // test": function () {}
         });
 
-        buster.assert(context.tests[0].deferred);
+        assert(context.tests[0].deferred);
     },
 
     "should clean cruft from name": function () {
@@ -533,6 +536,6 @@ buster.util.testCase("TestContextTestDeferredTest", {
             "   // test": function () {}
         });
 
-        buster.assert.equals(context.tests[0].name, "test");
+        assert.equals(context.tests[0].name, "test");
     }
 });

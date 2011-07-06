@@ -3,7 +3,7 @@ if (typeof require != "undefined") {
     var buster = require("buster-core");
 
     buster.extend(buster, {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         testCase: require("../../../lib/buster-test/test-case"),
         testContextFilter: require("../../../lib/buster-test/test-context-filter")
     });
@@ -19,6 +19,8 @@ Function.prototype.bind = function (obj) {
     };
 };
 
+var assert = buster.assertions.assert;
+
 buster.util.testCase("ContextFilterTest", {
     "should return unfiltered context": function () {
         var context = buster.testCase("Some tests", {
@@ -27,7 +29,7 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context);
 
-        buster.assert.equals(context.tests, context2.tests);
+        assert.equals(context.tests, context2.tests);
     },
 
     "should exclude tests that don't match string filter": function () {
@@ -39,9 +41,9 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, "test ");
 
-        buster.assert.equals(context2.tests.length, 2);
-        buster.assert.equals(context2.tests[0].name, "test 1");
-        buster.assert.equals(context2.tests[1].name, "test 2");
+        assert.equals(context2.tests.length, 2);
+        assert.equals(context2.tests[0].name, "test 1");
+        assert.equals(context2.tests[1].name, "test 2");
     },
 
     "should exclude nested tests that don't match string filter": function () {
@@ -58,9 +60,9 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, "test ");
 
-        buster.assert.equals(context2.contexts[0].tests.length, 2);
-        buster.assert.equals(context2.contexts[0].tests[0].name, "test inner 1");
-        buster.assert.equals(context2.contexts[0].tests[1].name, "test inner 2");
+        assert.equals(context2.contexts[0].tests.length, 2);
+        assert.equals(context2.contexts[0].tests[0].name, "test inner 1");
+        assert.equals(context2.contexts[0].tests[1].name, "test inner 2");
     },
 
     "should filter nested tests based on full name": function () {
@@ -77,8 +79,8 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, "context test");
 
-        buster.assert.equals(context2.tests.length, 0);
-        buster.assert.equals(context2.contexts[0].tests.length, 2);
+        assert.equals(context2.tests.length, 0);
+        assert.equals(context2.contexts[0].tests.length, 2);
     },
 
     "should filter nested tests based on deeply nested full name": function () {
@@ -100,9 +102,9 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, "context deep test");
 
-        buster.assert.equals(context2.tests.length, 0);
-        buster.assert.equals(context2.contexts[0].tests.length, 0);
-        buster.assert.equals(context2.contexts[0].contexts[0].tests.length, 2);
+        assert.equals(context2.tests.length, 0);
+        assert.equals(context2.contexts[0].tests.length, 0);
+        assert.equals(context2.contexts[0].contexts[0].tests.length, 2);
     },
 
     "should exclude tests that don't match regexp filter": function () {
@@ -114,9 +116,9 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, /\d/);
 
-        buster.assert.equals(context2.tests.length, 2);
-        buster.assert.equals(context2.tests[0].name, "test 1");
-        buster.assert.equals(context2.tests[1].name, "test 2");
+        assert.equals(context2.tests.length, 2);
+        assert.equals(context2.tests[0].name, "test 1");
+        assert.equals(context2.tests[1].name, "test 2");
     },
 
     "should exclude nested tests that don't match regexp filter": function () {
@@ -133,9 +135,9 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, /\d/);
 
-        buster.assert.equals(context2.contexts[0].tests.length, 2);
-        buster.assert.equals(context2.contexts[0].tests[0].name, "test inner 1");
-        buster.assert.equals(context2.contexts[0].tests[1].name, "test inner 2");
+        assert.equals(context2.contexts[0].tests.length, 2);
+        assert.equals(context2.contexts[0].tests[0].name, "test inner 1");
+        assert.equals(context2.contexts[0].tests[1].name, "test inner 2");
     },
 
     "should filter nested tests with regexp based on full name": function () {
@@ -152,8 +154,8 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, /context test/);
 
-        buster.assert.equals(context2.tests.length, 0);
-        buster.assert.equals(context2.contexts[0].tests.length, 2);
+        assert.equals(context2.tests.length, 0);
+        assert.equals(context2.contexts[0].tests.length, 2);
     },
 
     "should apply filter case insensitively": function () {
@@ -163,7 +165,7 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, "TEST");
 
-        buster.assert.equals(context2.tests.length, 1);
+        assert.equals(context2.tests.length, 1);
     },
 
     "should exclude empty sub-contexts": function () {
@@ -173,7 +175,7 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, "something");
 
-        buster.assert.equals(context2.contexts.length, 0);
+        assert.equals(context2.contexts.length, 0);
     },
 
     "should not exclude sub-context with tests": function () {
@@ -183,6 +185,6 @@ buster.util.testCase("ContextFilterTest", {
 
         var context2 = buster.testContextFilter(context, "something");
 
-        buster.assert.equals(context2.contexts.length, 1);
+        assert.equals(context2.contexts.length, 1);
     }
 });

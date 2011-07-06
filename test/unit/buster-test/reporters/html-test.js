@@ -3,6 +3,9 @@
         return;
     }
 
+    var assert = buster.assertions.assert;
+    var refute = buster.assertions.refute;
+
     function reporterSetUp() {
         this.runner = buster.create(buster.eventEmitter);
         this.root = document.createElement("div");
@@ -25,9 +28,9 @@
     function assertMessage(list, level, message) {
         var messages = list.firstChild.getElementsByTagName("ul")[0];
 
-        buster.assert.className(messages, "messages");
+        assert.className(messages, "messages");
 
-        buster.assert.match(messages.firstChild, {
+        assert.match(messages.firstChild, {
             innerHTML: "Is message",
             className: "log"
         });
@@ -45,7 +48,7 @@
         },
 
         "should throw without root element": function () {
-            buster.assert.exception(function () {
+            assert.exception(function () {
                 buster.reporters.html.create();
             });
         },
@@ -55,13 +58,13 @@
 
             buster.reporters.html.create({ root: element });
 
-            buster.assert.className(element, "buster-test");
+            assert.className(element, "buster-test");
         },
 
         "should add 'buster-test' class to html element if root is body": function () {
             buster.reporters.html.create({ root: document.body });
 
-            buster.assert.className(document.documentElement, "buster-test");
+            assert.className(document.documentElement, "buster-test");
         },
 
         "should make page mobile friendly if logging on body": function () {
@@ -75,8 +78,8 @@
                 }
             }
 
-            buster.assert.isNotNull(meta);
-            buster.assert.equals(meta.content, "width=device-width, initial-scale=1.0");
+            refute.isNull(meta);
+            assert.equals(meta.content, "width=device-width, initial-scale=1.0");
         },
 
         "should inject CSS file from same directory if buster-test.js is not found":
@@ -86,7 +89,7 @@
             var links = document.getElementsByTagName("link");
             var link = links[links.length - 1];
 
-            buster.assert.match(link, {
+            assert.match(link, {
                 rel: "stylesheet",
                 type: "text/css",
                 media: "all",
@@ -101,7 +104,7 @@
             var links = document.getElementsByTagName("link");
             var link = links[links.length - 1];
 
-            buster.assert.match(link, {
+            assert.match(link, {
                 rel: "stylesheet",
                 type: "text/css",
                 media: "all",
@@ -115,7 +118,7 @@
 
             var h1 = document.getElementsByTagName("h1")[0];
 
-            buster.assert.match(h1, { innerHTML: "Buster.JS Test case" });
+            assert.match(h1, { innerHTML: "Buster.JS Test case" });
         },
 
         "should not inject h1 if one already exists": function () {
@@ -126,8 +129,8 @@
 
             var h1s = document.getElementsByTagName("h1");
 
-            buster.assert.equals(h1s.length, 1);
-            buster.assert.match(h1s[0], { innerHTML: "Hey" });
+            assert.equals(h1s.length, 1);
+            assert.match(h1s[0], { innerHTML: "Hey" });
         },
 
         "should use document.title in h1": function () {
@@ -136,7 +139,7 @@
 
             var h1 = document.getElementsByTagName("h1")[0];
 
-            buster.assert.match(h1, { innerHTML: "Use it" });
+            assert.match(h1, { innerHTML: "Use it" });
         }
     });
 
@@ -146,7 +149,7 @@
         "should add context name as h2 when entering top-level context": function () {
             this.reporter.contextStart({ name: "Some context" });
 
-            buster.assert.match(this.root.firstChild, {
+            assert.match(this.root.firstChild, {
                 tagName: "h2", innerHTML: "Some context"
             });
         },
@@ -155,13 +158,13 @@
             this.reporter.contextStart({ name: "Some context" });
             this.reporter.contextStart({ name: "Some other context" });
 
-            buster.assert.equals(this.root.getElementsByTagName("h2").length, 1);
+            assert.equals(this.root.getElementsByTagName("h2").length, 1);
         },
 
         "should print passing test name as list item with success class": function () {
             this.reporter.testSuccess({ name: "should do something" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 tagName: "li",
                 className: "success",
                 innerHTML: /<[hH]3>should do something<\/[hH]3>/
@@ -173,7 +176,7 @@
             this.reporter.contextStart({ name: "in some state" });
             this.reporter.testSuccess({ name: "should do it" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 innerHTML: /in some state should do it/
             });
         },
@@ -185,7 +188,7 @@
             this.reporter.contextStart({ name: "in some other state" });
             this.reporter.testSuccess({ name: "should do it" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 innerHTML: /in some other state should do it/
             });
         },
@@ -193,7 +196,7 @@
         "should print failed test name as list item with error class": function () {
             this.reporter.testFailure({ name: "should do something" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 tagName: "li",
                 className: "failure",
                 innerHTML: /<[hH]3>should do something<\/[hH]3>/
@@ -209,13 +212,13 @@
             var error = this.list().firstChild.getElementsByTagName("p")[0];
             var stack = this.list().firstChild.getElementsByTagName("ul")[0];
 
-            buster.assert.match(error, {
+            assert.match(error, {
                 innerHTML: "Expected a to be equal to b",
                 className: "error-message"
             });
 
-            buster.assert.equals(stack.className, "stack");
-            buster.assert.match(stack.firstChild, { innerHTML: /html-test.js/ });
+            assert.equals(stack.className, "stack");
+            assert.match(stack.firstChild, { innerHTML: /html-test.js/ });
         },
 
         "should print failed test name with full contextual name": function () {
@@ -223,7 +226,7 @@
             this.reporter.contextStart({ name: "in some state" });
             this.reporter.testFailure({ name: "should do it" });
 
-            buster.assert.match(this.list().firstChild,{
+            assert.match(this.list().firstChild,{
                 innerHTML: /in some state should do it/
             });
         },
@@ -231,7 +234,7 @@
         "should print errored test name as list item with error class": function () {
             this.reporter.testError({ name: "should do something" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 tagName: "li",
                 className: "error",
                 innerHTML: /<[hH]3>should do something<\/[hH]3>/
@@ -247,13 +250,13 @@
             var error = this.list().firstChild.getElementsByTagName("p")[0];
             var stack = this.list().firstChild.getElementsByTagName("ul")[0];
 
-            buster.assert.match(error, {
+            assert.match(error, {
                 innerHTML: "Error: Expected a to be equal to b",
                 className: "error-message"
             });
 
-            buster.assert.equals(stack.className, "stack");
-            buster.assert.match(stack.firstChild, { innerHTML: /html-test.js/ });
+            assert.equals(stack.className, "stack");
+            assert.match(stack.firstChild, { innerHTML: /html-test.js/ });
         },
 
         "should print errored test name with full contextual name": function () {
@@ -261,7 +264,7 @@
             this.reporter.contextStart({ name: "in some state" });
             this.reporter.testError({ name: "should do it" });
 
-            buster.assert.match(this.list().firstChild,{
+            assert.match(this.list().firstChild,{
                 innerHTML: /in some state should do it/
             });
         },
@@ -269,7 +272,7 @@
         "should print deferred test as list item with deferred class": function () {
             this.reporter.testDeferred({ name: "should do something" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 tagName: "li",
                 className: "deferred",
                 innerHTML: /<[hH]3>should do something<\/[hH]3>/
@@ -281,7 +284,7 @@
             this.reporter.contextStart({ name: "in some state" });
             this.reporter.testDeferred({ name: "should do it" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 innerHTML: /in some state should do it/
             });
         },
@@ -289,7 +292,7 @@
         "should print timed out test as list item with timeout class": function () {
             this.reporter.testTimeout({ name: "should do something" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 tagName: "li",
                 className: "timeout",
                 innerHTML: /<[hH]3>should do something<\/[hH]3>/
@@ -301,7 +304,7 @@
             this.reporter.contextStart({ name: "in some state" });
             this.reporter.testTimeout({ name: "should do it" });
 
-            buster.assert.match(this.list().firstChild, {
+            assert.match(this.list().firstChild, {
                 innerHTML: /<[hH]3>in some state should do it<\/[hH]3>/
             });
         },
@@ -351,7 +354,7 @@
             this.reporter.testTimeout({ name: "should go again" });
 
             var messages = this.list().getElementsByTagName("ul")[1];
-            buster.assert.equals(messages.childNodes.length, 1);
+            assert.equals(messages.childNodes.length, 1);
         },
 
         "should render two contexts": function () {
@@ -364,9 +367,9 @@
 
             var headings = this.root.getElementsByTagName("h2");
 
-            buster.assert.equals(headings.length, 2);
-            buster.assert.tagName(headings[0].nextSibling, "ul");
-            buster.assert.tagName(headings[1].nextSibling, "ul");
+            assert.equals(headings.length, 2);
+            assert.tagName(headings[0].nextSibling, "ul");
+            assert.tagName(headings[1].nextSibling, "ul");
         }
     });
 
@@ -385,13 +388,13 @@
         "should add stats element": function () {
             this.reporter.addStats({});
 
-            buster.assert.className(this.stats(), "stats");
+            assert.className(this.stats(), "stats");
         },
 
         "should add stats heading": function () {
             this.reporter.addStats({});
 
-            buster.assert.match(this.stats().firstChild, {
+            assert.match(this.stats().firstChild, {
                 tagName: "h2",
                 innerHTML: "Test failures!"
             });
@@ -409,15 +412,15 @@
             });
 
             var stats = this.stats().firstChild.nextSibling;
-            buster.assert.tagName(stats, "ul");
+            assert.tagName(stats, "ul");
 
-            buster.assert.match(stats.childNodes[0].innerHTML, "2 test cases");
-            buster.assert.match(stats.childNodes[1].innerHTML, "4 tests");
-            buster.assert.match(stats.childNodes[2].innerHTML, "6 assertions");
-            buster.assert.match(stats.childNodes[3].innerHTML, "1 failure");
-            buster.assert.match(stats.childNodes[4].innerHTML, "1 error");
-            buster.assert.match(stats.childNodes[5].innerHTML, "1 timeout");
-            buster.assert.match(stats.childNodes[6].innerHTML, "2 deferred");
+            assert.match(stats.childNodes[0].innerHTML, "2 test cases");
+            assert.match(stats.childNodes[1].innerHTML, "4 tests");
+            assert.match(stats.childNodes[2].innerHTML, "6 assertions");
+            assert.match(stats.childNodes[3].innerHTML, "1 failure");
+            assert.match(stats.childNodes[4].innerHTML, "1 error");
+            assert.match(stats.childNodes[5].innerHTML, "1 timeout");
+            assert.match(stats.childNodes[6].innerHTML, "2 deferred");
         }
     });
 
@@ -443,55 +446,55 @@
         "should map suite:end to addStats": function () {
             this.runner.emit("suite:end", {});
 
-            buster.assert(this.reporter.addStats.calledOnce);
+            assert(this.reporter.addStats.calledOnce);
         },
 
         "should map context:start to contextStart": function () {
             this.runner.emit("context:start");
 
-            buster.assert(this.reporter.contextStart.calledOnce);
+            assert(this.reporter.contextStart.calledOnce);
         },
 
         "should map context:end to contextEnd": function () {
             this.runner.emit("context:end");
 
-            buster.assert(this.reporter.contextEnd.calledOnce);
+            assert(this.reporter.contextEnd.calledOnce);
         },
 
         "should map test:success to testSuccess": function () {
             this.runner.emit("test:success");
 
-            buster.assert(this.reporter.testSuccess.calledOnce);
+            assert(this.reporter.testSuccess.calledOnce);
         },
 
         "should map test:error to testError": function () {
             this.runner.emit("test:error");
 
-            buster.assert(this.reporter.testError.calledOnce);
+            assert(this.reporter.testError.calledOnce);
         },
 
         "should map test:fail to testFailure": function () {
             this.runner.emit("test:failure");
 
-            buster.assert(this.reporter.testFailure.calledOnce);
+            assert(this.reporter.testFailure.calledOnce);
         },
 
         "should map test:timeout to testTimeout": function () {
             this.runner.emit("test:timeout");
 
-            buster.assert(this.reporter.testTimeout.calledOnce);
+            assert(this.reporter.testTimeout.calledOnce);
         },
 
         "should map logger log to log": function () {
             this.runner.console.emit("log");
 
-            buster.assert(this.reporter.log.calledOnce);
+            assert(this.reporter.log.calledOnce);
         },
 
         "should map test:deferred to testDeferred": function () {
             this.runner.emit("test:deferred");
 
-            buster.assert(this.reporter.testDeferred.calledOnce);
+            assert(this.reporter.testDeferred.calledOnce);
         }
     }, "should"));
 }());

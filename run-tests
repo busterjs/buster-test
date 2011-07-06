@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require("buster-assert").format = require("buster-format").ascii;
+require("buster-assertions").format = require("buster-format").ascii;
 
 require("sinon").config = {
     useFakeTimers: true,

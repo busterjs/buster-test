@@ -3,12 +3,15 @@ if (typeof require != "undefined") {
     var buster = require("buster-core");
 
     buster.extend(buster, {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         xUnitConsoleReporter: require("../../../../lib/buster-test/reporters/xunit-console")
     });
 
     buster.util = require("buster-util");
 }
+
+var assert = buster.assertions.assert;
+var refute = buster.assertions.refute;
 
 buster.util.testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
     setUp: function () {
@@ -35,79 +38,79 @@ buster.util.testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
         this.runner.emit("suite:start");
 
         // reset is also called by the create method
-        buster.assert(this.reporter.reset.calledTwice);
+        assert(this.reporter.reset.calledTwice);
     },
 
     "should map suite:end to printDetails": function () {
         this.runner.emit("suite:end", {});
 
-        buster.assert(this.reporter.printDetails.calledOnce);
+        assert(this.reporter.printDetails.calledOnce);
     },
 
     "should map context:start to startContext": function () {
         this.runner.emit("context:start");
 
-        buster.assert(this.reporter.startContext.calledOnce);
+        assert(this.reporter.startContext.calledOnce);
     },
 
     "should map context:end to endContext": function () {
         this.runner.emit("context:end");
 
-        buster.assert(this.reporter.endContext.calledOnce);
+        assert(this.reporter.endContext.calledOnce);
     },
 
     "should map context:unsupported to unsupportedContext": function () {
         this.runner.emit("context:unsupported");
 
-        buster.assert(this.reporter.unsupportedContext.calledOnce);
+        assert(this.reporter.unsupportedContext.calledOnce);
     },
 
     "should map test:success to testSuccess": function () {
         this.runner.emit("test:success");
 
-        buster.assert(this.reporter.testSuccess.calledOnce);
+        assert(this.reporter.testSuccess.calledOnce);
     },
 
     "should map test:error to testError": function () {
         this.runner.emit("test:error");
 
-        buster.assert(this.reporter.testError.calledOnce);
+        assert(this.reporter.testError.calledOnce);
     },
 
     "should map test:fail to testFailure": function () {
         this.runner.emit("test:failure");
 
-        buster.assert(this.reporter.testFailure.calledOnce);
+        assert(this.reporter.testFailure.calledOnce);
     },
 
     "should map test:async to testAsync": function () {
         this.runner.emit("test:async");
 
-        buster.assert(this.reporter.testAsync.calledOnce);
+        assert(this.reporter.testAsync.calledOnce);
     },
 
     "should map test:timeout to testTimeout": function () {
         this.runner.emit("test:timeout");
 
-        buster.assert(this.reporter.testTimeout.calledOnce);
+        assert(this.reporter.testTimeout.calledOnce);
     },
 
     "should map logger log to log": function () {
         this.runner.console.emit("log");
 
-        buster.assert(this.reporter.log.calledOnce);
+        assert(this.reporter.log.calledOnce);
     },
 
     "should map test:deferred to testDeferred": function () {
         this.runner.emit("test:deferred");
 
-        buster.assert(this.reporter.testDeferred.calledOnce);
+        assert(this.reporter.testDeferred.calledOnce);
     },
 
     "should map uncaughtException to uncaughtException": function () {
         this.runner.emit("uncaughtException");
 
-        buster.assert(this.reporter.uncaughtException.calledOnce);
+        assert(this.reporter.uncaughtException.calledOnce);
     }
 }, "should"));
 
@@ -133,38 +136,38 @@ buster.util.testCase("XUnitConsoleReporterTestsRunningTest", {
     "should print dot when test passes": function () {
         this.reporter.testSuccess({ name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), ".");
+        assert.equals(this.io.toString(), ".");
     },
 
     "should not print dot when test passes if not printing progress": function () {
         this.reporter.displayProgress = false;
         this.reporter.testSuccess({ name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "");
+        assert.equals(this.io.toString(), "");
     },
 
     "should print capital E when test errors": function () {
         this.reporter.testError({ name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "E");
+        assert.equals(this.io.toString(), "E");
     },
 
     "should print capital F when test fails": function () {
         this.reporter.testFailure({ name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "F");
+        assert.equals(this.io.toString(), "F");
     },
 
     "should print capital T when test times out": function () {
         this.runner.emit("test:timeout", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "T");
+        assert.equals(this.io.toString(), "T");
     },
 
     "should print capital A when test is asynchronous": function () {
         this.reporter.testAsync({ name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "A");
+        assert.equals(this.io.toString(), "A");
     },
 
     "should replace async marker when test completes": function () {
@@ -175,27 +178,27 @@ buster.util.testCase("XUnitConsoleReporterTestsRunningTest", {
         this.reporter.testAsync({ name: "Stuff #3" });
         this.reporter.testError({ name: "Stuff #3" });
 
-        buster.assert.equals(this.io.toString(), "A\033[1D.A\033[1DFA\033[1DE");
+        assert.equals(this.io.toString(), "A\033[1D.A\033[1DFA\033[1DE");
     },
 
     "should print context name when starting top-level context": function () {
         this.reporter.startContext({ name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "Stuff: ");
+        assert.equals(this.io.toString(), "Stuff: ");
     },
 
     "should not print context name when starting inner context": function () {
         this.reporter.startContext({ name: "Stuff" });
         this.reporter.startContext({ name: "Inner" });
 
-        buster.assert.equals(this.io.toString(), "Stuff: ");
+        assert.equals(this.io.toString(), "Stuff: ");
     },
 
     "should print line break when ending top-level context": function () {
         this.reporter.startContext({ name: "Stuff" });
         this.reporter.endContext({ name: "Stuff" });
 
-        buster.assert.match(this.io.toString(), "Stuff: \n");
+        assert.match(this.io.toString(), "Stuff: \n");
     },
 
     "should not print line break when ending inner context": function () {
@@ -204,7 +207,7 @@ buster.util.testCase("XUnitConsoleReporterTestsRunningTest", {
         this.reporter.endContext({ name: "Inner" });
         this.reporter.endContext({ name: "Stuff" });
 
-        buster.assert.match(this.io.toString(), "Stuff: \n");
+        assert.match(this.io.toString(), "Stuff: \n");
     },
 
     "should print all top-level context names": function () {
@@ -213,7 +216,7 @@ buster.util.testCase("XUnitConsoleReporterTestsRunningTest", {
         this.reporter.startContext({ name: "Second" });
         this.reporter.endContext({ name: "Second" });
 
-        buster.assert.match(this.io.toString(), "Stuff: \nSecond: \n");
+        assert.match(this.io.toString(), "Stuff: \nSecond: \n");
     }
 });
 
@@ -231,8 +234,8 @@ buster.util.testCase("XUnitConsoleReporterMessagesTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printDetails();
 
-        buster.assert.match(this.io.toString(), "Passed: Stuff some test");
-        buster.assert.match(this.io.toString(), "[LOG] Is message");
+        assert.match(this.io.toString(), "Passed: Stuff some test");
+        assert.match(this.io.toString(), "[LOG] Is message");
     },
 
     "should not re-print messages for failed test": function () {
@@ -243,7 +246,7 @@ buster.util.testCase("XUnitConsoleReporterMessagesTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printDetails();
 
-        buster.assert.noMatch(this.io.toString(), "Passed: Stuff some test");
+        refute.match(this.io.toString(), "Passed: Stuff some test");
     },
 
     "should print list of deferred tests": function () {
@@ -252,7 +255,7 @@ buster.util.testCase("XUnitConsoleReporterMessagesTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printDetails();
 
-        buster.assert.match(this.io.toString(), "Deferred: Stuff some test");
+        assert.match(this.io.toString(), "Deferred: Stuff some test");
     }
 });
 
@@ -266,7 +269,7 @@ buster.util.testCase("XUnitConsoleReporterStatsTest", {
             unsupported: ["localStorage"]
         });
 
-        buster.assert.noMatch(this.io.toString(), "localStorage");
+        refute.match(this.io.toString(), "localStorage");
     },
 
     "should print warning when skipping unsupported context": function () {
@@ -277,7 +280,7 @@ buster.util.testCase("XUnitConsoleReporterStatsTest", {
 
         this.reporter.printDetails();
 
-        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
+        assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
     },
 
     "should print warning when skipping nested unsupported context": function () {
@@ -290,7 +293,7 @@ buster.util.testCase("XUnitConsoleReporterStatsTest", {
 
         this.reporter.printDetails();
 
-        buster.assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
+        assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
     },
 
     "should print all unsupported features": function () {
@@ -301,67 +304,67 @@ buster.util.testCase("XUnitConsoleReporterStatsTest", {
 
         this.reporter.printDetails();
 
-        buster.assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
+        assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
     },
 
     "should print for one test case with one test": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, assertions: 1, failures: 0, errors: 0 });
 
         var expected = "1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print for two test cases": function () {
         this.reporter.printStats({ contexts:  2, tests: 2, assertions: 2, failures: 0, errors: 0 });
 
         var expected = "2 test cases, 2 tests, 2 assertions, 0 failures, 0 errors, 0 timeouts\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print for errors and failures": function () {
         this.reporter.printStats({ contexts:  2, tests: 4, assertions: 5, failures: 1, errors: 1 });
 
         var expected = "2 test cases, 4 tests, 5 assertions, 1 failure, 1 error, 0 timeouts\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should report 0 assertions when assertions property is missing from test success": function () {
         this.reporter.printStats({ contexts:  1, tests: 1 });
 
         var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should report timeouts": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, timeouts: 1 });
 
         var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should report deferred tests": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, deferred: 2 });
 
         var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts, 2 deferred\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print warning when no tests": function () {
         this.reporter.printStats({ contexts:  1, tests: 0, assertions: 0 });
 
-        buster.assert.match(this.io.toString(), "WARNING: No tests!");
+        assert.match(this.io.toString(), "WARNING: No tests!");
     },
 
     "should print warning when no assertions": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, assertions: 0 });
 
-        buster.assert.match(this.io.toString(), "WARNING: No assertions!");
+        assert.match(this.io.toString(), "WARNING: No assertions!");
     },
 
     "should not print warning for no assertions when no tests": function () {
         this.reporter.printStats({ contexts:  1, tests: 0, assertions: 0 });
 
-        buster.assert.noMatch(this.io.toString(), "WARNING: No assertions!");
+        refute.match(this.io.toString(), "WARNING: No assertions!");
     }
 });
 
@@ -374,7 +377,7 @@ buster.util.testCase("XUnitConsoleReporterFailureTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printFailures();
 
-        buster.assert.match(this.io.toString(), "Failure: Stuff should do stuff");
+        assert.match(this.io.toString(), "Failure: Stuff should do stuff");
     },
 
     "should print error message": function () {
@@ -387,7 +390,7 @@ buster.util.testCase("XUnitConsoleReporterFailureTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printFailures();
 
-        buster.assert.match(this.io.toString(), "    Expected a to be equal to b");
+        assert.match(this.io.toString(), "    Expected a to be equal to b");
     },
 
     "should print log messages": function () {
@@ -402,7 +405,7 @@ buster.util.testCase("XUnitConsoleReporterFailureTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printFailures();
 
-        buster.assert.match(this.io.toString(), "[LOG] Hey");
+        assert.match(this.io.toString(), "[LOG] Hey");
     },
 
     "should print stack trace": function () {
@@ -419,7 +422,7 @@ buster.util.testCase("XUnitConsoleReporterFailureTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printFailures();
 
-        buster.assert.match(this.io.toString(), "\n    at Object");
+        assert.match(this.io.toString(), "\n    at Object");
     }
 });
 
@@ -432,7 +435,7 @@ buster.util.testCase("XUnitConsoleReporterErrorTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printErrors();
 
-        buster.assert.match(this.io.toString(), "Error: Stuff should do stuff");
+        assert.match(this.io.toString(), "Error: Stuff should do stuff");
     },
 
     "should print error message": function () {
@@ -446,7 +449,7 @@ buster.util.testCase("XUnitConsoleReporterErrorTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printErrors();
 
-        buster.assert.match(this.io.toString(), "    ReferenceError: a is not defined");
+        assert.match(this.io.toString(), "    ReferenceError: a is not defined");
     },
 
     "should print log messages": function () {
@@ -461,7 +464,7 @@ buster.util.testCase("XUnitConsoleReporterErrorTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printErrors();
 
-        buster.assert.match(this.io.toString(), "[LOG] Hey");
+        assert.match(this.io.toString(), "[LOG] Hey");
     },
 
     "should print stack trace": function () {
@@ -479,7 +482,7 @@ buster.util.testCase("XUnitConsoleReporterErrorTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printErrors();
 
-        buster.assert.match(this.io.toString(), "\n    at Object");
+        assert.match(this.io.toString(), "\n    at Object");
     }
 });
 
@@ -492,7 +495,7 @@ buster.util.testCase("XUnitConsoleReporterUncaughtExceptionTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printUncaughtExceptions();
 
-        buster.assert.match(this.io.toString(), "Uncaught exception!");
+        assert.match(this.io.toString(), "Uncaught exception!");
     },
 
     "should print error message": function () {
@@ -505,7 +508,7 @@ buster.util.testCase("XUnitConsoleReporterUncaughtExceptionTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printUncaughtExceptions();
 
-        buster.assert.match(this.io.toString(), "    Expected a to be equal to b");
+        assert.match(this.io.toString(), "    Expected a to be equal to b");
     },
 
     "should print stack trace": function () {
@@ -522,7 +525,7 @@ buster.util.testCase("XUnitConsoleReporterUncaughtExceptionTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printUncaughtExceptions();
 
-        buster.assert.match(this.io.toString(), "\n    at Object");
+        assert.match(this.io.toString(), "\n    at Object");
     }
 });
 
@@ -539,37 +542,37 @@ buster.util.testCase("XUnitConsoleReporterColorOutputTest", {
     "should print green dot when test passes": function () {
         this.runner.emit("test:success", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[32m.\033[0m");
+        assert.equals(this.io.toString(), "\033[32m.\033[0m");
     },
 
     "should print green dot when test passes": function () {
         this.runner.emit("test:success", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[32m.\033[0m");
+        assert.equals(this.io.toString(), "\033[32m.\033[0m");
     },
 
     "should print yellow capital E when test errors": function () {
         this.runner.emit("test:error", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[33mE\033[0m");
+        assert.equals(this.io.toString(), "\033[33mE\033[0m");
     },
 
     "should print red capital F when test fails": function () {
         this.runner.emit("test:failure", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[31mF\033[0m");
+        assert.equals(this.io.toString(), "\033[31mF\033[0m");
     },
 
     "should print red capital T when test times out": function () {
         this.runner.emit("test:timeout", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[31mT\033[0m");
+        assert.equals(this.io.toString(), "\033[31mT\033[0m");
     },
 
     "should print purple capital A when test is asynchronous": function () {
         this.reporter.testAsync({ name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[35mA\033[0m");
+        assert.equals(this.io.toString(), "\033[35mA\033[0m");
     }
 });
 
@@ -593,7 +596,7 @@ buster.util.testCase("XUnitConsoleReporterColorizedMessagesTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printDetails();
 
-        buster.assert.match(this.io.toString(),
+        assert.match(this.io.toString(),
                             "\033[32mPassed: Stuff some test\033[0m");
     }
 });
@@ -612,47 +615,47 @@ buster.util.testCase("XUnitConsoleReporterColorizedStatsTest", {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 1, failures: 0, errors: 0 });
 
         var expected = "\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print in red when errors and failures": function () {
         this.reporter.printStats({ contexts: 1, tests: 2, assertions: 2, failures: 1, errors: 1 });
 
         var expected = "\033[31m1 test case, 2 tests, 2 assertions, 1 failure, 1 error, 0 timeouts\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print in red when no assertions": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
         var expected = "\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print in red when no tests": function () {
         this.reporter.printStats({ contexts: 1, tests: 0 });
 
         var expected = "\033[31m1 test case, 0 tests, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print in red when timeouts": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, timeouts: 1 });
 
         var expected = "\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print no test warning in red": function () {
         this.reporter.printStats({ contexts: 1, tests: 0, assertions: 0 });
 
-        buster.assert.match(this.io.toString(), "\033[31mWARNING: No tests!\033[0m");
+        assert.match(this.io.toString(), "\033[31mWARNING: No tests!\033[0m");
     },
 
     "should print no assertion warning in red": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
-        buster.assert.match(this.io.toString(), "\033[31mWARNING: No assertions!\033[0m");
+        assert.match(this.io.toString(), "\033[31mWARNING: No assertions!\033[0m");
     }
 });
 
@@ -672,7 +675,7 @@ buster.util.testCase("XUnitConsoleReporterColorizedExceptionTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printFailures();
 
-        buster.assert.match(this.io.toString(), "\033[31mFailure\033[0m: Stuff should do stuff");
+        assert.match(this.io.toString(), "\033[31mFailure\033[0m: Stuff should do stuff");
     },
 
     "should print full test name with yellow label when error": function () {
@@ -681,7 +684,7 @@ buster.util.testCase("XUnitConsoleReporterColorizedExceptionTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printErrors();
 
-        buster.assert.match(this.io.toString(), "\033[33mError\033[0m: Stuff should do stuff");
+        assert.match(this.io.toString(), "\033[33mError\033[0m: Stuff should do stuff");
     }
 });
 
@@ -699,31 +702,31 @@ buster.util.testCase("XUnitConsoleReporterBrightColorOutputTest", {
     "should print bright green dot when test passes": function () {
         this.runner.emit("test:success", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[1m\033[32m.\033[0m");
+        assert.equals(this.io.toString(), "\033[1m\033[32m.\033[0m");
     },
 
     "should print bright yellow capital E when test errors": function () {
         this.runner.emit("test:error", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[1m\033[33mE\033[0m");
+        assert.equals(this.io.toString(), "\033[1m\033[33mE\033[0m");
     },
 
     "should print bright red capital F when test fails": function () {
         this.runner.emit("test:failure", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[1m\033[31mF\033[0m");
+        assert.equals(this.io.toString(), "\033[1m\033[31mF\033[0m");
     },
 
     "should print bright red capital T when test times out": function () {
         this.runner.emit("test:timeout", { name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[1m\033[31mT\033[0m");
+        assert.equals(this.io.toString(), "\033[1m\033[31mT\033[0m");
     },
 
     "should print bright purple capital A when test is asynchronous": function () {
         this.reporter.testAsync({ name: "Stuff" });
 
-        buster.assert.equals(this.io.toString(), "\033[1m\033[35mA\033[0m");
+        assert.equals(this.io.toString(), "\033[1m\033[35mA\033[0m");
     }
 });
 
@@ -742,47 +745,47 @@ buster.util.testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
         this.reporter.printStats({ contexts: 1, tests: 1, failures: 0, errors: 0, assertions: 1 });
 
         var expected = "\033[1m\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print in bright red when errors and failures": function () {
         this.reporter.printStats({ contexts: 1, tests: 2, failures: 1, errors: 1 });
 
         var expected = "\033[1m\033[31m1 test case, 2 tests, 0 assertions, 1 failure, 1 error, 0 timeouts\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print in bright red when no assertions": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
         var expected = "\033[1m\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print in bright red when no tests": function () {
         this.reporter.printStats({ contexts: 1, tests: 0 });
 
         var expected = "\033[1m\033[31m1 test case, 0 tests, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print in bright red when timeouts": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, timeouts: 1 });
 
         var expected = "\033[1m\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\033[0m\n";
-        buster.assert.match(this.io.toString(), expected);
+        assert.match(this.io.toString(), expected);
     },
 
     "should print no test warning in bright red": function () {
         this.reporter.printStats({ tests: 0 });
 
-        buster.assert.match(this.io.toString(), "\033[1m\033[31mWARNING: No tests!\033[0m");
+        assert.match(this.io.toString(), "\033[1m\033[31mWARNING: No tests!\033[0m");
     },
 
     "should print no assertion warning in bright red": function () {
         this.reporter.printStats({ tests: 1, assertions: 0 });
 
-        buster.assert.match(this.io.toString(), "\033[1m\033[31mWARNING: No assertions!\033[0m");
+        assert.match(this.io.toString(), "\033[1m\033[31mWARNING: No assertions!\033[0m");
     }
 });
 
@@ -803,7 +806,7 @@ buster.util.testCase("XUnitConsoleReporterBrightlyColorizedExceptionTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printFailures();
 
-        buster.assert.match(this.io.toString(), "\033[1m\033[31mFailure\033[0m: Stuff should do stuff");
+        assert.match(this.io.toString(), "\033[1m\033[31mFailure\033[0m: Stuff should do stuff");
     },
 
     "should print full test name with yellow label when error": function () {
@@ -812,6 +815,6 @@ buster.util.testCase("XUnitConsoleReporterBrightlyColorizedExceptionTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printErrors();
 
-        buster.assert.match(this.io.toString(), "\033[1m\033[33mError\033[0m: Stuff should do stuff");
+        assert.match(this.io.toString(), "\033[1m\033[33mError\033[0m: Stuff should do stuff");
     }
 });

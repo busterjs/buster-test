@@ -3,12 +3,15 @@ if (typeof require != "undefined") {
     var sinon = require("sinon");
 
     var buster = {
-        assert: require("buster-assert"),
+        assertions: require("buster-assertions"),
         stackFilter: require("../../../lib/buster-test/stack-filter")
     };
 
     buster.util = require("buster-util");
 }
+
+var assert = buster.assertions.assert;
+var refute = buster.assertions.refute;
 
 buster.util.testCase("Stack filter test", {
     setUp: function () {
@@ -44,19 +47,19 @@ buster.util.testCase("Stack filter test", {
         buster.stackFilter.filters = ["bundle-0.1.0"];
         var stack = buster.stackFilter(this.stack).join("\n");
 
-        buster.assert.noMatch(stack, /bundle/);
+        refute.match(stack, /bundle/);
     },
 
     "should remove cwd from paths": function () {
         var stack = buster.stackFilter(this.stack, "http://localhost:1111/sessions/1/resources").join("\n");
 
-        buster.assert.match(stack, /\(-9\)@\.\/buster\/bundle-0.1.0/m);
+        assert.match(stack, /\(-9\)@\.\/buster\/bundle-0.1.0/m);
     },
 
     "should remove regexp cwd from paths": function () {
         var stack = buster.stackFilter(this.stack, /http:\/\/[^:]+:1111\/sessions\/1\/resources/).join("\n");
 
-        buster.assert.match(stack, /\(-9\)@\.\/buster\/bundle-0.1.0/m);
+        assert.match(stack, /\(-9\)@\.\/buster\/bundle-0.1.0/m);
     },
 
     "should process node stack": function () {
@@ -69,7 +72,7 @@ buster.util.testCase("Stack filter test", {
                         'at Module.load (module.js:336:31)',
                         'at Function._load (module.js:297:12)'];
 
-        buster.assert.equals(buster.stackFilter(this.nodeStack, cwd), expected);
+        assert.equals(buster.stackFilter(this.nodeStack, cwd), expected);
     },
 
     "should process firefox stack": function () {
@@ -77,6 +80,6 @@ buster.util.testCase("Stack filter test", {
         var cwd = "http://localhost:1111/sessions/1/resources";
         var expected = ['((void 0))@./my-test.js:7'];
 
-        buster.assert.equals(buster.stackFilter(this.stack, cwd), expected);
+        assert.equals(buster.stackFilter(this.stack, cwd), expected);
     }
 });
