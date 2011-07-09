@@ -19,3 +19,6 @@
 [submodule "node_modules/buster-assertions"]
 	path = node_modules/buster-assertions
 	url = git://gitorious.org/buster/buster-assert.git
+[submodule "node_modules/buster-terminal"]
+	path = node_modules/buster-terminal
+	url = git://gitorious.org/buster/buster-terminal.git
