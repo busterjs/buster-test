@@ -682,6 +682,23 @@ buster.util.testCase("TestRunnerAssertionCountTest", {
             assert.equals(this.listener.args[0][0].name, "test1");
             test.end();
         }.bind(this));
+    },
+
+    "should count assertions when asserting in callback to done": function (test) {
+        var stub = sinon.stub(this.runner, "assertionCount").returns(0);
+
+        var context = buster.testCase("Test Assertions", {
+            test1: function (done) {
+                done(function () {
+                    stub.returns(3);
+                });
+            }
+        });
+
+        this.runner.runSuite([context]).then(function (result) {
+            assert.equals(result.assertions, 3);
+            test.end();
+        });
     }
 });
 
