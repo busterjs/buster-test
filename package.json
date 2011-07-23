@@ -19,7 +19,11 @@
     },
     "dependencies": {
         "buster-core": "~0.2",
-        "buster-event-emitter": "~0.2",
-        "buster-promise": "~0.2"
+        "buster-promise": "~0.2",
+        "buster-terminal": "*",
+        "buster-module-loader": "*"
+    },
+    "devDependencies": {
+        "buster": "*"
     }
 }
