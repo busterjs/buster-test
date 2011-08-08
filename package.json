@@ -1,8 +1,9 @@
 {
     "name": "buster-test",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Promised based evented xUnit and BDD style test runner for JavaScript",
-    "homepage": "http://busterjs.org/buster-test",
+    "homepage": "http://busterjs.org/docs/buster-test",
+    "author": { "name": "August Lilleaas and Christian Johansen" },
     "contributors": [{
         "name": "Christian Johansen",
         "email": "christian@cjohansen.no",
@@ -15,15 +16,18 @@
     "main": "./lib/buster-test",
     "repository": {
         "type": "git",
-        "url": "http://git.gitorious.org/buster-js/buster-test.git"
+        "url": "git://gitorious.org/buster/buster-test.git"
     },
     "dependencies": {
-        "buster-core": "~0.2",
-        "buster-promise": "~0.2",
-        "buster-terminal": "*",
-        "buster-module-loader": "*"
+        "buster-assertions": "~>0.6",
+        "buster-format": "~>0.4",
+        "buster-core": "~>0.3",
+        "buster-promise": "~>0.3",
+        "buster-terminal": "~>0.2",
+        "buster-module-loader": "~>0.2"
     },
     "devDependencies": {
-        "buster": "*"
+        "sinon": "~>1.1",
+        "buster-util": "~>0.3"
     }
 }
