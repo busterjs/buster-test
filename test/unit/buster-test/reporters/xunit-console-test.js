@@ -573,6 +573,26 @@ buster.util.testCase("XUnitConsoleReporterColorOutputTest", {
         this.reporter.testAsync({ name: "Stuff" });
 
         assert.equals(this.io.toString(), "\033[35mA\033[0m");
+    },
+
+    "should print deferred test in cyan": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testDeferred({ name: "some test" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        assert.match(this.io.toString(), "\033[36mDeferred: Stuff some test\033[0m");
+    },
+
+    "should print unsupported test in yellow": function () {
+        this.reporter.unsupportedContext({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        this.reporter.printDetails();
+
+        assert.match(this.io.toString(), "\033[33mSkipping Stuff, unsupported requirement: localStorage\n\033[0m");
     }
 });
 
@@ -727,6 +747,27 @@ buster.util.testCase("XUnitConsoleReporterBrightColorOutputTest", {
         this.reporter.testAsync({ name: "Stuff" });
 
         assert.equals(this.io.toString(), "\033[1m\033[35mA\033[0m");
+    },
+
+    "should print deferred test in bright cyan": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testDeferred({ name: "some test" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        assert.match(this.io.toString(),
+                     "\033[1m\033[36mDeferred: Stuff some test\033[0m");
+    },
+
+    "should print unsupported test in bright yellow": function () {
+        this.reporter.unsupportedContext({
+            context: { name: "Stuff" },
+            unsupported: ["localStorage"]
+        });
+
+        this.reporter.printDetails();
+
+        assert.match(this.io.toString(), "\033[1m\033[33mSkipping Stuff, unsupported requirement: localStorage\n\033[0m");
     }
 });
 
