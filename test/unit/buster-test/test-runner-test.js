@@ -871,7 +871,7 @@ buster.util.testCase("TestRunnerImplicitAsyncTest", {
 
         this.runner.run(context).then(function () {
             assert(listener.called);
-            refute.isUndefined(callback);
+            assert.defined(callback);
             assert(callback.called);
             test.end();
         });
@@ -1004,7 +1004,7 @@ buster.util.testCase("TestRunnerImplicitAsyncSetUpTest", {
         });
 
         this.runner.run(context).then(function () {
-            refute.isUndefined(callback);
+            assert.defined(callback);
             assert(callback.called);
             test.end();
         });
@@ -1171,7 +1171,7 @@ buster.util.testCase("TestRunnerImplicitAsyncTearDownTest", {
         });
 
         this.runner.run(context).then(function () {
-            refute.isUndefined(callback);
+            assert.defined(callback);
             assert(callback.called);
             test.end();
         });

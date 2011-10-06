@@ -50,7 +50,7 @@ buster.util.testCase("SpecTest", {
         assert.isObject(spec);
         assert.equals("Some test", spec.name);
         assert.equals(0, spec.tests.length);
-        assert.isUndefined(spec.setUp);
+        refute.defined(spec.setUp);
     },
 
     "should call create callback when a spec is created": function () {
