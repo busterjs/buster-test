@@ -523,6 +523,22 @@ buster.util.testCase("TestContextTestDeferredTest", {
         assert(context.tests[0].deferred);
     },
 
+    "should set deferred flag when test is a string": function () {
+        var context = buster.testCase("Name", {
+            "test": "Later, peeps"
+        });
+
+        assert(context.tests[0].deferred);
+    },
+
+    "should use deferred test string as comment": function () {
+        var context = buster.testCase("Name", {
+            "test": "Later, peeps"
+        });
+
+        assert.equals(context.tests[0].comment, "Later, peeps");
+    },
+
     "should set deferred flag when // is the first non-white-space characters in name": function () {
         var context = buster.testCase("Name", {
             "   // test": function () {}

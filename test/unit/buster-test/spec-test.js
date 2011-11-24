@@ -99,6 +99,18 @@ buster.util.testCase("SpecCallbackTest", {
         assert(spec.tests[0].deferred);
     },
 
+    "converts test without callback but with comment to deferred": function () {
+        var test = function () {};
+
+        var spec = buster.spec.describe("Stuff", function () {
+            buster.spec.it("does it", "Cause it's important");
+        });
+
+        assert.equals("does it", spec.tests[0].name);
+        assert(spec.tests[0].deferred);
+        assert.equals(spec.tests[0].comment, "Cause it's important");
+    },
+
     "makes deferred test with itEventually": function () {
         var test = function () {};
 
@@ -108,6 +120,29 @@ buster.util.testCase("SpecCallbackTest", {
 
         assert.equals("does it", spec.tests[0].name);
         assert(spec.tests[0].deferred);
+    },
+
+    "makes commented deferred test with itEventually": function () {
+        var test = function () {};
+
+        var spec = buster.spec.describe("Stuff", function () {
+            buster.spec.itEventually("does it", "Because it should", function () {});
+        });
+
+        assert(spec.tests[0].deferred);
+        assert.equals("Because it should", spec.tests[0].comment);
+        assert.isFunction(spec.tests[0].func);
+    },
+
+    "makes commented deferred test with itEventually with no function": function () {
+        var test = function () {};
+
+        var spec = buster.spec.describe("Stuff", function () {
+            buster.spec.itEventually("does it", "Because it should");
+        });
+
+        assert(spec.tests[0].deferred);
+        assert.equals("Because it should", spec.tests[0].comment);
     },
 
     "converts this.itEventually test to deferred test": function () {
