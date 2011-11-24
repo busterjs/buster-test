@@ -113,6 +113,32 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.runner.emit("context:end", { name: "Context" });
         this.runner.emit("suite:end");
 
-        this.assertIO("not ok 1 Context no. 1 # Deferred");
+        this.assertIO("not ok 1 Context no. 1 # TODO Deferred");
+    },
+
+    "should print SKIP directive for unsupported requirement": function () {
+        this.runner.emit("suite:start");
+        this.runner.emit("context:start", { name: "Context" });
+        this.runner.emit("context:unsupported", {
+            context: { name: "Context 2" },
+            unsupported: ["A"]
+        });
+        this.runner.emit("context:end", { name: "Context" });
+        this.runner.emit("suite:end");
+
+        this.assertIO("not ok 1 Context 2 # SKIP Unsupported requirement: A");
+    },
+
+    "should print SKIP directive for all unsupported requirements": function () {
+        this.runner.emit("suite:start");
+        this.runner.emit("context:start", { name: "Context" });
+        this.runner.emit("context:unsupported", {
+            context: { name: "Context 2" },
+            unsupported: ["A", "B"]
+        });
+        this.runner.emit("context:end", { name: "Context" });
+        this.runner.emit("suite:end");
+
+        this.assertIO("not ok 1 Context 2 # SKIP Unsupported requirements: A, B");
     }
 }, "should"));
