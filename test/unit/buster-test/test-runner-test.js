@@ -1947,6 +1947,20 @@ buster.util.testCase("TestRunnerEventsTest", {
         }.bind(this));
     },
 
+    "should emit test:deferred event with comment": function (test) {
+        var context = buster.testCase("Test", {
+            "should do this": "Later, seriously"
+        });
+
+        var listener = this.listeners["test:deferred"];
+
+        this.runner.run(context).then(function () {
+            assert(listener.calledOnce);
+            assert.equals(listener.args[0][0].comment, "Later, seriously");
+            test.end();
+        }.bind(this));
+    },
+
     "should emit context:unsupported event": function (test) {
         var context = buster.testCase("Test", {
             requiresSupportForAny: { A: false },
