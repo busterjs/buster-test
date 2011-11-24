@@ -1,43 +1,20 @@
-if (typeof require != "undefined") {
-    var sinon = require("sinon");
-    var buster = require("buster-core");
+var sinon = require("sinon");
+var buster = require("buster-core");
+var assertions = require("buster-assertions");
+var xmlReporter = require("../../../../lib/buster-test/reporters/xml");
+var busterUtil = require("buster-util");
+var assert = assertions.assert;
+var refute = assertions.refute;
+var helper = require("./test-helper");
 
-    buster.extend(buster, {
-        assertions: require("buster-assertions"),
-        xmlReporter: require("../../../../lib/buster-test/reporters/xml")
-    });
-
-    buster.util = require("buster-util");
-}
-
-var assert = buster.assertions.assert;
-var refute = buster.assertions.refute;
-
-buster.util.testCase("XMLReporterTest", sinon.testCase({
+busterUtil.testCase("XMLReporterTest", sinon.testCase({
     setUp: function () {
-        this.io = {
-            content: "",
-            puts: function (str) { this.print(str + "\n"); },
-            print: function (str) { this.content += str; },
-            toString: function () { return this.content }
-        };
+        this.io = helper.io();
+        this.assertIO = helper.assertIO;
 
-        this.reporter = buster.xmlReporter.create({
+        this.reporter = xmlReporter.create({
             io: this.io
         });
-
-        this.assertIO = function (string) {
-            try {
-                assert.match(this.io.toString(), string);
-            } catch (e) {
-                e.message = "\nassert.match failed\n" +
-                    "===================\nIO:\n" +
-                    this.io.toString() + "\n" +
-                    "===================\nPattern:\n" +
-                    string + "\n-------------------\n";
-                throw e;
-            }
-        };
     },
 
     "should print xml prolog and testsuites tag on suite:start": function () {
@@ -343,21 +320,21 @@ buster.util.testCase("XMLReporterTest", sinon.testCase({
     }
 }, "should"));
 
-buster.util.testCase("XMLReporterEventMappingTest", sinon.testCase({
+busterUtil.testCase("XMLReporterEventMappingTest", sinon.testCase({
     setUp: function () {
-        this.stub(buster.xmlReporter, "suiteStart");
-        this.stub(buster.xmlReporter, "suiteEnd");
-        this.stub(buster.xmlReporter, "contextStart");
-        this.stub(buster.xmlReporter, "contextEnd");
-        this.stub(buster.xmlReporter, "testSuccess");
-        this.stub(buster.xmlReporter, "testError");
-        this.stub(buster.xmlReporter, "testFailure");
-        this.stub(buster.xmlReporter, "testTimeout");
-        this.stub(buster.xmlReporter, "testStart");
+        this.stub(xmlReporter, "suiteStart");
+        this.stub(xmlReporter, "suiteEnd");
+        this.stub(xmlReporter, "contextStart");
+        this.stub(xmlReporter, "contextEnd");
+        this.stub(xmlReporter, "testSuccess");
+        this.stub(xmlReporter, "testError");
+        this.stub(xmlReporter, "testFailure");
+        this.stub(xmlReporter, "testTimeout");
+        this.stub(xmlReporter, "testStart");
 
         this.runner = buster.create(buster.eventEmitter);
         this.runner.console = buster.create(buster.eventEmitter);
-        this.reporter = buster.xmlReporter.create().listen(this.runner);
+        this.reporter = xmlReporter.create().listen(this.runner);
     },
 
     "should map suite:start to suiteStart": function () {
