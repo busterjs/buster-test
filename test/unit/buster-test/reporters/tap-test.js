@@ -18,9 +18,10 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
             io: this.io
         }).listen(this.runner);
 
-        this.test = function (name, result) {
-            this.runner.emit("test:start", { name: "no. 1" });
-            this.runner.emit("test:" + result, { name: "no. 1" });
+        this.test = function (name, result, data) {
+            var event = buster.extend({ name: "no. 1" }, data);
+            this.runner.emit("test:start", event);
+            this.runner.emit("test:" + result, event);
         };
     },
 
@@ -114,6 +115,16 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.runner.emit("suite:end");
 
         this.assertIO("not ok 1 Context no. 1 # TODO Deferred");
+    },
+
+    "should print TODO directive with comment": function () {
+        this.runner.emit("suite:start");
+        this.runner.emit("context:start", { name: "Context" });
+        this.test("no. 1", "deferred", { comment: "Later y'all" });
+        this.runner.emit("context:end", { name: "Context" });
+        this.runner.emit("suite:end");
+
+        this.assertIO("not ok 1 Context no. 1 # TODO Later y'all");
     },
 
     "should print SKIP directive for unsupported requirement": function () {
