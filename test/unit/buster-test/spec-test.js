@@ -14,37 +14,37 @@ var assert = buster.assertions.assert;
 var refute = buster.assertions.refute;
 
 buster.util.testCase("SpecTest", {
-    "should throw without name": function () {
+    "throws without name": function () {
         assert.exception(function () {
             var spec = buster.spec.describe();
         });
     },
 
-    "should throw if name is not a string": function () {
+    "throws if name is not a string": function () {
         assert.exception(function () {
             var spec = buster.spec.describe({});
         });
     },
 
-    "should throw if name is empty": function () {
+    "throws if name is empty": function () {
         assert.exception(function () {
             var spec = buster.spec.describe("");
         });
     },
 
-    "should throw without spec": function () {
+    "throws without spec": function () {
         assert.exception(function () {
             var spec = buster.spec.describe("Some test");
         });
     },
 
-    "should throw if specs is not a function": function () {
+    "throws if specs is not a function": function () {
         assert.exception(function () {
             var spec = buster.spec.describe("Some test", {});
         });
     },
 
-    "should return context object": function () {
+    "returns context object": function () {
         var spec = buster.spec.describe("Some test", function () {});
 
         assert.isObject(spec);
@@ -53,7 +53,7 @@ buster.util.testCase("SpecTest", {
         refute.defined(spec.setUp);
     },
 
-    "should call create callback when a spec is created": function () {
+    "calls create callback when a spec is created": function () {
         buster.spec.describe.onCreate = sinon.spy();
 
         var spec = buster.spec.describe("Some test", function () {});
@@ -64,85 +64,96 @@ buster.util.testCase("SpecTest", {
 });
 
 buster.util.testCase("SpecCallbackTest", {
-    "should add test function by calling should": function () {
+    "adds test function by calling it": function () {
         var test = function () {};
 
         var spec = buster.spec.describe("Stuff", function () {
-            buster.spec.should("do it", test);
+            buster.spec.it("does it", test);
         });
 
         assert.equals(1, spec.tests.length);
-        assert.equals("should do it", spec.tests[0].name);
+        assert.equals("does it", spec.tests[0].name);
         assert.equals(test, spec.tests[0].func);
     },
 
-    "should add test function by calling this.should": function () {
+    "adds test function by calling this.it": function () {
         var test = function () {};
 
         var spec = buster.spec.describe("Stuff", function () {
-            this.should("do it", test);
+            this.it("does it", test);
         });
 
         assert.equals(1, spec.tests.length);
-        assert.equals("should do it", spec.tests[0].name);
+        assert.equals("does it", spec.tests[0].name);
         assert.equals(test, spec.tests[0].func);
     },
 
-    "should convert shouldEventually test to deferred test": function () {
+    "converts test without callback to deferred test": function () {
         var test = function () {};
 
         var spec = buster.spec.describe("Stuff", function () {
-            buster.spec.shouldEventually("do it", test);
+            buster.spec.it("does it");
         });
 
-        assert.equals("should do it", spec.tests[0].name);
+        assert.equals("does it", spec.tests[0].name);
         assert(spec.tests[0].deferred);
     },
 
-    "should convert this.shouldEventually test to deferred test": function () {
+    "makes deferred test with itEventually": function () {
         var test = function () {};
 
         var spec = buster.spec.describe("Stuff", function () {
-            this.shouldEventually("do it", test);
+            buster.spec.itEventually("does it", function () {});
+        });
+
+        assert.equals("does it", spec.tests[0].name);
+        assert(spec.tests[0].deferred);
+    },
+
+    "converts this.itEventually test to deferred test": function () {
+        var test = function () {};
+
+        var spec = buster.spec.describe("Stuff", function () {
+            this.itEventually("does it", test);
         });
 
         assert(spec.tests[0].deferred);
     },
 
-    "should add setUp function by calling buster.spec.before": function () {
+    "adds setUp function by calling buster.spec.before": function () {
         var setUp = function () {};
 
-        var spec = buster.spec.describe("Stuff", function (should) {
+        var spec = buster.spec.describe("Stuff", function () {
             buster.spec.before(setUp);
         });
 
         assert.equals(setUp, spec.setUp);
     },
 
-    "should add setUp function by calling this..before": function () {
+    "adds setUp function by calling this..before": function () {
         var setUp = function () {};
 
-        var spec = buster.spec.describe("Stuff", function (should) {
+        var spec = buster.spec.describe("Stuff", function () {
             this.before(setUp);
         });
 
         assert.equals(setUp, spec.setUp);
     },
 
-    "should add tearDown function by calling buster.spec.after": function () {
+    "adds tearDown function by calling buster.spec.after": function () {
         var tearDown = function () {};
 
-        var spec = buster.spec.describe("Stuff", function (should) {
+        var spec = buster.spec.describe("Stuff", function () {
             buster.spec.after(tearDown);
         });
 
         assert.equals(tearDown, spec.tearDown);
     },
 
-    "should add tearDown function by calling this.after": function () {
+    "adds tearDown function by calling this.after": function () {
         var tearDown = function () {};
 
-        var spec = buster.spec.describe("Stuff", function (should) {
+        var spec = buster.spec.describe("Stuff", function () {
             this.after(tearDown);
         });
 
@@ -151,30 +162,30 @@ buster.util.testCase("SpecCallbackTest", {
 });
 
 buster.util.testCase("SpecContextTestsTest", {
-    "should extract only test functions": function () {
+    "extracts only test functions": function () {
         var funcs = [function () {}, function () {}, function () {}];
 
-        var spec = buster.spec.describe("Spec", function (should) {
+        var spec = buster.spec.describe("Spec", function () {
             buster.spec.before(function () {});
             buster.spec.after(function () {});
 
-            buster.spec.should("test1", funcs[0]);
-            buster.spec.should("test2", funcs[1]);
-            buster.spec.should("test3", funcs[2]);
+            buster.spec.it("test1", funcs[0]);
+            buster.spec.it("test2", funcs[1]);
+            buster.spec.it("test3", funcs[2]);
         });
 
         var tests = spec.tests;
 
         assert.equals(3, tests.length);
-        assert.equals("should test1", tests[0].name);
+        assert.equals("test1", tests[0].name);
         assert.equals(funcs[0], tests[0].func);
-        assert.equals("should test2", tests[1].name);
+        assert.equals("test2", tests[1].name);
         assert.equals(funcs[1], tests[1].func);
     },
 
-    "should keep reference to parent context": function () {
-        var spec = buster.spec.describe("Spec", function (should) {
-            buster.spec.should("test1", function () {});
+    "keeps reference to parent context": function () {
+        var spec = buster.spec.describe("Spec", function () {
+            buster.spec.it("test1", function () {});
         });
 
         var tests = spec.tests;
@@ -184,17 +195,17 @@ buster.util.testCase("SpecContextTestsTest", {
 });
 
 buster.util.testCase("SpecContextContextsTest", {
-    "should get contexts as list of context objects": function () {
-        var spec = buster.spec.describe("Spec", function (should) {
-            buster.spec.describe("Some context", function (should) {});
+    "gets contexts as list of context objects": function () {
+        var spec = buster.spec.describe("Spec", function () {
+            buster.spec.describe("Some context", function () {});
         });
 
         assert.equals(1, spec.contexts.length);
         assert.equals("Some context", spec.contexts[0].name);
     },
 
-    "should get contexts with current context as parent": function () {
-        var spec = buster.spec.describe("Name", function (should) {
+    "gets contexts with current context as parent": function () {
+        var spec = buster.spec.describe("Name", function () {
             buster.spec.describe("doingIt", function () {});
         });
 
@@ -203,8 +214,8 @@ buster.util.testCase("SpecContextContextsTest", {
         assert.equals(spec, contexts[0].parent);
     },
 
-    "should fail for non-function contexts": function () {
-        var spec = buster.spec.describe("Name", function (should) {
+    "fails for non-function contexts": function () {
+        var spec = buster.spec.describe("Name", function () {
             assert.exception(function () {
                 buster.spec.context("doingIt", {});
             });
@@ -213,19 +224,19 @@ buster.util.testCase("SpecContextContextsTest", {
         spec.parse();
     },
 
-    "should get tests from nested context": function () {
+    "gets tests from nested context": function () {
         var spec = buster.spec.describe("Name", function () {
             buster.spec.describe("someContext", function () {
-                buster.spec.should("do it", function () {});
+                buster.spec.it("does it", function () {});
             });
         });
 
         var tests = spec.contexts[0].tests;
         assert.equals(1, tests.length);
-        assert.equals("should do it", tests[0].name);
+        assert.equals("does it", tests[0].name);
     },
 
-    "should give contexts different buster.util.testCase instances": function () {
+    "gives contexts different buster.util.testCase instances": function () {
         var spec = buster.spec.describe("Name", function () {
             buster.spec.describe("someContext", function () {});
         });
@@ -240,7 +251,7 @@ buster.util.testCase("SpecExposeTest", {
         buster.spec.expose(this.env);
     },
 
-    "should call exposed describe, should, shouldEventually, before and after": function () {
+    "calls exposed describe, it, itEventually, before and after": function () {
         var env = this.env;
         var test = function () {};
         var before = function () {};
@@ -250,27 +261,27 @@ buster.util.testCase("SpecExposeTest", {
         var spec = env.describe("Stuff", function () {
             env.before(before);
             env.after(after);
-            env.should("do it", test);
-            env.shouldEventually("sometime", eventually);
+            env.it("does it", test);
+            env.itEventually("sometime", eventually);
         });
 
         assert.equals(2, spec.tests.length);
-        assert.equals("should do it", spec.tests[0].name);
+        assert.equals("does it", spec.tests[0].name);
         assert.equals(test, spec.tests[0].func);
-        assert.equals(eventually, spec.tests[1].func);
+        assert.equals("sometime", spec.tests[1].name);
         assert.equals(before, spec.setUp);
         assert.equals(after, spec.tearDown);
     },
 
-    "should properly parse nested spec": function () {
+    "parses nested spec properly": function () {
         var env = this.env;
 
         var spec = env.describe("Sample spec", function () {
-            env.should("pass simple assertion", function () {});
-            env.should("fail when test throws", function () {});
-            env.should("fail test", function () {});
+            env.it("pass simple assertion", function () {});
+            env.it("fail when test throws", function () {});
+            env.it("fail test", function () {});
             env.describe("nested", function () {
-                env.should("do it", function () {});
+                env.it("do it", function () {});
             });
         });
 
@@ -281,28 +292,28 @@ buster.util.testCase("SpecExposeTest", {
 });
 
 buster.util.testCase("SpecRequiresSupportForTest", {
-    "should set requiresSupportForAll property": function () {
+    "sets requiresSupportForAll property": function () {
         var spec = buster.spec.ifSupported({ "feature A": true }).describe("some cross-platform feature", function () {
         });
 
         assert.equals(spec.requiresSupportForAll, { "feature A": true });
     },
 
-    "should explicitly set requiresSupportForAll property": function () {
+    "sets requiresSupportForAll property explicitly": function () {
         var spec = buster.spec.ifAllSupported({ "feature A": true }).describe("some cross-platform feature", function () {
         });
 
         assert.equals(spec.requiresSupportForAll, { "feature A": true });
     },
 
-    "should set requiresSupportForAny property": function () {
+    "sets requiresSupportForAny property": function () {
         var spec = buster.spec.ifAnySupported({ "feature A": true }).describe("some cross-platform feature", function () {
         });
 
         assert.equals(spec.requiresSupportForAny, { "feature A": true });
     },
 
-    "should set requiresSupportForAny property on nested context": function () {
+    "sets requiresSupportForAny property on nested context": function () {
         var spec = buster.spec.describe("some cross-platform feature", function () {
             buster.spec.ifAnySupported({ "feature A": true }).describe("Something", function () {});
         });
