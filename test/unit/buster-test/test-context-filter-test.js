@@ -65,6 +65,45 @@ buster.util.testCase("ContextFilterTest", {
         assert.equals(context2.contexts[0].tests[1].name, "test inner 2");
     },
 
+    "should exclude nested tests that don't match either filter": function () {
+        var context = buster.testCase("Some tests", {
+            "test 1": function () {},
+            "test 2": function () {},
+            "should be dropped": function () {},
+            "context": {
+                "test inner 1": function () {},
+                "some stuff": function () {},
+                "test inner 2": function () {}
+            }
+        });
+
+        var context2 = buster.testContextFilter(context, ["test 1", "test 2"]);
+
+        assert.equals(context2.tests.length, 2);
+        assert.equals(context2.tests[0].name, "test 1");
+        assert.equals(context2.tests[1].name, "test 2");
+    },
+
+    "should match with multiple string and regexp filters": function () {
+        var context = buster.testCase("Some tests", {
+            "test 1": function () {},
+            "test 2": function () {},
+            "should be dropped": function () {},
+            "context": {
+                "test inner 1": function () {},
+                "some stuff": function () {},
+                "test inner 2": function () {}
+            }
+        });
+
+        var context2 = buster.testContextFilter(context, [/test (1|2)/, "stuff"]);
+
+        assert.equals(context2.tests.length, 2);
+        assert.equals(context2.contexts.length, 1);
+        assert.equals(context2.contexts[0].tests.length, 1);
+        assert.equals(context2.contexts[0].tests[0].name, "some stuff");
+    },
+
     "should filter nested tests based on full name": function () {
         var context = buster.testCase("Some tests", {
             "test 1": function () {},
