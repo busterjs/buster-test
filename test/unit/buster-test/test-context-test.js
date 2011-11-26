@@ -5,7 +5,7 @@ if (typeof require != "undefined") {
     buster.extend(buster, {
         assertions: require("buster-assertions"),
         testCase: require("../../../lib/buster-test/test-case"),
-        testContextFilter: require("../../../lib/buster-test/test-context-filter")
+        testContext: require("../../../lib/buster-test/test-context")
     });
 
     buster.util = require("buster-util");
@@ -27,7 +27,7 @@ buster.util.testCase("ContextFilterTest", {
             "test": function () {}
         });
 
-        var context2 = buster.testContextFilter(context);
+        var context2 = buster.testContext.filter(context);
 
         assert.equals(context.tests, context2.tests);
     },
@@ -39,7 +39,7 @@ buster.util.testCase("ContextFilterTest", {
             "should be dropped": function () {}
         });
 
-        var context2 = buster.testContextFilter(context, "test ");
+        var context2 = buster.testContext.filter(context, "test ");
 
         assert.equals(context2.tests.length, 2);
         assert.equals(context2.tests[0].name, "test 1");
@@ -58,7 +58,7 @@ buster.util.testCase("ContextFilterTest", {
             }
         });
 
-        var context2 = buster.testContextFilter(context, "test ");
+        var context2 = buster.testContext.filter(context, "test ");
 
         assert.equals(context2.contexts[0].tests.length, 2);
         assert.equals(context2.contexts[0].tests[0].name, "test inner 1");
@@ -77,7 +77,7 @@ buster.util.testCase("ContextFilterTest", {
             }
         });
 
-        var context2 = buster.testContextFilter(context, ["test 1", "test 2"]);
+        var context2 = buster.testContext.filter(context, ["test 1", "test 2"]);
 
         assert.equals(context2.tests.length, 2);
         assert.equals(context2.tests[0].name, "test 1");
@@ -96,7 +96,7 @@ buster.util.testCase("ContextFilterTest", {
             }
         });
 
-        var context2 = buster.testContextFilter(context, [/test (1|2)/, "stuff"]);
+        var context2 = buster.testContext.filter(context, [/test (1|2)/, "stuff"]);
 
         assert.equals(context2.tests.length, 2);
         assert.equals(context2.contexts.length, 1);
@@ -116,7 +116,7 @@ buster.util.testCase("ContextFilterTest", {
             }
         });
 
-        var context2 = buster.testContextFilter(context, "context test");
+        var context2 = buster.testContext.filter(context, "context test");
 
         assert.equals(context2.tests.length, 0);
         assert.equals(context2.contexts[0].tests.length, 2);
@@ -139,7 +139,7 @@ buster.util.testCase("ContextFilterTest", {
             }
         });
 
-        var context2 = buster.testContextFilter(context, "context deep test");
+        var context2 = buster.testContext.filter(context, "context deep test");
 
         assert.equals(context2.tests.length, 0);
         assert.equals(context2.contexts[0].tests.length, 0);
@@ -153,7 +153,7 @@ buster.util.testCase("ContextFilterTest", {
             "should be dropped": function () {}
         });
 
-        var context2 = buster.testContextFilter(context, /\d/);
+        var context2 = buster.testContext.filter(context, /\d/);
 
         assert.equals(context2.tests.length, 2);
         assert.equals(context2.tests[0].name, "test 1");
@@ -172,7 +172,7 @@ buster.util.testCase("ContextFilterTest", {
             }
         });
 
-        var context2 = buster.testContextFilter(context, /\d/);
+        var context2 = buster.testContext.filter(context, /\d/);
 
         assert.equals(context2.contexts[0].tests.length, 2);
         assert.equals(context2.contexts[0].tests[0].name, "test inner 1");
@@ -191,7 +191,7 @@ buster.util.testCase("ContextFilterTest", {
             }
         });
 
-        var context2 = buster.testContextFilter(context, /context test/);
+        var context2 = buster.testContext.filter(context, /context test/);
 
         assert.equals(context2.tests.length, 0);
         assert.equals(context2.contexts[0].tests.length, 2);
@@ -202,7 +202,7 @@ buster.util.testCase("ContextFilterTest", {
             "test 1": function () {}
         });
 
-        var context2 = buster.testContextFilter(context, "TEST");
+        var context2 = buster.testContext.filter(context, "TEST");
 
         assert.equals(context2.tests.length, 1);
     },
@@ -212,7 +212,7 @@ buster.util.testCase("ContextFilterTest", {
             "something": {}
         });
 
-        var context2 = buster.testContextFilter(context, "something");
+        var context2 = buster.testContext.filter(context, "something");
 
         assert.equals(context2.contexts.length, 0);
     },
@@ -222,7 +222,7 @@ buster.util.testCase("ContextFilterTest", {
             "something": { "test": function () {} }
         });
 
-        var context2 = buster.testContextFilter(context, "something");
+        var context2 = buster.testContext.filter(context, "something");
 
         assert.equals(context2.contexts.length, 1);
     }
