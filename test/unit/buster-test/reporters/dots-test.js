@@ -4,7 +4,7 @@ if (typeof require != "undefined") {
 
     buster.extend(buster, {
         assertions: require("buster-assertions"),
-        xUnitConsoleReporter: require("../../../../lib/buster-test/reporters/xunit-console")
+        dotsReporter: require("../../../../lib/buster-test/reporters/dots")
     });
 
     buster.util = require("buster-util");
@@ -13,25 +13,25 @@ if (typeof require != "undefined") {
 var assert = buster.assertions.assert;
 var refute = buster.assertions.refute;
 
-buster.util.testCase("XUnitConsoleReporterEventMappingTest", sinon.testCase({
+buster.util.testCase("DotsReporterEventMappingTest", sinon.testCase({
     setUp: function () {
-        this.stub(buster.xUnitConsoleReporter, "reset");
-        this.stub(buster.xUnitConsoleReporter, "printDetails");
-        this.stub(buster.xUnitConsoleReporter, "startContext");
-        this.stub(buster.xUnitConsoleReporter, "endContext");
-        this.stub(buster.xUnitConsoleReporter, "unsupportedContext");
-        this.stub(buster.xUnitConsoleReporter, "testSuccess");
-        this.stub(buster.xUnitConsoleReporter, "testFailure");
-        this.stub(buster.xUnitConsoleReporter, "testError");
-        this.stub(buster.xUnitConsoleReporter, "testAsync");
-        this.stub(buster.xUnitConsoleReporter, "testTimeout");
-        this.stub(buster.xUnitConsoleReporter, "testDeferred");
-        this.stub(buster.xUnitConsoleReporter, "log");
-        this.stub(buster.xUnitConsoleReporter, "uncaughtException");
+        this.stub(buster.dotsReporter, "reset");
+        this.stub(buster.dotsReporter, "printDetails");
+        this.stub(buster.dotsReporter, "startContext");
+        this.stub(buster.dotsReporter, "endContext");
+        this.stub(buster.dotsReporter, "unsupportedContext");
+        this.stub(buster.dotsReporter, "testSuccess");
+        this.stub(buster.dotsReporter, "testFailure");
+        this.stub(buster.dotsReporter, "testError");
+        this.stub(buster.dotsReporter, "testAsync");
+        this.stub(buster.dotsReporter, "testTimeout");
+        this.stub(buster.dotsReporter, "testDeferred");
+        this.stub(buster.dotsReporter, "log");
+        this.stub(buster.dotsReporter, "uncaughtException");
 
         this.runner = buster.create(buster.eventEmitter);
         this.runner.console = buster.create(buster.eventEmitter);
-        this.reporter = buster.xUnitConsoleReporter.create().listen(this.runner);
+        this.reporter = buster.dotsReporter.create().listen(this.runner);
     },
 
     "should map suite:start to reset": function () {
@@ -127,10 +127,10 @@ function runnerSetUp() {
 
 function reporterSetUp() {
     runnerSetUp.call(this);
-    this.reporter = buster.xUnitConsoleReporter.create({ io: this.io }).listen(this.runner);
+    this.reporter = buster.dotsReporter.create({ io: this.io }).listen(this.runner);
 }
 
-buster.util.testCase("XUnitConsoleReporterTestsRunningTest", {
+buster.util.testCase("DotsReporterTestsRunningTest", {
     setUp: reporterSetUp,
 
     "should print dot when test passes": function () {
@@ -220,7 +220,7 @@ buster.util.testCase("XUnitConsoleReporterTestsRunningTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterMessagesTest", {
+buster.util.testCase("DotsReporterMessagesTest", {
     setUp: function () {
         reporterSetUp.call(this);
         sinon.stub(this.reporter, "printStats");
@@ -259,7 +259,7 @@ buster.util.testCase("XUnitConsoleReporterMessagesTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterStatsTest", {
+buster.util.testCase("DotsReporterStatsTest", {
     setUp: reporterSetUp,
 
     "should not print unsupported context during run": function () {
@@ -368,7 +368,7 @@ buster.util.testCase("XUnitConsoleReporterStatsTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterFailureTest", {
+buster.util.testCase("DotsReporterFailureTest", {
     setUp: reporterSetUp,
 
     "should print full test name": function () {
@@ -426,7 +426,7 @@ buster.util.testCase("XUnitConsoleReporterFailureTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterErrorTest", {
+buster.util.testCase("DotsReporterErrorTest", {
     setUp: reporterSetUp,
 
     "should print full test name": function () {
@@ -486,7 +486,7 @@ buster.util.testCase("XUnitConsoleReporterErrorTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterUncaughtExceptionTest", {
+buster.util.testCase("DotsReporterUncaughtExceptionTest", {
     setUp: reporterSetUp,
 
     "should print label": function () {
@@ -529,11 +529,11 @@ buster.util.testCase("XUnitConsoleReporterUncaughtExceptionTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterColorOutputTest", {
+buster.util.testCase("DotsReporterColorOutputTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.xUnitConsoleReporter.create({
+        this.reporter = buster.dotsReporter.create({
             io: this.io,
             color: true
         }).listen(this.runner);
@@ -596,11 +596,11 @@ buster.util.testCase("XUnitConsoleReporterColorOutputTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterColorizedMessagesTest", {
+buster.util.testCase("DotsReporterColorizedMessagesTest", {
     setUp: function () {
         reporterSetUp.call(this);
 
-        this.reporter = buster.xUnitConsoleReporter.create({
+        this.reporter = buster.dotsReporter.create({
             io: this.io,
             color: true
         }).listen(this.runner);
@@ -621,11 +621,11 @@ buster.util.testCase("XUnitConsoleReporterColorizedMessagesTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterColorizedStatsTest", {
+buster.util.testCase("DotsReporterColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.xUnitConsoleReporter.create({
+        this.reporter = buster.dotsReporter.create({
             io: this.io,
             color: true
         }).listen(this.runner);
@@ -679,11 +679,11 @@ buster.util.testCase("XUnitConsoleReporterColorizedStatsTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterColorizedExceptionTest", {
+buster.util.testCase("DotsReporterColorizedExceptionTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.xUnitConsoleReporter.create({
+        this.reporter = buster.dotsReporter.create({
             io: this.io,
             color: true
         }).listen(this.runner);
@@ -708,11 +708,11 @@ buster.util.testCase("XUnitConsoleReporterColorizedExceptionTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterBrightColorOutputTest", {
+buster.util.testCase("DotsReporterBrightColorOutputTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.xUnitConsoleReporter.create({
+        this.reporter = buster.dotsReporter.create({
             io: this.io,
             color: true,
             bright: true
@@ -771,11 +771,11 @@ buster.util.testCase("XUnitConsoleReporterBrightColorOutputTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
+buster.util.testCase("DotsReporterBrightlyColorizedStatsTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.xUnitConsoleReporter.create({
+        this.reporter = buster.dotsReporter.create({
             io: this.io,
             color: true,
             bright: true
@@ -830,11 +830,11 @@ buster.util.testCase("XUnitConsoleReporterBrightlyColorizedStatsTest", {
     }
 });
 
-buster.util.testCase("XUnitConsoleReporterBrightlyColorizedExceptionTest", {
+buster.util.testCase("DotsReporterBrightlyColorizedExceptionTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.xUnitConsoleReporter.create({
+        this.reporter = buster.dotsReporter.create({
             io: this.io,
             color: true,
             bright: true

@@ -131,7 +131,7 @@ buster.util.testCase("SpecCallbackTest", {
 
         assert(spec.tests[0].deferred);
         assert.equals("Because it should", spec.tests[0].comment);
-        assert.isFunction(spec.tests[0].func);
+        assert.typeOf(spec.tests[0].func, "function");
     },
 
     "makes commented deferred test with itEventually with no function": function () {

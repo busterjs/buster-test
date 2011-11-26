@@ -65,7 +65,7 @@
             runner(buster.testCase("Auto running test case", this.tc));
             this.clock.tick(0);
 
-            assert.isTrue(this.onRun.calledOnce);
+            assert(this.onRun.calledOnce);
         },
 
         "should not autorun if a runner was already created": function () {
@@ -96,8 +96,8 @@
         },
 
         "should default reporter from env.BUSTER_REPORTER": testAutoRunOptions({
-            env: { BUSTER_REPORTER: "bddConsole" },
-            options: { reporter: "bddConsole" }
+            env: { BUSTER_REPORTER: "specification" },
+            options: { reporter: "specification" }
         }),
 
         "should use reporter from options": testAutoRunOptions({
@@ -204,7 +204,7 @@
         },
 
         "should initialize reporter with options": function () {
-            var reporter = typeof document == "undefined" ? buster.reporters.xUnitConsole : buster.reporters.html;
+            var reporter = typeof document == "undefined" ? buster.reporters.dots : buster.reporters.html;
 
             this.sandbox.spy(reporter, "create");
             buster.autoRun.run([this.context], {

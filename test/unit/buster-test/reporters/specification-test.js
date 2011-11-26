@@ -4,7 +4,7 @@ if (typeof require != "undefined") {
 
     buster.extend(buster, {
         assertions: require("buster-assertions"),
-        bddConsoleReporter: require("../../../../lib/buster-test/reporters/bdd-console")
+        specificationReporter: require("../../../../lib/buster-test/reporters/specification")
     });
 
     buster.util = require("buster-util");
@@ -23,7 +23,7 @@ function runnerSetUp() {
 
 function reporterSetUp() {
     runnerSetUp.call(this);
-    this.reporter = buster.bddConsoleReporter.create({ io: this.io }).listen(this.runner);
+    this.reporter = buster.specificationReporter.create({ io: this.io }).listen(this.runner);
 }
 
 function generateError(message, type) {
@@ -34,7 +34,7 @@ function generateError(message, type) {
 
 var assert = buster.assertions.assert;
 
-buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
+buster.util.testCase("SpecificationReporterTestsRunningTest", {
     setUp: reporterSetUp,
 
     "should print context name when entering top-level context": function () {
@@ -206,7 +206,7 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
             context: { name: "Stuff" },
             unsupported: ["localStorage"]
         });
- 
+
         assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
     },
 
@@ -220,21 +220,21 @@ buster.util.testCase("BDDConsoleReporterTestsRunningTest", {
     }
 });
 
-buster.util.testCase("BDDConsoleReporterEventMappingTest", sinon.testCase({
+buster.util.testCase("SpecificationReporterEventMappingTest", sinon.testCase({
     setUp: function () {
-        this.stub(buster.bddConsoleReporter, "contextStart");
-        this.stub(buster.bddConsoleReporter, "contextEnd");
-        this.stub(buster.bddConsoleReporter, "testSuccess");
-        this.stub(buster.bddConsoleReporter, "testFailure");
-        this.stub(buster.bddConsoleReporter, "testError");
-        this.stub(buster.bddConsoleReporter, "testTimeout");
-        this.stub(buster.bddConsoleReporter, "testDeferred");
-        this.stub(buster.bddConsoleReporter, "log");
-        this.stub(buster.bddConsoleReporter, "printStats");
+        this.stub(buster.specificationReporter, "contextStart");
+        this.stub(buster.specificationReporter, "contextEnd");
+        this.stub(buster.specificationReporter, "testSuccess");
+        this.stub(buster.specificationReporter, "testFailure");
+        this.stub(buster.specificationReporter, "testError");
+        this.stub(buster.specificationReporter, "testTimeout");
+        this.stub(buster.specificationReporter, "testDeferred");
+        this.stub(buster.specificationReporter, "log");
+        this.stub(buster.specificationReporter, "printStats");
 
         this.runner = buster.create(buster.eventEmitter);
         this.runner.console = buster.create(buster.eventEmitter);
-        this.reporter = buster.bddConsoleReporter.create().listen(this.runner);
+        this.reporter = buster.specificationReporter.create().listen(this.runner);
     },
 
     "should map suite:end to printStats": function () {
@@ -292,11 +292,11 @@ buster.util.testCase("BDDConsoleReporterEventMappingTest", sinon.testCase({
     }
 }, "should"));
 
-buster.util.testCase("BDDConsoleReporterColoredTestsRunningTest", {
+buster.util.testCase("SpecificationReporterColoredTestsRunningTest", {
     setUp: function () {
         runnerSetUp.call(this);
 
-        this.reporter = buster.bddConsoleReporter.create({
+        this.reporter = buster.specificationReporter.create({
             io: this.io,
             color: true
         }).listen(this.runner);

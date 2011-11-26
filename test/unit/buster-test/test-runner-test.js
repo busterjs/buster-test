@@ -54,7 +54,7 @@ buster.util.testCase("TestRunnerRunTest", {
         var promise = this.runner.run();
 
         assert.isObject(promise);
-        assert.isFunction(promise.then);
+        assert(promise.then);
     },
 
     "should reject without context": function () {

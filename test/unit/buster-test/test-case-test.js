@@ -405,10 +405,10 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
             test: function () {}
         });
 
-        assert.isFunction(context.setUp);
-        assert.isFunction(context.tearDown);
-        assert.isFunction(context.contextSetUp);
-        assert.isFunction(context.contextTearDown);
+        assert.typeOf(context.setUp, "function");
+        assert.typeOf(context.tearDown, "function");
+        assert.typeOf(context.contextSetUp, "function");
+        assert.typeOf(context.contextTearDown, "function");
     },
 
     "should keep reference to setUp and tearDown methods with instance-level custom names": function () {
@@ -425,10 +425,10 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
             contextTearDownName: "afterContext"
         });
 
-        assert.isFunction(context.setUp);
-        assert.isFunction(context.tearDown);
-        assert.isFunction(context.contextSetUp);
-        assert.isFunction(context.contextTearDown);
+        assert.typeOf(context.setUp, "function");
+        assert.typeOf(context.tearDown, "function");
+        assert.typeOf(context.contextSetUp, "function");
+        assert.typeOf(context.contextTearDown, "function");
     }
 });
 
