@@ -47,6 +47,7 @@
             this.tc = { testIt: function () {} };
             this.sandbox = sinon.sandbox.create();
             this.clock = this.sandbox.useFakeTimers();
+            this.sandbox.stub(buster.testRunner, "on");
             var self = this;
 
             this.sandbox.stub(buster.testRunner, "runSuite", function () {
@@ -66,6 +67,16 @@
             this.clock.tick(0);
 
             assert(this.onRun.calledOnce);
+        },
+
+        "should call callback when runner emits suite:end": function () {
+            var callback = function () {};
+            var runner = buster.autoRun(callback);
+
+            runner(buster.testCase("Auto running test case", this.tc));
+            this.clock.tick(0);
+
+            assert(buster.testRunner.on.calledWith("suite:end", callback));
         },
 
         "should not autorun if a runner was already created": function () {
