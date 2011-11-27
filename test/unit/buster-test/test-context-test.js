@@ -225,5 +225,15 @@ buster.util.testCase("ContextFilterTest", {
         var context2 = buster.testContext.filter(context, "something");
 
         assert.equals(context2.contexts.length, 1);
+    },
+
+    "should treat empty array as pass-all filter": function () {
+        var context = buster.testCase("Some tests", {
+            "something": { "test": function () {} }
+        });
+
+        var context2 = buster.testContext.filter(context, []);
+
+        assert.equals(context2.contexts.length, 1);
     }
 });
