@@ -1,18 +1,38 @@
 (function () {
-    if (typeof document == "undefined") {
-        return;
+    if (typeof require == "function") {
+        var sinon = require("sinon");
+        var buster = require("buster-core");
+        var helper = require("./test-helper");
+
+        buster.extend(buster, {
+            assertions: require("buster-assertions"),
+            reporters: {
+                html: require("../../../../lib/buster-test/reporters/html")
+            }
+        });
+
+        buster.util = require("buster-util");
+        var jsdom = require("jsdom").jsdom;
     }
 
     var assert = buster.assertions.assert;
     var refute = buster.assertions.refute;
 
-    function reporterSetUp() {
-        this.runner = buster.create(buster.eventEmitter);
-        this.root = document.createElement("div");
+    function createDocument() {
+        var dom = jsdom("<!DOCTYPE html><html><head></head><body></body></html>");
+        return dom.createWindow().document;
+    }
 
-        this.reporter = buster.reporters.html.create({
+    function reporterSetUp(options) {
+        options = options || {};
+        this.runner = buster.create(buster.eventEmitter);
+        this.doc = typeof document != "undefined" ? document : createDocument();
+        this.root = options.root || this.doc.createElement("div");
+
+        this.reporter = buster.reporters.html.create(buster.extend({
+            document: this.doc,
             root: this.root
-        }).listen(this.runner);
+        }, options)).listen(this.runner);
 
         this.list = function () {
             return this.root.getElementsByTagName("ul")[0];
@@ -37,8 +57,12 @@
     }
 
     buster.util.testCase("HTMLReporterCreateTest", {
+        setUp: function () {
+            this.doc = createDocument();
+        },
+
         tearDown: function () {
-            var h1s = document.getElementsByTagName("h1");
+            var h1s = this.doc.getElementsByTagName("h1");
 
             for (var i = 0, l = h1s.length; i < l; ++i) {
                 if (h1s[i]) {
@@ -54,23 +78,23 @@
         },
 
         "should add 'buster-test' class to root element": function () {
-            var element = document.createElement("div");
+            var element = this.doc.createElement("div");
 
-            buster.reporters.html.create({ root: element });
+            buster.reporters.html.create({ document: this.doc, root: element });
 
             assert.className(element, "buster-test");
         },
 
         "should add 'buster-test' class to html element if root is body": function () {
-            buster.reporters.html.create({ root: document.body });
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
 
-            assert.className(document.documentElement, "buster-test");
+            assert.className(this.doc.documentElement, "buster-test");
         },
 
         "should make page mobile friendly if logging on body": function () {
-            buster.reporters.html.create({ root: document.body });
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
 
-            var metas = document.getElementsByTagName("meta"), meta;
+            var metas = this.doc.getElementsByTagName("meta"), meta;
 
             for (var i = 0, l = metas.length; i < l; ++i) {
                 if (metas[i].name == "viewport") {
@@ -82,11 +106,28 @@
             assert.equals(meta.content, "width=device-width, initial-scale=1.0");
         },
 
+        "should serve page with right charset if logging on body": function () {
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+
+            var metas = this.doc.getElementsByTagName("meta"), meta;
+
+            for (var i = 0, l = metas.length; i < l; ++i) {
+                if (metas[i]["http-equiv"]) {
+                    meta = metas[i];
+                }
+            }
+
+            refute.isNull(meta);
+            assert.equals(meta["http-equiv"], "Content-Type");
+            assert.equals(meta.content, "text/html; charset=utf-8");
+        },
+
         "should inject CSS file from same directory if buster-test.js is not found":
         function () {
-            buster.reporters.html.create({ root: document.body });
+            if (typeof document == "undefined") return;
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
 
-            var links = document.getElementsByTagName("link");
+            var links = this.doc.getElementsByTagName("link");
             var link = links[links.length - 1];
 
             assert.match(link, {
@@ -98,10 +139,11 @@
         },
 
         "should inject CSS file if logging on body": function () {
-            document.body.innerHTML += "<script src=\"/some/path/buster-test.js\"></script>";
-            buster.reporters.html.create({ root: document.body });
+            if (typeof document == "undefined") return;
+            this.doc.body.innerHTML += "<script src=\"/some/path/buster-test.js\"></script>";
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
 
-            var links = document.getElementsByTagName("link");
+            var links = this.doc.getElementsByTagName("link");
             var link = links[links.length - 1];
 
             assert.match(link, {
@@ -112,32 +154,42 @@
             });
         },
 
-        "should inject h1 if logging on body": function () {
-            document.title = "";
-            buster.reporters.html.create({ root: document.body });
+        "should inject CSS file in style tag if on node": function () {
+            if (typeof document != "undefined") return;
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
 
-            var h1 = document.getElementsByTagName("h1")[0];
+            var styles = this.doc.getElementsByTagName("style");
+            var style = styles[styles.length - 1];
+
+            assert.match(style.innerHTML, ".buster-logo {");
+        },
+
+        "should inject h1 if logging on body": function () {
+            this.doc.title = "";
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+
+            var h1 = this.doc.getElementsByTagName("h1")[0];
 
             assert.match(h1, { innerHTML: "Buster.JS Test case" });
         },
 
         "should not inject h1 if one already exists": function () {
-            var h1 = document.createElement("h1");
+            var h1 = this.doc.createElement("h1");
             h1.innerHTML = "Hey";
-            document.body.appendChild(h1);
-            buster.reporters.html.create({ root: document.body });
+            this.doc.body.appendChild(h1);
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
 
-            var h1s = document.getElementsByTagName("h1");
+            var h1s = this.doc.getElementsByTagName("h1");
 
             assert.equals(h1s.length, 1);
             assert.match(h1s[0], { innerHTML: "Hey" });
         },
 
-        "should use document.title in h1": function () {
-            document.title = "Use it";
-            buster.reporters.html.create({ root: document.body });
+        "should use this.doc.title in h1": function () {
+            this.doc.title = "Use it";
+            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
 
-            var h1 = document.getElementsByTagName("h1")[0];
+            var h1 = this.doc.getElementsByTagName("h1")[0];
 
             assert.match(h1, { innerHTML: "Use it" });
         }
@@ -373,6 +425,34 @@
         }
     });
 
+    buster.util.testCase("HTMLReporterConsoleTest", {
+        setUp: function () {
+            this.io = helper.io();
+            this.assertIO = helper.assertIO;
+            this.doc = createDocument();
+
+            reporterSetUp.call(this, {
+                document: this.doc,
+                root: this.doc.body,
+                io: this.io
+            });
+        },
+
+        "should render entire document to output stream": function () {
+            this.reporter.contextStart({ name: "Some stuff" });
+            this.reporter.testSuccess({ name: "should do it" });
+            this.reporter.contextEnd({ name: "Some stuff" });
+            this.reporter.contextStart({ name: "Other stuff" });
+            this.reporter.testSuccess({ name: "should do more" });
+            this.reporter.contextEnd({ name: "Other stuff" });
+            this.reporter.addStats({});
+
+            this.assertIO("should do it");
+            this.assertIO("<!DOCTYPE html>");
+            this.assertIO(".buster-logo");
+        }
+    });
+
     buster.util.testCase("HTMLReporterStatsTest", {
         setUp: function () {
             reporterSetUp.call(this);
@@ -436,10 +516,11 @@
             this.stub(buster.reporters.html, "log");
             this.stub(buster.reporters.html, "addStats");
 
+            this.doc = typeof document != "undefined" ? document : createDocument();
             this.runner = buster.create(buster.eventEmitter);
             this.runner.console = buster.create(buster.eventEmitter);
             this.reporter = buster.reporters.html.create({
-                root: document.createElement("div")
+                root: this.doc.createElement("div")
             }).listen(this.runner);
         },
 
@@ -496,5 +577,5 @@
 
             assert(this.reporter.testDeferred.calledOnce);
         }
-    }, "should"));
+}, "should"));
 }());

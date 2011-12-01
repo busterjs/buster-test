@@ -24,7 +24,8 @@
         "buster-core": "~0.3",
         "buster-promise": "~0.3",
         "buster-terminal": "~0.2",
-        "buster-module-loader": "~0.2"
+        "buster-module-loader": "~0.2",
+        "jsdom": "*"
     },
     "devDependencies": {
         "sinon": "~1.1",
