@@ -31,7 +31,8 @@
 
         this.reporter = buster.reporters.html.create(buster.extend({
             document: this.doc,
-            root: this.root
+            root: this.root,
+            io: options.io || { puts: function () {} }
         }, options)).listen(this.runner);
 
         this.list = function () {
@@ -69,12 +70,6 @@
                     h1s[i].parentNode.removeChild(h1s[i]);
                 }
             }
-        },
-
-        "should throw without root element": function () {
-            assert.exception(function () {
-                buster.reporters.html.create();
-            });
         },
 
         "should add 'buster-test' class to root element": function () {
