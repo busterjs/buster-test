@@ -59,6 +59,8 @@ buster.spec.expose();
 
     buster.util.testCase("TestRunnerIntegrationTest", {
         "emits all test case events in proper order": function (test) {
+            var mathRandom = Math.random;
+            Math.random = function () { return 0; };
             var assertionError = new Error("Test failed");
             assertionError.name = "AssertionError";
             var error = new Error("Oops");
@@ -120,12 +122,15 @@ buster.spec.expose();
                 "end: TestCase";
 
             runner.run(context).then(function () {
+                Math.random = mathRandom;
                 assert.equals(events.join("\n"), expected);
                 test.end();
             });
         },
 
         "should emit all spec events in proper order": function (test) {
+            var mathRandom = Math.random;
+            Math.random = function () { return 0; };
             var assertionError = new Error("Test failed");
             assertionError.name = "AssertionError";
             var error = new Error("Oops");
@@ -187,6 +192,7 @@ buster.spec.expose();
                 "end: TestCase";
 
             runner.run(context).then(function () {
+                Math.random = mathRandom;
                 assert.equals(events.join("\n"), expected);
                 test.end();
             });

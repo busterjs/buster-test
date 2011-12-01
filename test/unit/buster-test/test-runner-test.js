@@ -48,6 +48,12 @@ buster.util.testCase("TestRunnerCreateTest", {
 buster.util.testCase("TestRunnerRunTest", {
     setUp: function () {
         this.runner = buster.testRunner.create();
+        this.mathRandom = Math.random;
+        Math.random = function () { return 1; };
+    },
+
+    tearDown: function () {
+        Math.random = this.mathRandom;
     },
 
     "should return promise": function () {
@@ -297,10 +303,16 @@ buster.util.testCase("TestRunnerRunTest", {
         });
 
         this.runner.run(context).then(function () {
-            assert(setUp.calledThrice);
-            assert(setUp.calledBefore(tests[0]));
-            assert(setUp.calledAfter(tests[1]));
-            assert(!setUp.calledAfter(tests[2]));
+            var calls = [tests[0].callIds[0], tests[1].callIds[0], tests[2].callIds[0]];
+            calls = calls.sort(function (a, b) {
+                return a == b ? 0 : (a < b ? - 1 : 1);
+            });
+
+            assert(setUp.callIds[0] < calls[0]);
+            assert(setUp.callIds[1] > calls[0]);
+            assert(setUp.callIds[1] < calls[1]);
+            assert(setUp.callIds[2] > calls[1]);
+            assert(setUp.callIds[2] < calls[2]);
             test.end();
         });
     },
@@ -316,9 +328,17 @@ buster.util.testCase("TestRunnerRunTest", {
 
         this.runner.run(context).then(function () {
             assert(tearDown.calledThrice);
-            assert(!tearDown.calledBefore(tests[0]));
-            assert(tearDown.calledAfter(tests[0]));
-            assert(tearDown.calledAfter(tests[2]));
+
+            var calls = [tests[0].callIds[0], tests[1].callIds[0], tests[2].callIds[0]];
+            calls = calls.sort(function (a, b) {
+                return a == b ? 0 : (a < b ? - 1 : 1);
+            });
+
+            assert(tearDown.callIds[0] > calls[0]);
+            assert(tearDown.callIds[0] < calls[1]);
+            assert(tearDown.callIds[1] > calls[1]);
+            assert(tearDown.callIds[1] < calls[2]);
+            assert(tearDown.callIds[2] > calls[2]);
             test.end();
         });
     },
@@ -871,7 +891,7 @@ buster.util.testCase("TestRunnerImplicitAsyncTest", {
 
         this.runner.run(context).then(function () {
             assert(listener.called);
-            assert.defined(callback);
+            assert(!!callback);
             assert(callback.called);
             test.end();
         });
@@ -1004,7 +1024,7 @@ buster.util.testCase("TestRunnerImplicitAsyncSetUpTest", {
         });
 
         this.runner.run(context).then(function () {
-            assert.defined(callback);
+            assert(!!callback);
             assert(callback.called);
             test.end();
         });
@@ -1171,7 +1191,7 @@ buster.util.testCase("TestRunnerImplicitAsyncTearDownTest", {
         });
 
         this.runner.run(context).then(function () {
-            assert.defined(callback);
+            assert(!!callback);
             assert(callback.called);
             test.end();
         });
