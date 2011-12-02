@@ -1,22 +1,22 @@
 (function () {
+    var assert, refute, htmlReporter, busterUtil;
+
     if (typeof require == "function") {
         var sinon = require("sinon");
         var buster = require("buster-core");
         var helper = require("./test-helper");
-
-        buster.extend(buster, {
-            assertions: require("buster-assertions"),
-            reporters: {
-                html: require("../../../../lib/buster-test/reporters/html")
-            }
-        });
-
-        buster.util = require("buster-util");
+        var assertions = require("buster-assertions");
         var jsdom = require("jsdom").jsdom;
+        assert = assertions.assert;
+        refute = assertions.refute;
+        htmlReporter = require("../../../../lib/buster-test/reporters/html");
+        busterUtil = require("buster-util");
+    } else {
+        assert = buster.assertions.assert;
+        refute = buster.assertions.refute;
+        htmlReporter = buster.reporters.html;
+        busterUtil = buster.util;
     }
-
-    var assert = buster.assertions.assert;
-    var refute = buster.assertions.refute;
 
     function createDocument() {
         var dom = jsdom("<!DOCTYPE html><html><head></head><body></body></html>");
@@ -29,7 +29,7 @@
         this.doc = typeof document != "undefined" ? document : createDocument();
         this.root = options.root || this.doc.createElement("div");
 
-        this.reporter = buster.reporters.html.create(buster.extend({
+        this.reporter = htmlReporter.create(buster.extend({
             document: this.doc,
             root: this.root,
             io: options.io || { puts: function () {} }
@@ -57,7 +57,7 @@
         });
     }
 
-    buster.util.testCase("HTMLReporterCreateTest", {
+    busterUtil.testCase("HTMLReporterCreateTest", {
         setUp: function () {
             this.doc = createDocument();
         },
@@ -75,19 +75,19 @@
         "should add 'buster-test' class to root element": function () {
             var element = this.doc.createElement("div");
 
-            buster.reporters.html.create({ document: this.doc, root: element });
+            htmlReporter.create({ document: this.doc, root: element });
 
             assert.className(element, "buster-test");
         },
 
         "should add 'buster-test' class to html element if root is body": function () {
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             assert.className(this.doc.documentElement, "buster-test");
         },
 
         "should make page mobile friendly if logging on body": function () {
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             var metas = this.doc.getElementsByTagName("meta"), meta;
 
@@ -102,7 +102,7 @@
         },
 
         "should serve page with right charset if logging on body": function () {
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             var metas = this.doc.getElementsByTagName("meta"), meta;
 
@@ -120,7 +120,7 @@
         "should inject CSS file from same directory if buster-test.js is not found":
         function () {
             if (typeof document == "undefined") return;
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             var links = this.doc.getElementsByTagName("link");
             var link = links[links.length - 1];
@@ -136,7 +136,7 @@
         "should inject CSS file if logging on body": function () {
             if (typeof document == "undefined") return;
             this.doc.body.innerHTML += "<script src=\"/some/path/buster-test.js\"></script>";
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             var links = this.doc.getElementsByTagName("link");
             var link = links[links.length - 1];
@@ -151,7 +151,7 @@
 
         "should inject CSS file in style tag if on node": function () {
             if (typeof document != "undefined") return;
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             var styles = this.doc.getElementsByTagName("style");
             var style = styles[styles.length - 1];
@@ -161,7 +161,7 @@
 
         "should inject h1 if logging on body": function () {
             this.doc.title = "";
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             var h1 = this.doc.getElementsByTagName("h1")[0];
 
@@ -172,7 +172,7 @@
             var h1 = this.doc.createElement("h1");
             h1.innerHTML = "Hey";
             this.doc.body.appendChild(h1);
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             var h1s = this.doc.getElementsByTagName("h1");
 
@@ -182,7 +182,7 @@
 
         "should use this.doc.title in h1": function () {
             this.doc.title = "Use it";
-            buster.reporters.html.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body });
 
             var h1 = this.doc.getElementsByTagName("h1")[0];
 
@@ -190,7 +190,7 @@
         }
     });
 
-    buster.util.testCase("HTMLReporterTestsRunningTest", {
+    busterUtil.testCase("HTMLReporterTestsRunningTest", {
         setUp: reporterSetUp,
 
         "should add context name as h2 when entering top-level context": function () {
@@ -420,7 +420,7 @@
         }
     });
 
-    buster.util.testCase("HTMLReporterConsoleTest", {
+    busterUtil.testCase("HTMLReporterConsoleTest", {
         setUp: function () {
             this.io = helper.io();
             this.assertIO = helper.assertIO;
@@ -448,7 +448,7 @@
         }
     });
 
-    buster.util.testCase("HTMLReporterStatsTest", {
+    busterUtil.testCase("HTMLReporterStatsTest", {
         setUp: function () {
             reporterSetUp.call(this);
             this.reporter.contextStart({ name: "Some context" });
@@ -499,22 +499,22 @@
         }
     });
 
-    buster.util.testCase("HTMLReporterEventMappingTest", sinon.testCase({
+    busterUtil.testCase("HTMLReporterEventMappingTest", sinon.testCase({
         setUp: function () {
-            this.stub(buster.reporters.html, "contextStart");
-            this.stub(buster.reporters.html, "contextEnd");
-            this.stub(buster.reporters.html, "testSuccess");
-            this.stub(buster.reporters.html, "testFailure");
-            this.stub(buster.reporters.html, "testError");
-            this.stub(buster.reporters.html, "testTimeout");
-            this.stub(buster.reporters.html, "testDeferred");
-            this.stub(buster.reporters.html, "log");
-            this.stub(buster.reporters.html, "addStats");
+            this.stub(htmlReporter, "contextStart");
+            this.stub(htmlReporter, "contextEnd");
+            this.stub(htmlReporter, "testSuccess");
+            this.stub(htmlReporter, "testFailure");
+            this.stub(htmlReporter, "testError");
+            this.stub(htmlReporter, "testTimeout");
+            this.stub(htmlReporter, "testDeferred");
+            this.stub(htmlReporter, "log");
+            this.stub(htmlReporter, "addStats");
 
             this.doc = typeof document != "undefined" ? document : createDocument();
             this.runner = buster.create(buster.eventEmitter);
             this.runner.console = buster.create(buster.eventEmitter);
-            this.reporter = buster.reporters.html.create({
+            this.reporter = htmlReporter.create({
                 root: this.doc.createElement("div")
             }).listen(this.runner);
         },
