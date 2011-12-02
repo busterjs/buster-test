@@ -630,6 +630,22 @@ buster.util.testCase("TestRunnerAssertionCountTest", {
         }.bind(this));
     },
 
+    "should not fail with 0 assertions if timing out": function (test) {
+        sinon.stub(this.runner, "assertionCount").returns(0);
+        var timeoutListener = sinon.spy();
+        this.runner.on("test:timeout", timeoutListener);
+
+        var context = buster.testCase("Test + Assertions", {
+            test1: function (done) {}
+        });
+
+        this.runner.run(context).then(function () {
+            assert(timeoutListener.calledOnce);
+            refute(this.listener.called);
+            test.end();
+        }.bind(this));
+    },
+
     "should not fail test if 1 assertion": function (test) {
         sinon.stub(this.runner, "assertionCount").returns(1);
 
