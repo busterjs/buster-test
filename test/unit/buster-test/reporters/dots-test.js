@@ -249,6 +249,18 @@ buster.util.testCase("DotsReporterMessagesTest", {
         refute.match(this.io.toString(), "Passed: Stuff some test");
     },
 
+    "prints messages not belonging to a specific test": function () {
+        this.reporter.log({ level: "log", message: "Is message" });
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testFailure({ name: "some test" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        refute.match(this.io.toString(), "undefined");
+        assert.match(this.io.toString(), "Global message log:");
+        assert.match(this.io.toString(), "[LOG] Is message");
+    },
+
     "should print list of deferred tests": function () {
         this.reporter.startContext({ name: "Stuff" });
         this.reporter.testDeferred({ name: "some test" });
