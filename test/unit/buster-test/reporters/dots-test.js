@@ -599,7 +599,7 @@ buster.util.testCase("DotsReporterColorOutputTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printDetails();
 
-        assert.match(this.io.toString(), "\033[30mLater\033[0m");
+        assert.match(this.io.toString(), "\033[38;5;8mLater\033[0m");
     },
 
     "should print unsupported test in yellow": function () {
@@ -783,7 +783,7 @@ buster.util.testCase("DotsReporterBrightColorOutputTest", {
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printDetails();
 
-        assert.match(this.io.toString(), "\033[1m\033[30mLater\033[0m");
+        assert.match(this.io.toString(), "\033[1m\033[38;5;8mLater\033[0m");
     },
 
     "should print unsupported test in bright yellow": function () {
