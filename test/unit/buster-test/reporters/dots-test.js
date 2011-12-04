@@ -256,6 +256,15 @@ buster.util.testCase("DotsReporterMessagesTest", {
         this.reporter.printDetails();
 
         assert.match(this.io.toString(), "Deferred: Stuff some test");
+    },
+
+    "should print deferred test comment": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testDeferred({ name: "some test", comment: "Later" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        assert.match(this.io.toString(), "Deferred: Stuff some test\nLater");
     }
 });
 
@@ -584,6 +593,15 @@ buster.util.testCase("DotsReporterColorOutputTest", {
         assert.match(this.io.toString(), "\033[36mDeferred: Stuff some test\033[0m");
     },
 
+    "should print deferred test comment in light grey": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testDeferred({ name: "some test", comment: "Later" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        assert.match(this.io.toString(), "\033[30mLater\033[0m");
+    },
+
     "should print unsupported test in yellow": function () {
         this.reporter.unsupportedContext({
             context: { name: "Stuff" },
@@ -757,6 +775,15 @@ buster.util.testCase("DotsReporterBrightColorOutputTest", {
 
         assert.match(this.io.toString(),
                      "\033[1m\033[36mDeferred: Stuff some test\033[0m");
+    },
+
+    "should print deferred test comment in bright grey": function () {
+        this.reporter.startContext({ name: "Stuff" });
+        this.reporter.testDeferred({ name: "some test", comment: "Later" });
+        this.reporter.endContext({ name: "Stuff" });
+        this.reporter.printDetails();
+
+        assert.match(this.io.toString(), "\033[1m\033[30mLater\033[0m");
     },
 
     "should print unsupported test in bright yellow": function () {
