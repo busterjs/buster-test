@@ -1,5 +1,4 @@
 if (typeof require != "undefined") {
-    var sys = require("sys");
     var sinon = require("sinon");
 
     var buster = {
