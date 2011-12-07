@@ -553,5 +553,21 @@ buster.util.testCase("TestContextTestDeferredTest", {
         });
 
         assert.equals(context.tests[0].name, "test");
+    },
+
+    "should defer entire context": function () {
+        var context = buster.testCase("Name", {
+            "// up next": {
+                "cool feature A": function () {},
+                "cool feature B": function () {},
+                "cool feature C": function () {}
+            }
+        });
+
+        var context = context.contexts[0];
+        assert.equals(context.name, "up next");
+        assert(context.tests[0].deferred);
+        assert(context.tests[1].deferred);
+        assert(context.tests[2].deferred);
     }
 });
