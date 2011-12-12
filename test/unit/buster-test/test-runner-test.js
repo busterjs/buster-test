@@ -881,6 +881,48 @@ buster.util.testCase("TestRunnerAsyncTest", {
             assert(listener.calledOnce);
             test.end();
         });
+    },
+
+    "should prefer test error over tearDown failure": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:error", listener);
+        this.runner.on("test:failure", listener);
+
+        var a;
+        var context = buster.testCase("Test", {
+            tearDown: function () { assert(false); },
+            test: function () { a.b.c = 42; }
+        });
+
+        this.runner.run(context).then(function () {
+            assert(listener.calledOnce);
+            assert.equals(listener.args[0][0].error.name, "TypeError");
+            test.end();
+        }, function () {
+            assert.fail();
+        });
+    },
+
+    "should prefer test error over tearDown failure with non-throwing assertions": function (test) {
+        var listener = sinon.spy();
+        this.runner.on("test:error", listener);
+        this.runner.on("test:failure", listener);
+
+        var a;
+        var assertionError = new Error("Oops");
+        assertionError.name = "AssertionError";
+        var context = buster.testCase("Test", {
+            tearDown: function () { runner.assertionFailure(assertionError); },
+            test: function () { a.b.c = 42; }
+        });
+
+        this.runner.run(context).then(function () {
+            assert(listener.calledOnce);
+            assert.equals(listener.args[0][0].error.name, "TypeError");
+            test.end();
+        }, function () {
+            assert.fail();
+        });
     }
 });
 
