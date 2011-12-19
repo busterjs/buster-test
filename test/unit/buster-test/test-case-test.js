@@ -43,7 +43,7 @@ buster.util.testCase("BusterTestCaseTest", {
 
     "should throw if tests is not an object": function () {
         assert.exception(function () {
-            var testCase = buster.testCase("Some test", function () {});
+            var testCase = buster.testCase("Some test", 42);
         });
     },
 
@@ -351,5 +351,55 @@ buster.util.testCase("TestContextTestDeferredTest", {
         assert(context.tests[0].deferred);
         assert(context.tests[1].deferred);
         assert(context.tests[2].deferred);
+    }
+});
+
+buster.util.testCase("AsyncTestContextTest", {
+    "should make context promise": function () {
+        var testCase = buster.testCase("Some test", function () {});
+
+        assert.equals(typeof testCase.then, "function");
+        refute.defined(testCase.name);
+        refute.defined(testCase.tests);
+        refute.defined(testCase.setUp);
+        refute.defined(testCase.tearDown);
+    },
+
+    "should call async context with run argument": function () {
+        var spy = sinon.spy();
+        var testCase = buster.testCase("Some test", spy);
+
+        assert(spy.calledOnce);
+        assert.isFunction(spy.args[0][0]);
+    },
+
+    "calling run should resolve promise": function (test) {
+        var spy = sinon.spy();
+
+        buster.testCase("Some test", spy).then(test.end);
+
+        spy.args[0][0]({});
+    },
+
+    "should resolve promise with test context data": function (test) {
+        var setUp = function () {};
+        var testFn = function () {};
+
+        var testCase = buster.testCase("Some test", function (run) {
+            run({
+                setUp: setUp,
+                testSomething: testFn
+            });
+        });
+
+        testCase.then(function (ctx) {
+            assert.isObject(ctx);
+            assert.equals(ctx.name, "Some test");
+            assert.equals(ctx.tests.length, 1);
+            assert.equals(ctx.tests[0].name, "testSomething");
+            assert.equals(ctx.tests[0].func, testFn);
+            assert.equals(ctx.setUp, setUp);
+            test.end();
+        });
     }
 });
