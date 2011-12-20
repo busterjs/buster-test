@@ -364,4 +364,103 @@
             });
         }
     });
+
+    testCase("AsyncSpecTest", {
+        "makes context promise when describe callback expects argument": function () {
+            var spec = bspec.describe("Some spec", function (run) {});
+
+            assert.equals(typeof spec.then, "function");
+            refute.defined(spec.name);
+            refute.defined(spec.tests);
+            refute.defined(spec.setUp);
+            refute.defined(spec.tearDown);
+        },
+
+        "calls async context with run argument": function () {
+            var run;
+            bspec.describe("Some spec", function (r) { run = r; });
+
+            assert.defined(run);
+            assert.isFunction(run);
+        },
+
+        "calling run resolves promise": function (test) {
+            var run;
+            bspec.describe("Some spec", function (r) { run = r; }).then(test.end);
+            run(function () {});
+        },
+
+        "resolves promise with test context data": function (test) {
+            var before = function () {};
+            var example = function () {};
+
+            bspec.describe("Some spec", function (run) {
+                run(function () {
+                    bspec.before(before);
+                    bspec.it("Does stuff", example);
+                });
+            }).then(function (ctx) {
+                assert.isObject(ctx);
+                assert.equals(ctx.name, "Some spec");
+                assert.equals(ctx.tests.length, 1);
+                assert.equals(ctx.tests[0].name, "Does stuff");
+                assert.equals(ctx.tests[0].func, example);
+                assert.equals(ctx.setUp, before);
+                test.end();
+            });
+        },
+
+        "handles multiple async specs": function (test) {
+            var runSpec1, runSpec2;
+
+            var spec1 = bspec.describe("Some spec", function (run) {
+                runSpec1 = function () {
+                    run(function () {
+                        bspec.it("Does stuff", function () {});
+                        bspec.describe("Inner examples", function () {
+                            bspec.it("Is sure", function () {});
+                        });
+                    });
+                };
+            });
+
+            var spec2 = bspec.describe("Some other spec", function (run) {
+                runSpec2 = function () {
+                    run(function () {
+                        bspec.describe("Inner once again", function () {
+                            bspec.it("Should not mix the two", function () {});
+                            bspec.it("Should behave well", function () {});
+                        });
+                    });
+                };
+            });
+
+            runSpec2();
+            runSpec1();
+
+            spec1.then(function (ctx) {
+                assert.isObject(ctx);
+                assert.equals(ctx.name, "Some spec");
+                assert.equals(ctx.tests.length, 1);
+                assert.equals(ctx.tests[0].name, "Does stuff");
+                assert.equals(ctx.contexts.length, 1);
+                assert.equals(ctx.contexts[0].name, "Inner examples");
+                assert.equals(ctx.contexts[0].tests.length, 1);
+                assert.equals(ctx.contexts[0].tests[0].name, "Is sure");
+                test.end();
+            });
+        },
+
+        "does not allow nested async specs": function (test) {
+            var innerRun;
+            bspec.describe("Some spec", function (run) {
+                run(function (r2) {
+                    innerRun = r2;
+                });
+            }).then(function (ctx) {
+                refute.defined(innerRun);
+                test.end();
+            });
+        }
+    });
 }(this.buster, this.sinon));
