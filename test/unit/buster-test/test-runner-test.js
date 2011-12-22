@@ -271,6 +271,62 @@
             }));
         },
 
+        "runs all tests in series": function (test) {
+            var events = [];
+
+            var context = testCase("Test", {
+                setUp: function () { events.push("setUp"); },
+                tearDown: function () { events.push("tearDown"); },
+                test1: function () { events.push("test1"); },
+                test2: function (done) {
+                    setTimeout(done(function () { events.push("test2"); }), 10);
+                },
+                test3: function (done) {
+                    setTimeout(done(function () { events.push("test3"); }), 10);
+                }
+            });
+
+            this.runner.runContext(context).then(test.end(function () {
+                assert.equals(events, ["setUp", "test3", "tearDown",
+                                       "setUp", "test2", "tearDown",
+                                       "setUp", "test1", "tearDown"]);
+            }));
+        },
+
+        "runs all contexts in series": function (test) {
+            var events = [];
+
+            var context = testCase("Test", {
+                setUp: function () { events.push("su"); },
+                tearDown: function () { events.push("td"); },
+                context1: {
+                    setUp: function () { events.push("su 1"); },
+                    tearDown: function () { events.push("td 1"); },
+                    test1: function () { events.push("test1"); },
+                },
+                context2: {
+                    setUp: function () { events.push("su 2"); },
+                    tearDown: function () { events.push("td 2"); },
+                    test2: function (done) {
+                        setTimeout(done(function () { events.push("test2"); }), 10);
+                    },
+                },
+                context3: {
+                    setUp: function () { events.push("su 3"); },
+                    tearDown: function () { events.push("td 3"); },
+                    test3: function (done) {
+                        setTimeout(done(function () { events.push("test3"); }), 10);
+                    }
+                }
+            });
+
+            this.runner.runContext(context).then(test.end(function () {
+                assert.equals(events, ["su", "su 3", "test3", "td 3", "td",
+                                       "su", "su 2", "test2", "td 2", "td",
+                                       "su", "su 1", "test1", "td 1", "td"]);
+            }));
+        },
+
         "runs tests in random order": function (test) {
             // A tad bit too clever. Non-determinism is hard to test.
             var calls = 0;
