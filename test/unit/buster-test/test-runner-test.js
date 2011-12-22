@@ -610,7 +610,6 @@ bu.testCase("TestRunnerRunSuiteTest", {
         this.runner.runSuite(contexts).then(test.end(function () {
             assert(tests[0].calledOnce);
             assert(tests[1].calledOnce);
-            assert(tests[1].calledAfter(tests[0]));
         }));
     }
 });
