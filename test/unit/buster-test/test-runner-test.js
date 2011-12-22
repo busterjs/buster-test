@@ -6,7 +6,7 @@
         B = require("buster-core");
         when = require("when");
         testCase = require("../../../lib/buster-test/test-case");
-        testRunner = require("../../../lib/buster-test/test-runner2");
+        testRunner = require("../../../lib/buster-test/test-runner");
         bu = require("buster-util");
         assertions = require("buster-assertions");
         format = require("buster-format");
@@ -43,7 +43,7 @@
         }
     });
 
-    bu.testCase("TestRunnerRunTest", {
+    bu.testCase("TestRunnerRunContextTest", {
         setUp: function () {
             this.runner = testRunner.create();
             this.mathRandom = Math.random;
@@ -55,7 +55,7 @@
         },
 
         "returns promise": function () {
-            var promise = this.runner.run();
+            var promise = this.runner.runContext();
 
             assert.isObject(promise);
             assert(promise.then);
@@ -63,7 +63,7 @@
 
         "rejects without context": function (test) {
             var rejection = sinon.spy();
-            this.runner.run().then(function () { console.log("HMM"); }, function () {
+            this.runner.runContext().then(function () {}, function () {
                 test.end();
             })
         },
@@ -72,7 +72,7 @@
             var testFn = sinon.spy();
             var context = testCase("Test", { test: testFn });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(testFn.calledOnce);
                 assert(context.testCase.isPrototypeOf(testFn.thisValues[0]));
             }));
@@ -81,7 +81,7 @@
         "runs test asynchronously": function (test) {
             var testFn = sinon.spy();
             var context = testCase("Test", { test: testFn });
-            var runnerResult = this.runner.run(context);
+            var runnerResult = this.runner.runContext(context);
 
             assert(!testFn.called);
 
@@ -93,7 +93,7 @@
         "does not reject if test throws": function (test) {
             var context = testCase("Test", { test: sinon.stub().throws() });
 
-            this.runner.run(context).then(test.end, test.end(function () {
+            this.runner.runContext(context).then(test.end, test.end(function () {
                 assert(false, "Promise rejected");
             }));
         },
@@ -103,7 +103,7 @@
             var testFn = sinon.spy();
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(setUp.calledOnce);
                 assert.same(testFn.thisValues[0], setUp.thisValues[0]);
             }));
@@ -114,7 +114,7 @@
             var setUp = sinon.spy();
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(setUp.calledBefore(testFn));
             }));
         },
@@ -126,7 +126,7 @@
             var setUp = function (done) { doneCb = done; };
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            var testRun = this.runner.run(context).then(test.end(function () {
+            var testRun = this.runner.runContext(context).then(test.end(function () {
                 assert(testFn.calledOnce);
             }));
 
@@ -146,7 +146,7 @@
 
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            var testRun = this.runner.run(context).then(test.end(function () {
+            var testRun = this.runner.runContext(context).then(test.end(function () {
                 assert(resolved);
                 assert(testFn.calledOnce);
             }));
@@ -161,7 +161,7 @@
             var setUp = sinon.stub().throws();
             var context = testCase("Test", { setUp: setUp, test: sinon.spy() });
 
-            this.runner.run(context).then(function () {
+            this.runner.runContext(context).then(function () {
                 test.end();
             }, function () {
                 assert.fail();
@@ -173,7 +173,7 @@
             var setUp = sinon.stub().throws();
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(!testFn.called);
             }));
         },
@@ -184,7 +184,7 @@
             var setUp = sinon.stub().returns(deferred.promise);
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(!testFn.called);
             }));
 
@@ -196,7 +196,7 @@
             var tearDown = sinon.spy();
             var context = testCase("Test", { tearDown: tearDown, test: testFn });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledOnce);
                 assert.same(testFn.thisValues[0], tearDown.thisValues[0]);
             }));
@@ -207,7 +207,7 @@
             var tearDown = sinon.spy();
             var context = testCase("Test", { tearDown: tearDown, test: testFn });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledAfter(testFn));
             }));
         },
@@ -218,7 +218,7 @@
             var context = testCase("Test", { tearDown: tearDown, test: sinon.spy() });
             var complete = sinon.spy(B.partial(B.nextTick, test.end));
 
-            this.runner.run(context).then(complete);
+            this.runner.runContext(context).then(complete);
 
             buster.nextTick(function () {
                 assert(!complete.called);
@@ -231,7 +231,7 @@
             var tearDown = sinon.stub().throws();
             var context = testCase("Test", { tearDown: tearDown, test: testFn });
 
-            this.runner.run(context).then(test.end, assert.fail);
+            this.runner.runContext(context).then(test.end, assert.fail);
         },
 
         "calls tearDown if setUp throws": function (test) {
@@ -240,7 +240,7 @@
                 setUp: sinon.stub().throws(), tearDown: tearDown, test: sinon.spy()
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledOnce);
             }));
         },
@@ -252,7 +252,7 @@
                 setUp: sinon.spy(), tearDown: tearDown, test: sinon.stub().throws()
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledOnce);
             }));
         },
@@ -264,10 +264,33 @@
                 test1: tests[0], test2: tests[1], test3: tests[2]
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tests[0].calledOnce);
                 assert(tests[1].calledOnce);
                 assert(tests[2].calledOnce);
+            }));
+        },
+
+        "runs tests in random order": function (test) {
+            // A tad bit too clever. Non-determinism is hard to test.
+            var calls = 0;
+            var numbers = [0.9, 0, 0.5];
+            Math.random = function () { return numbers[calls++ % 3]; };
+
+            var order = [];
+            var tests = [function () { order.unshift(1); },
+                         function () { order.unshift(2); },
+                         function () { order.unshift(3); },
+                         function () { order.unshift(4); },
+                         function () { order.unshift(5); }];
+
+            var context = testCase("Test", {
+                test1: tests[0], test2: tests[1], test3: tests[2],
+                test4: tests[3], test5: tests[4]
+            });
+
+            this.runner.runContext(context).then(test.end(function () {
+                refute.equals(order, [1, 2, 3, 4, 5]);
             }));
         },
 
@@ -278,7 +301,7 @@
                 test1: tests[0], test2: tests[1], test3: tests[2]
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tests[0].calledOnce);
                 assert(tests[1].calledOnce);
                 assert(tests[2].calledOnce);
@@ -294,7 +317,7 @@
                 test1: tests[0], test2: tests[1], test3: tests[2]
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 var calls = [tests[0].callIds[0], tests[1].callIds[0], tests[2].callIds[0]];
                 calls = calls.sort(numericSort);
 
@@ -315,7 +338,7 @@
                 test1: tests[0], test2: tests[1], test3: tests[2]
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledThrice);
 
                 var calls = [tests[0].callIds[0], tests[1].callIds[0],
@@ -334,7 +357,7 @@
             var testFn = sinon.spy();
             var context = testCase("Test", { "context": { test1: testFn } });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(testFn.calledOnce);
             }));
         },
@@ -344,7 +367,7 @@
             var context = { tests: [{ name: "sumptn", func: testFn }] };
 
             refute.exception(B.bind(this, function () {
-                this.runner.run(context).then(test.end(function () {
+                this.runner.runContext(context).then(test.end(function () {
                     assert(testFn.calledOnce);
                 }));
             }));
@@ -358,7 +381,7 @@
                 "context2": { test1: tests[1] }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tests[0].calledOnce);
                 assert(tests[1].calledOnce);
             }));
@@ -374,7 +397,7 @@
 
             context.contexts[0].testCase.id = 42;
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(setUp.calledOnce);
                 assert.same(testFn.thisValues[0], setUp.thisValues[0]);
             }));
@@ -389,7 +412,7 @@
                 "context": { setUp: setUps[1], test1: testFn }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(setUps[0].calledOnce);
                 assert(setUps[1].calledOnce);
                 assert(setUps[0].calledBefore(setUps[1]));
@@ -405,7 +428,7 @@
                 setUp: outerSetUp, "context": { setUp: innerSetUp, test1: testFn }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(testFn.called);
             }));
 
@@ -429,7 +452,7 @@
                 "context": { test1: testFn }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert.same(testFn.thisValues[0], setUp.thisValues[0]);
             }));
         },
@@ -442,7 +465,7 @@
                 "context": { setUp: setUps[1], test1: sinon.spy() }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(!setUps[1].called);
             }));
         },
@@ -455,7 +478,7 @@
                 "context": { tearDown: tearDown, test1: testFn }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledOnce);
                 assert.same(testFn.thisValues[0], tearDown.thisValues[0]);
             }));
@@ -469,7 +492,7 @@
                 "context": { tearDown: tearDowns[1], test1: sinon.spy() }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDowns[0].calledOnce);
                 assert(tearDowns[0].calledOnce);
                 assert(tearDowns[1].calledOnce);
@@ -486,7 +509,7 @@
                 "context": { test1: testFn }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledOnce);
                 assert.same(tearDown.thisValues[0], testFn.thisValues[0]);
             }));
@@ -501,7 +524,7 @@
                 "context": { tearDown: tearDowns[1], test1: testFn }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDowns[1].calledBefore(tearDowns[0]));
             }));
         },
@@ -514,7 +537,7 @@
                 "context": { tearDown: tearDowns[1], test1: sinon.spy() }
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(tearDowns[1].called);
                 assert(!tearDowns[0].called);
             }));
@@ -530,7 +553,7 @@
                 "context": { tearDown: innerTearDown, test1: testFn }
             });
 
-            this.runner.run(context).then(test.end);
+            this.runner.runContext(context).then(test.end);
 
             // One buster.nextTick per context
             tick(2, function () {
@@ -550,7 +573,7 @@
                 "//should do this": testFn
             });
 
-            this.runner.run(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(!testFn.called);
             }));
         },
@@ -561,7 +584,7 @@
                 runIt = run;
             });
 
-            this.runner.run(context).then(completed);
+            this.runner.runContext(context).then(completed);
 
             buster.nextTick(function () {
                 assert.isFunction(runIt);
@@ -602,7 +625,7 @@ bu.testCase("TestRunnerAsyncTest", {
 
     "resolves run when test has resolved": function (test) {
         var completed = sinon.spy();
-        this.runner.run(this.context).then(completed);
+        this.runner.runSuite([this.context]).then(completed);
 
         buster.nextTick(B.bind(this, test.end(function () {
             refute(completed.called);
@@ -616,7 +639,7 @@ bu.testCase("TestRunnerAsyncTest", {
         this.runner.on("test:async", listeners[0]);
         this.runner.on("test:success", listeners[1]);
 
-        this.runner.run(this.context).then(test.end(function () {
+        this.runner.runSuite([this.context]).then(test.end(function () {
             assert(listeners[0].calledOnce);
             assert.equals(listeners[0].args[0], [{ name: "test" }]);
             assert(listeners[0].calledBefore(listeners[1]));
@@ -628,7 +651,7 @@ bu.testCase("TestRunnerAsyncTest", {
     "times out after 250ms": function (test) {
         var runnerResolution = sinon.spy();
         var promiseResolution = spyOnPromise(this.deferred.promise);
-        this.runner.run(this.context).then(runnerResolution);
+        this.runner.runSuite([this.context]).then(runnerResolution);
 
         setTimeout(test.end(function () {
             assert(runnerResolution.called);
@@ -639,7 +662,7 @@ bu.testCase("TestRunnerAsyncTest", {
     "times out after custom timeout": function (test) {
         var runnerResolution = sinon.spy();
         this.runner.timeout = 100;
-        this.runner.run(this.context).then(runnerResolution);
+        this.runner.runSuite([this.context]).then(runnerResolution);
 
         setTimeout(test.end(function () {
             assert(runnerResolution.called);
@@ -648,11 +671,11 @@ bu.testCase("TestRunnerAsyncTest", {
 
     "sets timeout as property on test case": function (test) {
         var runnerResolution = sinon.spy();
-        this.runner.run(testCase("Test", {
+        this.runner.runSuite([testCase("Test", {
             test: function (test) {
                 this.timeout = 50;
             }
-        })).then(runnerResolution);
+        })]).then(runnerResolution);
 
         setTimeout(test.end(function () {
             assert(runnerResolution.called);
@@ -664,7 +687,7 @@ bu.testCase("TestRunnerAsyncTest", {
         this.runner.timeout = 20;
         this.runner.on("test:timeout", listener);
 
-        this.runner.run(this.context).then(test.end(function () {
+        this.runner.runSuite([this.context]).then(test.end(function () {
             assert(listener.called);
             assert.match(listener.args[0], [{ name: "test" }]);
         }));
@@ -675,7 +698,7 @@ bu.testCase("TestRunnerAsyncTest", {
         this.runner.timeout = 20;
         this.runner.on("test:success", listener);
 
-        this.runner.run(this.context).then(test.end(function () {
+        this.runner.runSuite([this.context]).then(test.end(function () {
             assert(!listener.called);
         }));
     },
@@ -684,7 +707,7 @@ bu.testCase("TestRunnerAsyncTest", {
         var listener = sinon.spy();
         this.runner.on("test:success", listener);
 
-        this.runner.run(this.context).then(test.end(function () {
+        this.runner.runSuite([this.context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
 
@@ -698,7 +721,7 @@ bu.testCase("TestRunnerAsyncTest", {
         var listener = sinon.spy();
         this.runner.on("test:error", listener);
 
-        this.runner.run(this.context).then(test.end(function () {
+        this.runner.runSuite([this.context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.message, "Oh no");
         }));
@@ -710,7 +733,7 @@ bu.testCase("TestRunnerAsyncTest", {
         var listener = sinon.spy();
         this.runner.on("test:failure", listener);
 
-        this.runner.run(this.context).then(test.end(function () {
+        this.runner.runSuite([this.context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.message, "Oh no");
         }));
@@ -730,7 +753,7 @@ bu.testCase("TestRunnerAsyncTest", {
             test: function (done) { done(); }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     },
@@ -746,7 +769,7 @@ bu.testCase("TestRunnerAsyncTest", {
             test: function () { a.b.c = 42; }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.name, "TypeError");
         }), assert.fail);
@@ -766,7 +789,7 @@ bu.testCase("TestRunnerAsyncTest", {
             test: function () { a.b.c = 42; }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.name, "TypeError");
         }), assert.fail);
@@ -792,7 +815,7 @@ bu.testCase("TestRunnerImplicitAsyncTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.called);
             assert.isFunction(callback);
             assert(callback.called);
@@ -807,7 +830,7 @@ bu.testCase("TestRunnerImplicitAsyncTest", {
             test: function (done) { buster.nextTick(done); }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
 
@@ -827,7 +850,7 @@ bu.testCase("TestRunnerImplicitAsyncTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(innerDone);
         }));
 
@@ -848,7 +871,7 @@ bu.testCase("TestRunnerImplicitAsyncTest", {
             test: function (done) { fn(done(innerDone)); }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(innerDone.calledOnce);
             assert.equals(returnValue, 42);
             assert(innerDone.calledOn(thisp));
@@ -870,7 +893,7 @@ bu.testCase("TestRunnerImplicitAsyncTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.message, "Oops");
         }));
@@ -888,7 +911,7 @@ bu.testCase("TestRunnerImplicitAsyncTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.message, "Oops");
         }));
@@ -943,7 +966,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert.defined(callback);
             assert(callback.called);
         }));
@@ -960,7 +983,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
 
@@ -985,7 +1008,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.message, "Oops");
         }));
@@ -1004,7 +1027,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.message, "Oops");
         }));
@@ -1019,7 +1042,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     },
@@ -1033,7 +1056,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     },
@@ -1047,7 +1070,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(!listener.calledOnce);
         }));
     },
@@ -1061,7 +1084,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: function (done) { done(); }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     },
@@ -1078,7 +1101,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     }
@@ -1103,7 +1126,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(!!callback);
             assert(callback.called);
         }));
@@ -1122,7 +1145,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
 
@@ -1147,7 +1170,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.message, "Oops");
         }));
@@ -1166,7 +1189,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].error.message, "Oops");
         }));
@@ -1181,7 +1204,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     },
@@ -1195,7 +1218,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     },
@@ -1210,7 +1233,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             test: function (done) { done(); }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     },
@@ -1231,66 +1254,71 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listeners[1].calledOnce);
             assert(!listeners[0].called);
         }));
     }
 });
 
-// bu.testCase("RunnerRunAwayExceptionsTest", {
-//     "catches uncaught asynchronous errors": function (test) {
-//         var runner = testRunner.create();
-//         runner.timeout = 20;
-//         var listener = sinon.spy();
-//         runner.on("uncaughtException", listener);
+bu.testCase("RunnerRunAwayExceptionsTest", {
+    setUp: function () {
+        // Don't report uncaught exceptions in the util test runner too
+        bu.testCase.silent = true;
+    },
 
-//         var context = testCase("Test", {
-//             "does not fail, ever": function (done) {
-//                  setTimeout(function () {
-//                      throw new Error("Oops!");
-//                 }, 30);
-//             }
-//         });
+    tearDown: function () {
+        bu.testCase.silent = false;
+    },
 
-//         runner.run(context).then(function () {
-//             setTimeout(function () {
-//                 assert(listener.calledOnce);
-//                 test.end();
-//             }, 50);
-//         });
-//     },
-// /*
-//     "does not handle asynchronous failure as uncaught exception": function (test) {
-//         if (typeof document != "undefined") {
-//             console.log("'does not handle asynchronous failure as uncaught " +
-//                         "exception':\nAborting test, as browsers may not have " +
-//                         "enough information for uncaught errors to treat them as " +
-//                         "assertion failures");
-//             return test.end();
-//         }
+    "catches uncaught asynchronous errors": function (test) {
+        var runner = testRunner.create();
+        runner.timeout = 20;
+        var listener = sinon.spy();
+        runner.on("uncaughtException", listener);
 
-//         var runner = testRunner.create();
-//         var listeners = [sinon.spy(), sinon.spy()];
-//         runner.on("uncaughtException", listeners[0]);
-//         runner.on("test:failure", listeners[1]);
+        var context = testCase("Test", {
+            "does not fail, ever": function (done) {
+                 setTimeout(function () {
+                     throw new Error("Oops!");
+                }, 30);
+            }
+        });
 
-//         var context = testCase("Test", {
-//             "should fail with regular AssertionError": function (done) {
-//                  setTimeout(function () {
-//                      var error = new Error("[assert] Failed assertion asynchronously");
-//                      error.name = "AssertionError";
-//                      throw error;
-//                 }, 10);
-//             }
-//         });
+        runner.runSuite([context]).then(function () {
+            setTimeout(test.end(function () {
+                assert(listener.calledOnce);
+            }), 50);
+        });
+    },
 
-//         runner.run(context).then(function () {
-//             refute(listeners[0].called);
-//             assert(listeners[1].calledOnce);
-//             test.end();
-//         });
-//     },
+    "does not handle asynchronous failure as uncaught exception": function (test) {
+        if (typeof document != "undefined") {
+            console.log("'does not handle asynchronous failure as uncaught " +
+                        "exception':\nAborting test, as browsers may not have " +
+                        "enough information for uncaught errors to treat them as " +
+                        "assertion failures");
+            return test.end();
+        }
+
+        var runner = testRunner.create();
+        var listeners = [sinon.spy(), sinon.spy()];
+        runner.on("uncaughtException", listeners[0]);
+        runner.on("test:failure", listeners[1]);
+
+        var context = testCase("Test", {
+            "should fail with regular AssertionError": function (done) {
+                 setTimeout(function () {
+                     throw assertionError("[assert] Failed assertion asynchronously");
+                }, 10);
+            }
+        });
+
+        runner.runSuite([context]).then(test.end(function () {
+            refute(listeners[0].called);
+            assert(listeners[1].calledOnce);
+        }));
+    },
 
 //     "should keep handling uncaught exceptions after async failure": function (test) {
 //         if (typeof document != "undefined") {
@@ -1322,7 +1350,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
 //             }
 //         });
 
-//         runner.run(context).then(function () {
+//         runner.runSuite([context]).then(function () {
 //             setTimeout(function () {
 //                 assert(listeners[0].called);
 //                 assert(listeners[1].called);
@@ -1331,7 +1359,7 @@ bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
 //         });
 //     }
 // */
-// });
+});
 
 bu.testCase("TestRunnerEventedAssertionsTest", {
     setUp: function () {
@@ -1357,7 +1385,7 @@ bu.testCase("TestRunnerEventedAssertionsTest", {
             "test it": function () { _assert(false); }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             var args = listener.args;
             assert.equals(args[0][0].name, "test it");
@@ -1377,7 +1405,7 @@ bu.testCase("TestRunnerEventedAssertionsTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
         }));
     },
@@ -1395,7 +1423,7 @@ bu.testCase("TestRunnerEventedAssertionsTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listeners[0].calledOnce);
             assert(!listeners[1].called);
         }));
@@ -1413,7 +1441,7 @@ bu.testCase("TestRunnerEventedAssertionsTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listeners[0].calledOnce);
             assert(!listeners[1].called);
         }));
@@ -1428,15 +1456,17 @@ bu.testCase("TestRunnerEventedAssertionsTest", {
 
         var context = testCase("Test", {
             "test it": function (done) {
-                setTimeout(function () { assert(false); }, 40);
+                setTimeout(function () {
+                    assert(false);
+                }, 40);
             }
         });
 
-        this.runner.run(context).then(function () {
+        this.runner.runSuite([context]).then(function () {
             setTimeout(test.end(function () {
                 assert(!listeners[0].called);
                 assert(listeners[1].calledOnce);
-            }), 30);
+            }), 20);
         });
     },
 
@@ -1451,11 +1481,11 @@ bu.testCase("TestRunnerEventedAssertionsTest", {
             "test it": function () { assert(false); }
         });
 
-        this.runner.run(context).then(function () {
+        this.runner.runSuite([context]).then(function () {
             setTimeout(test.end(function () {
                 assert(listeners[0].calledOnce);
                 assert(!listeners[1].called);
-            }), 30);
+            }), 20);
         });
     }
 });
@@ -1471,7 +1501,7 @@ bu.testCase("TestRunnerAssertionCountTest", {
     "fails test if 0 assertions": function (test) {
         sinon.stub(this.runner, "assertionCount").returns(0);
 
-        this.runner.run(this.context).then(B.bind(this, test.end(function () {
+        this.runner.runSuite([this.context]).then(B.bind(this, test.end(function () {
             assert(this.listener.calledOnce);
         })));
     },
@@ -1485,7 +1515,7 @@ bu.testCase("TestRunnerAssertionCountTest", {
             test1: function (done) {}
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(timeoutListener.calledOnce);
             refute(this.listener.called);
         })));
@@ -1494,7 +1524,7 @@ bu.testCase("TestRunnerAssertionCountTest", {
     "does not fail test if 1 assertion": function (test) {
         sinon.stub(this.runner, "assertionCount").returns(1);
 
-        this.runner.run(this.context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([this.context]).then(test.end(B.bind(this, function () {
             assert(!this.listener.called);
         })));
     },
@@ -1503,7 +1533,7 @@ bu.testCase("TestRunnerAssertionCountTest", {
         sinon.stub(this.runner, "assertionCount").returns(0);
         this.runner.failOnNoAssertions = false;
 
-        this.runner.run(this.context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([this.context]).then(test.end(B.bind(this, function () {
             assert(!this.listener.called);
         })));
     },
@@ -1517,7 +1547,7 @@ bu.testCase("TestRunnerAssertionCountTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listener.calledOnce);
             assert.equals(this.listener.args[0][0].error.message,
                           "Expected 2 assertions, ran 3");
@@ -1535,7 +1565,7 @@ bu.testCase("TestRunnerAssertionCountTest", {
             test2: function () {}
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listener.calledOnce);
             assert.equals(this.listener.args[0][0].name, "test1");
         })));
@@ -1553,7 +1583,7 @@ bu.testCase("TestRunnerAssertionCountTest", {
             test2: function () {}
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listener.calledOnce);
             assert.equals(this.listener.args[0][0].name, "test1");
         })));
@@ -1590,7 +1620,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             "should run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.test.calledOnce);
         })));
     },
@@ -1601,7 +1631,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             "does not run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!this.test.called);
         })));
     },
@@ -1612,7 +1642,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             "does not run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!this.test.called);
         })));
     },
@@ -1623,7 +1653,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             "should run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.test.calledOnce);
         })));
     },
@@ -1637,7 +1667,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             "does not run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!this.test.called);
         })));
     },
@@ -1651,7 +1681,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             "does not run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!this.test.called);
         })));
     },
@@ -1665,7 +1695,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             "should run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.test.calledOnce);
         })));
     },
@@ -1679,7 +1709,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             "should run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!listener.called);
         })));
     },
@@ -1694,7 +1724,7 @@ bu.testCase("TestRunnerSupportRequirementsTest", {
             }
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!listener.called);
             assert(!this.test.called);
         })));
@@ -1771,13 +1801,13 @@ bu.testCase("TestRunnerEventsTest", {
     },
 
     "emits event when starting context": function (test) {
-        this.runner.run(this.myCase).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([this.myCase]).then(test.end(B.bind(this, function () {
             assert(this.listeners["context:start"].calledOnce);
         })));
     },
 
     "emits end context event after start context": function (test) {
-        this.runner.run(this.myCase).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([this.myCase]).then(test.end(B.bind(this, function () {
             assert(this.listeners["context:end"].calledOnce);
             assert(this.listeners["context:end"].calledAfter(
                 this.listeners["context:start"]));
@@ -1785,13 +1815,13 @@ bu.testCase("TestRunnerEventsTest", {
     },
 
     "emits event when starting test": function (test) {
-        this.runner.run(this.simpleCase).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:start"].calledOnce);
         })));
     },
 
     "emits setUp event before test:start": function (test) {
-        this.runner.run(this.simpleCase).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:setUp"].calledOnce);
             assert(this.listeners["test:setUp"].calledBefore(
                 this.listeners["test:start"]));
@@ -1799,7 +1829,7 @@ bu.testCase("TestRunnerEventsTest", {
     },
 
     "emits tearDown event after test:start": function (test) {
-        this.runner.run(this.simpleCase).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:tearDown"].calledOnce);
             assert(this.listeners["test:tearDown"].calledAfter(
                 this.listeners["test:start"]));
@@ -1807,7 +1837,7 @@ bu.testCase("TestRunnerEventsTest", {
     },
 
     "emits test:success when test passes": function (test) {
-        this.runner.run(this.simpleCase).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:success"].calledOnce);
         })));
     },
@@ -1817,7 +1847,7 @@ bu.testCase("TestRunnerEventsTest", {
             setUp: sinon.stub().throws(), testIt: sinon.spy()
         });
 
-        this.runner.run(context).then(function () {
+        this.runner.runSuite([context]).then(function () {
             assert(!this.listeners["test:success"].called);
             test.end();
         }.bind(this));
@@ -1828,7 +1858,7 @@ bu.testCase("TestRunnerEventsTest", {
             setUp: sinon.spy(), testIt: sinon.stub().throws()
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!this.listeners["test:success"].called);
         })));
     },
@@ -1838,7 +1868,7 @@ bu.testCase("TestRunnerEventsTest", {
             tearDown: sinon.stub().throws(), testIt: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!this.listeners["test:success"].called);
         })));
     },
@@ -1847,7 +1877,7 @@ bu.testCase("TestRunnerEventsTest", {
         var testFn = sinon.stub().throws(this.assertionError);
         var context = testCase("My case", { testIt: testFn });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:failure"].calledOnce);
         })));
     },
@@ -1857,7 +1887,7 @@ bu.testCase("TestRunnerEventsTest", {
             setUp: sinon.stub().throws(this.assertionError), testIt: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:failure"].calledOnce);
         })));
     },
@@ -1868,7 +1898,7 @@ bu.testCase("TestRunnerEventsTest", {
             testIt: sinon.stub()
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!this.listeners["test:failure"].called);
         })));
     },
@@ -1878,7 +1908,7 @@ bu.testCase("TestRunnerEventsTest", {
             tearDown: sinon.stub().throws(this.assertionError), testIt: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:failure"].calledOnce);
         })));
     },
@@ -1887,7 +1917,7 @@ bu.testCase("TestRunnerEventsTest", {
         var testFn = sinon.stub().throws(new Error("Oops"));
         var context = testCase("My case", { testIt: testFn });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:error"].calledOnce);
         })));
     },
@@ -1897,7 +1927,7 @@ bu.testCase("TestRunnerEventsTest", {
             setUp: sinon.stub().throws(), testIt: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:error"].calledOnce);
             assert(!this.listeners["test:failure"].called);
         })));
@@ -1908,7 +1938,7 @@ bu.testCase("TestRunnerEventsTest", {
             setUp: sinon.spy(), testIt: sinon.stub()
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(!this.listeners["test:error"].called);
         })));
     },
@@ -1918,7 +1948,7 @@ bu.testCase("TestRunnerEventsTest", {
             tearDown: sinon.stub().throws(), testIt: sinon.spy()
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listeners["test:error"].calledOnce);
             assert(!this.listeners["test:failure"].called);
         })));
@@ -1931,7 +1961,7 @@ bu.testCase("TestRunnerEventsTest", {
 
         var listener = this.listeners["test:deferred"];
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].name, "should do this");
         }));
@@ -1944,7 +1974,7 @@ bu.testCase("TestRunnerEventsTest", {
 
         var listener = this.listeners["test:deferred"];
 
-        this.runner.run(context).then(test.end(function () {
+        this.runner.runSuite([context]).then(test.end(function () {
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0].comment, "Later, seriously");
         }));
@@ -1956,7 +1986,7 @@ bu.testCase("TestRunnerEventsTest", {
             "does not run this": this.test
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             assert(this.listeners["context:unsupported"].calledOnce);
         })));
     }
@@ -1968,7 +1998,7 @@ bu.testCase("TestRunnerEventDataTest", {
     "context:start event data": function (test) {
         var context = testCase("My case", {});
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["context:start"].args[0];
             assert.equals(args, [context]);
         })));
@@ -1977,7 +2007,7 @@ bu.testCase("TestRunnerEventDataTest", {
     "context:end event data": function (test) {
         var context = testCase("My case", {});
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["context:end"].args[0];
             assert.equals(args, [context]);
         })));
@@ -1988,7 +2018,7 @@ bu.testCase("TestRunnerEventDataTest", {
             requiresSupportFor: { "Feature A": false }
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["context:unsupported"].args[0];
             assert.equals(args, [{
                 context: context,
@@ -2002,7 +2032,7 @@ bu.testCase("TestRunnerEventDataTest", {
             setUp: function () {}, test1: function () {}
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["test:setUp"].args;
             assert.equals(args[0][0].name, "test1");
             assert(context.testCase.isPrototypeOf(args[0][0].testCase));
@@ -2014,7 +2044,7 @@ bu.testCase("TestRunnerEventDataTest", {
             setUp: function () {}, test1: function () {}
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["test:tearDown"].args;
             assert.equals("test1", args[0][0].name);
             assert(context.testCase.isPrototypeOf(args[0][0].testCase));
@@ -2026,7 +2056,7 @@ bu.testCase("TestRunnerEventDataTest", {
             setUp: function () {}, test1: function () {}
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["test:start"].args;
             assert.equals(args[0][0].name, "test1");
             assert(context.testCase.isPrototypeOf(args[0][0].testCase));
@@ -2038,7 +2068,7 @@ bu.testCase("TestRunnerEventDataTest", {
             setUp: function () {}, test1: sinon.stub().throws("TypeError")
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["test:error"].args[0];
             assert.equals(args[0].name, "test1");
             assert.equals(args[0].error.name, "TypeError");
@@ -2052,7 +2082,7 @@ bu.testCase("TestRunnerEventDataTest", {
             setUp: function () {}, test1: sinon.stub().throws("AssertionError")
         });
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["test:failure"].args[0];
             assert.equals(args[0].name, "test1");
             assert.equals(args[0].error.name, "AssertionError");
@@ -2068,7 +2098,7 @@ bu.testCase("TestRunnerEventDataTest", {
 
         sinon.stub(this.runner, "assertionCount").returns(2);
 
-        this.runner.run(context).then(test.end(B.bind(this, function () {
+        this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
             var args = this.listeners["test:success"].args[0];
             assert.equals(args, [{ name: "test1", assertions: 2 }]);
         })));
@@ -2167,35 +2197,34 @@ bu.testCase("TestRunnerEventDataTest", {
         })));
     },
 
-//     "uncaughtException event data": function (test) {
-//         if (typeof document != "undefined") {
-//             console.log("'uncaughtException event data':\n Aborting test, as " +
-//                         "browsers may not have enough information to extract " +
-//                         "useful event data");
-//             return test.end();
-//         }
+    // "uncaughtException event data": function (test) {
+    //     if (typeof document != "undefined") {
+    //         console.log("'uncaughtException event data':\n Aborting test, as " +
+    //                     "browsers may not have enough information to extract " +
+    //                     "useful event data");
+    //         return test.end();
+    //     }
 
-//         var context = testCase("My case", {
-//             "test1": function (done) {
-//                 setTimeout(function () {
-//                     throw new Error("Damnit");
-//                 }, 15);
-//             }
-//         });
+    //     var context = testCase("My case", {
+    //         "test1": function (done) {
+    //             setTimeout(function () {
+    //                 throw new Error("Damnit");
+    //             }, 15);
+    //         }
+    //     });
 
-//         this.runner.handleUncaughtExceptions = true;
-//         this.runner.timeout = 5;
-//         var listener = this.listeners["uncaughtException"];
+    //     this.runner.handleUncaughtExceptions = true;
+    //     this.runner.timeout = 5;
+    //     var listener = this.listeners["uncaughtException"];
 
-//         this.runner.run(context).then(function () {
-//             setTimeout(function () {
-//                 assert(listener.calledOnce);
-//                 assert.match(listener.args[0][0].message, /Damnit/);
-//                 test.end();
-//             }, 10);
-//         });
-//     }
-    });
+    //     this.runner.runSuite([context]).then(function () {
+    //         setTimeout(test.end(function () {
+    //             assert(listener.calledOnce);
+    //             assert.match(listener.args[0][0].message, /Damnit/);
+    //         }), 15);
+    //     });
+    // }
+});
 
     function numericSort(a, b) {
         return a == b ? 0 : (a < b ? - 1 : 1);
