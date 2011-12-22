@@ -1313,6 +1313,22 @@
                 assert(listeners[1].calledOnce);
                 assert(!listeners[0].called);
             }));
+        },
+
+        "does not emit test:async for deferred test": function (test) {
+            var listeners = [sinon.spy(), sinon.spy()];
+            this.runner.on("test:async", listeners[0]);
+            this.runner.on("test:deferred", listeners[1]);
+            var runner = this.runner;
+            var context = testCase("Test", {
+                tearDown: function (done) { buster.nextTick(done); },
+                "//test": function () {}
+            });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(!listeners[0].called);
+                assert(listeners[1].calledOnce);
+            }));
         }
     });
 
