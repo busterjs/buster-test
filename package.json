@@ -1,6 +1,6 @@
 {
     "name": "buster-test",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "Promised based evented xUnit and BDD style test runner for JavaScript",
     "homepage": "http://busterjs.org/docs/buster-test",
     "author": { "name": "August Lilleaas and Christian Johansen" },
@@ -28,7 +28,7 @@
     "devDependencies": {
         "buster-assertions": "~0.8",
         "buster-format": "~0.5",
-        "sinon": "~1.2",
+        "sinon": "~1.3",
         "buster-util": "~0.4"
     }
 }
