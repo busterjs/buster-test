@@ -914,6 +914,18 @@
             });
         },
 
+        "done completes test when called with non-function argument": function (test) {
+            var context = testCase("Test", {
+                test: function (done) {
+                    buster.nextTick(done({ ok: function () {} }));
+                }
+            });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(true);
+            }));
+        },
+
         "done transparently proxies to its callback": function (test) {
             var innerDone = sinon.stub().returns(42);
             var thisp = { id: 42 };
