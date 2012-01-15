@@ -1,7 +1,8 @@
+/*jslint maxlen: 100*/
 (function (B, sinon, when) {
     var testCase, testRunner, bu, assertions, format;
 
-    if (typeof require == "function" && typeof module == "object") {
+    if (typeof require === "function" && typeof module === "object") {
         sinon = require("sinon");
         B = require("buster-core");
         when = require("when");
@@ -12,7 +13,7 @@
         format = require("buster-format");
     } else {
         testCase = buster.testCase;
-        testRunner = testRunner;
+        testRunner = buster.testRunner;
         bu = buster.util;
         assertions = buster.assertions;
         format = buster.format;
@@ -21,6 +22,35 @@
     var assert = assertions.assert;
     var refute = assertions.refute;
     assertions.format = format.ascii;
+
+    function assertionError(message) {
+        var error = new Error(message);
+        error.name = "AssertionError";
+        return error;
+    }
+
+    function spyOnPromise(promise) {
+        var promiseResolution = sinon.spy();
+        promise.then(promiseResolution);
+        return promiseResolution;
+    }
+
+    function numericSort(a, b) {
+        return a === b ? 0 : (a < b ? -1 : 1);
+    }
+
+    function tick(times, fn) {
+        function next() {
+            if (times === 0) {
+                fn();
+            } else {
+                times -= 1;
+                buster.nextTick(next);
+            }
+        }
+
+        next();
+    }
 
     bu.testCase("TestRunnerCreateTest", {
         "emits newly created object to callback": function () {
@@ -65,7 +95,7 @@
             var rejection = sinon.spy();
             this.runner.runContext().then(function () {}, function () {
                 test.end();
-            })
+            });
         },
 
         "runs single test function": function (test) {
@@ -146,7 +176,7 @@
 
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            var testRun = this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(test.end(function () {
                 assert(resolved);
                 assert(testFn.calledOnce);
             }));
@@ -192,23 +222,23 @@
         },
 
         "calls tearDown on same test case object as test": function (test) {
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
             var tearDown = sinon.spy();
-            var context = testCase("Test", { tearDown: tearDown, test: testFn });
+            var context = testCase("Test", { tearDown: tearDown, test: fn });
 
             this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledOnce);
-                assert.same(testFn.thisValues[0], tearDown.thisValues[0]);
+                assert.same(fn.thisValues[0], tearDown.thisValues[0]);
             }));
         },
 
         "calls tearDown after test": function (test) {
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
             var tearDown = sinon.spy();
-            var context = testCase("Test", { tearDown: tearDown, test: testFn });
+            var context = testCase("Test", { tearDown: tearDown, test: fn });
 
             this.runner.runContext(context).then(test.end(function () {
-                assert(tearDown.calledAfter(testFn));
+                assert(tearDown.calledAfter(fn));
             }));
         },
 
@@ -227,9 +257,9 @@
         },
 
         "does not throw if tearDown throws": function (test) {
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
             var tearDown = sinon.stub().throws();
-            var context = testCase("Test", { tearDown: tearDown, test: testFn });
+            var context = testCase("Test", { tearDown: tearDown, test: fn });
 
             this.runner.runContext(context).then(test.end, assert.fail);
         },
@@ -237,7 +267,9 @@
         "calls tearDown if setUp throws": function (test) {
             var tearDown = sinon.spy();
             var context = testCase("Test", {
-                setUp: sinon.stub().throws(), tearDown: tearDown, test: sinon.spy()
+                setUp: sinon.stub().throws(),
+                tearDown: tearDown,
+                test: sinon.spy()
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -249,7 +281,9 @@
             var tearDown = sinon.spy();
 
             var context = testCase("Test", {
-                setUp: sinon.spy(), tearDown: tearDown, test: sinon.stub().throws()
+                setUp: sinon.spy(),
+                tearDown: tearDown,
+                test: sinon.stub().throws()
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -261,7 +295,9 @@
             var tests = [sinon.spy(), sinon.spy(), sinon.spy()];
 
             var context = testCase("Test", {
-                test1: tests[0], test2: tests[1], test3: tests[2]
+                test1: tests[0],
+                test2: tests[1],
+                test3: tests[2]
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -302,14 +338,14 @@
                 context1: {
                     setUp: function () { events.push("su 1"); },
                     tearDown: function () { events.push("td 1"); },
-                    test1: function () { events.push("test1"); },
+                    test1: function () { events.push("test1"); }
                 },
                 context2: {
                     setUp: function () { events.push("su 2"); },
                     tearDown: function () { events.push("td 2"); },
                     test2: function (done) {
                         setTimeout(done(function () { events.push("test2"); }), 10);
-                    },
+                    }
                 },
                 context3: {
                     setUp: function () { events.push("su 3"); },
@@ -341,8 +377,11 @@
                          function () { order.unshift(5); }];
 
             var context = testCase("Test", {
-                test1: tests[0], test2: tests[1], test3: tests[2],
-                test4: tests[3], test5: tests[4]
+                test1: tests[0],
+                test2: tests[1],
+                test3: tests[2],
+                test4: tests[3],
+                test5: tests[4]
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -354,7 +393,9 @@
             var tests = [sinon.spy(), sinon.stub().throws(), sinon.spy()];
 
             var context = testCase("Test", {
-                test1: tests[0], test2: tests[1], test3: tests[2]
+                test1: tests[0],
+                test2: tests[1],
+                test3: tests[2]
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -370,7 +411,9 @@
 
             var context = testCase("Test", {
                 setUp: setUp,
-                test1: tests[0], test2: tests[1], test3: tests[2]
+                test1: tests[0],
+                test2: tests[1],
+                test3: tests[2]
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -391,7 +434,9 @@
 
             var context = testCase("Test", {
                 tearDown: tearDown,
-                test1: tests[0], test2: tests[1], test3: tests[2]
+                test1: tests[0],
+                test2: tests[1],
+                test3: tests[2]
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -410,21 +455,21 @@
         },
 
         "runs tests in sub context": function (test) {
-            var testFn = sinon.spy();
-            var context = testCase("Test", { "context": { test1: testFn } });
+            var fn = sinon.spy();
+            var context = testCase("Test", { "context": { test1: fn } });
 
             this.runner.runContext(context).then(test.end(function () {
-                assert(testFn.calledOnce);
+                assert(fn.calledOnce);
             }));
         },
 
         "does not fail without sub contexts": function (test) {
-            var testFn = sinon.spy();
-            var context = { tests: [{ name: "sumptn", func: testFn }] };
+            var fn = sinon.spy();
+            var context = { tests: [{ name: "sumptn", func: fn }] };
 
             refute.exception(B.bind(this, function () {
                 this.runner.runContext(context).then(test.end(function () {
-                    assert(testFn.calledOnce);
+                    assert(fn.calledOnce);
                 }));
             }));
         },
@@ -445,27 +490,27 @@
 
         "runs sub context setUp for test in sub context": function (test) {
             var setUp = sinon.spy();
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
 
             var context = testCase("Test", {
-                "context": { setUp: setUp, test1: testFn }
+                "context": { setUp: setUp, test1: fn }
             });
 
             context.contexts[0].testCase.id = 42;
 
             this.runner.runContext(context).then(test.end(function () {
                 assert(setUp.calledOnce);
-                assert.same(testFn.thisValues[0], setUp.thisValues[0]);
+                assert.same(fn.thisValues[0], setUp.thisValues[0]);
             }));
         },
 
         "runs parent setUp prior to local setUp": function (test) {
             var setUps = [sinon.spy(), sinon.spy()];
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
 
             var context = testCase("Test", {
                 setUp: setUps[0],
-                "context": { setUp: setUps[1], test1: testFn }
+                "context": { setUp: setUps[1], test1: fn }
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -479,13 +524,14 @@
             var deferreds = [when.defer(), when.defer()];
             var outerSetUp = sinon.stub().returns(deferreds[0].promise);
             var innerSetUp = sinon.stub().returns(deferreds[1].promise);
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
             var context = testCase("Test", {
-                setUp: outerSetUp, "context": { setUp: innerSetUp, test1: testFn }
+                setUp: outerSetUp,
+                "context": { setUp: innerSetUp, test1: fn }
             });
 
             this.runner.runContext(context).then(test.end(function () {
-                assert(testFn.called);
+                assert(fn.called);
             }));
 
             // One buster.nextTick per context
@@ -494,22 +540,22 @@
                 assert(!innerSetUp.called);
                 deferreds[0].resolver.resolve();
                 assert(innerSetUp.calledOnce);
-                assert(!testFn.called);
+                assert(!fn.called);
                 deferreds[1].resolver.resolve();
             });
         },
 
         "runs parent setUp on local test case object": function (test) {
             var setUp = sinon.spy();
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
 
             var context = testCase("Test", {
                 setUp: setUp,
-                "context": { test1: testFn }
+                "context": { test1: fn }
             });
 
             this.runner.runContext(context).then(test.end(function () {
-                assert.same(testFn.thisValues[0], setUp.thisValues[0]);
+                assert.same(fn.thisValues[0], setUp.thisValues[0]);
             }));
         },
 
@@ -528,15 +574,15 @@
 
         "runs sub context tearDown for test in sub context": function (test) {
             var tearDown = sinon.spy();
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
 
             var context = testCase("Test", {
-                "context": { tearDown: tearDown, test1: testFn }
+                "context": { tearDown: tearDown, test1: fn }
             });
 
             this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledOnce);
-                assert.same(testFn.thisValues[0], tearDown.thisValues[0]);
+                assert.same(fn.thisValues[0], tearDown.thisValues[0]);
             }));
         },
 
@@ -558,26 +604,26 @@
 
         "runs parent tearDown on local test case object": function (test) {
             var tearDown = sinon.spy();
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
 
             var context = testCase("Test", {
                 tearDown: tearDown,
-                "context": { test1: testFn }
+                "context": { test1: fn }
             });
 
             this.runner.runContext(context).then(test.end(function () {
                 assert(tearDown.calledOnce);
-                assert.same(tearDown.thisValues[0], testFn.thisValues[0]);
+                assert.same(tearDown.thisValues[0], fn.thisValues[0]);
             }));
         },
 
         "runs tearDowns inner -> outer": function (test) {
             var tearDowns = [sinon.spy(), sinon.spy()];
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
 
             var context = testCase("Test", {
                 tearDown: tearDowns[0],
-                "context": { tearDown: tearDowns[1], test1: testFn }
+                "context": { tearDown: tearDowns[1], test1: fn }
             });
 
             this.runner.runContext(context).then(test.end(function () {
@@ -603,17 +649,17 @@
             var deferreds = [when.defer(), when.defer()];
             var innerTearDown = sinon.stub().returns(deferreds[0].promise);
             var outerTearDown = sinon.stub().returns(deferreds[1].promise);
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
             var context = testCase("Test", {
                 tearDown: outerTearDown,
-                "context": { tearDown: innerTearDown, test1: testFn }
+                "context": { tearDown: innerTearDown, test1: fn }
             });
 
             this.runner.runContext(context).then(test.end);
 
             // One buster.nextTick per context
             tick(2, function () {
-                assert(testFn.called);
+                assert(fn.called);
                 assert(innerTearDown.calledOnce);
                 assert(!outerTearDown.called);
                 deferreds[0].resolver.resolve();
@@ -623,14 +669,14 @@
         },
 
         "skips deferred test": function (test) {
-            var testFn = sinon.spy();
+            var fn = sinon.spy();
 
             var context = testCase("Test", {
-                "//should do this": testFn
+                "//should do this": fn
             });
 
             this.runner.runContext(context).then(test.end(function () {
-                assert(!testFn.called);
+                assert(!fn.called);
             }));
         },
 
@@ -674,8 +720,8 @@
         setUp: function () {
             this.runner = testRunner.create();
             this.deferred = when.defer();
-            this.testFn = sinon.stub().returns(this.deferred.promise);
-            this.context = testCase("Test", { test: this.testFn });
+            this.fn = sinon.stub().returns(this.deferred.promise);
+            this.context = testCase("Test", { test: this.fn });
         },
 
         "resolves run when test has resolved": function (test) {
@@ -830,17 +876,16 @@
             }), assert.fail);
         },
 
-        "prefers test error over tearDown failure with non-throwing assertion":
-        function (test) {
+        // Started failing after fixing a lint error ;)
+        "prefers test error over tearDown failure with non-throwing assertion": function (test) {
             var listener = sinon.spy();
             this.runner.on("test:error", listener);
             this.runner.on("test:failure", listener);
 
-            var a;
-            var assertionError = new Error("Oops");
-            assertionError.name = "AssertionError";
+            var a, runner = this.runner;
+            var error = assertionError("Oops");
             var context = testCase("Test", {
-                tearDown: function () { runner.assertionFailure(assertionError); },
+                tearDown: function () { runner.assertionFailure(error); },
                 test: function () { a.b.c = 42; }
             });
 
@@ -894,7 +939,7 @@
             });
         },
 
-        "done returns actual done when called with a function argument": function (test) {
+        "done returns actual done if called with a function": function (test) {
             var innerDone;
 
             var context = testCase("Test", {
@@ -914,7 +959,7 @@
             });
         },
 
-        "done completes test when called with non-function argument": function (test) {
+        "done completes test when called with non-function": function (test) {
             var context = testCase("Test", {
                 test: function (done) {
                     buster.nextTick(done({ ok: function () {} }));
@@ -966,7 +1011,7 @@
             }));
         },
 
-        "emits test:error when Error is thrown in done callback": function (test) {
+        "emits test:error when Error is thrown in done callback": function (t) {
             var listener = sinon.spy();
             this.runner.on("test:error", listener);
 
@@ -978,7 +1023,7 @@
                 }
             });
 
-            this.runner.runSuite([context]).then(test.end(function () {
+            this.runner.runSuite([context]).then(t.end(function () {
                 assert(listener.calledOnce);
                 assert.equals(listener.args[0][0].error.message, "Oops");
             }));
@@ -1059,8 +1104,7 @@
             });
         },
 
-        "emits test:failure when setUp done callback throws AssertionError":
-        function (test) {
+        "emits test:failure when setUp done callback throws AssertionError": function (test) {
             var listener = sinon.spy();
             this.runner.on("test:failure", listener);
 
@@ -1221,8 +1265,7 @@
             });
         },
 
-        "emits test:failure when tearDown done callback throws AssertionError":
-        function (test) {
+        "emits test:failure when tearDown done callback throws AssertionError": function (test) {
             var listener = sinon.spy();
             this.runner.on("test:failure", listener);
 
@@ -1250,7 +1293,7 @@
             var context = testCase("Test", {
                 tearDown: function (done) {
                     buster.nextTick(done(function () {
-                        throw new Error("Oops")
+                        throw new Error("Oops");
                     }));
                 },
                 test: sinon.spy()
@@ -1376,7 +1419,7 @@
         },
 
         "does not handle asynchronous failure as uncaught exception": function (test) {
-            if (typeof document != "undefined") {
+            if (typeof document !== "undefined") {
                 console.log("'does not handle asynchronous failure as uncaught " +
                             "exception':\nAborting test, as browsers may not have " +
                             "enough information for uncaught errors to treat them as " +
@@ -1597,8 +1640,7 @@
             })));
         },
 
-        "only checks expected assertions for tests that explicitly define it":
-        function (test) {
+        "only checks expected assertions for tests that explicitly define it": function (test) {
             sinon.stub(this.runner, "assertionCount").returns(3);
 
             var context = testCase("Test Assertions", {
@@ -1808,7 +1850,7 @@
         this.runner.on("context:end", this.listeners["context:end"]);
         this.runner.on("context:unsupported", this.listeners["context:unsupported"]);
         this.runner.on("suite:end", this.listeners["suite:end"]);
-        this.runner.on("uncaughtException", this.listeners["uncaughtException"]);
+        this.runner.on("uncaughtException", this.listeners.uncaughtException);
 
         this.myCase = testCase("My case", {});
         this.otherCase = testCase("Other", {});
@@ -1839,7 +1881,8 @@
             this.runner.runSuite([this.myCase]).then(test.end(B.bind(this, function () {
                 assert(this.listeners["suite:end"].calledOnce);
                 assert(this.listeners["suite:end"].calledAfter(
-                    this.listeners["context:end"]));
+                    this.listeners["context:end"]
+                ));
             })));
         },
 
@@ -1853,7 +1896,8 @@
             this.runner.runSuite([this.myCase]).then(test.end(B.bind(this, function () {
                 assert(this.listeners["context:end"].calledOnce);
                 assert(this.listeners["context:end"].calledAfter(
-                    this.listeners["context:start"]));
+                    this.listeners["context:start"]
+                ));
             })));
         },
 
@@ -1867,7 +1911,8 @@
             this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
                 assert(this.listeners["test:setUp"].calledOnce);
                 assert(this.listeners["test:setUp"].calledBefore(
-                    this.listeners["test:start"]));
+                    this.listeners["test:start"]
+                ));
             })));
         },
 
@@ -1875,7 +1920,8 @@
             this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
                 assert(this.listeners["test:tearDown"].calledOnce);
                 assert(this.listeners["test:tearDown"].calledAfter(
-                    this.listeners["test:start"]));
+                    this.listeners["test:start"]
+                ));
             })));
         },
 
@@ -1887,7 +1933,8 @@
 
         "does not emit test:success when setUp throws": function (test) {
             var context = testCase("My case", {
-                setUp: sinon.stub().throws(), testIt: sinon.spy()
+                setUp: sinon.stub().throws(),
+                testIt: sinon.spy()
             });
 
             this.runner.runSuite([context]).then(function () {
@@ -1898,7 +1945,8 @@
 
         "does not emit test:success when test throws": function (test) {
             var context = testCase("My case", {
-                setUp: sinon.spy(), testIt: sinon.stub().throws()
+                setUp: sinon.spy(),
+                testIt: sinon.stub().throws()
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -1908,7 +1956,8 @@
 
         "does not emit test:success if tearDown throws": function (test) {
             var context = testCase("My case", {
-                tearDown: sinon.stub().throws(), testIt: sinon.spy()
+                tearDown: sinon.stub().throws(),
+                testIt: sinon.spy()
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -1917,8 +1966,8 @@
         },
 
         "should emit test:fail when test throws assertion error": function (test) {
-            var testFn = sinon.stub().throws(this.assertionError);
-            var context = testCase("My case", { testIt: testFn });
+            var fn = sinon.stub().throws(this.assertionError);
+            var context = testCase("My case", { testIt: fn });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
                 assert(this.listeners["test:failure"].calledOnce);
@@ -1927,7 +1976,8 @@
 
         "emits test:fail if setUp throws assertion error": function (test) {
             var context = testCase("My case", {
-                setUp: sinon.stub().throws(this.assertionError), testIt: sinon.spy()
+                setUp: sinon.stub().throws(this.assertionError),
+                testIt: sinon.spy()
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -1948,7 +1998,8 @@
 
         "emits test:fail if tearDown throws assertion error": function (test) {
             var context = testCase("My case", {
-                tearDown: sinon.stub().throws(this.assertionError), testIt: sinon.spy()
+                tearDown: sinon.stub().throws(this.assertionError),
+                testIt: sinon.spy()
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -1957,8 +2008,8 @@
         },
 
         "emits test:error when test throws": function (test) {
-            var testFn = sinon.stub().throws(new Error("Oops"));
-            var context = testCase("My case", { testIt: testFn });
+            var fn = sinon.stub().throws(new Error("Oops"));
+            var context = testCase("My case", { testIt: fn });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
                 assert(this.listeners["test:error"].calledOnce);
@@ -1967,7 +2018,8 @@
 
         "emits test:error if setUp throws": function (test) {
             var context = testCase("My case", {
-                setUp: sinon.stub().throws(), testIt: sinon.spy()
+                setUp: sinon.stub().throws(),
+                testIt: sinon.spy()
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -1978,7 +2030,8 @@
 
         "does not emit test:error if test passes": function (test) {
             var context = testCase("My case", {
-                setUp: sinon.spy(), testIt: sinon.stub()
+                setUp: sinon.spy(),
+                testIt: sinon.stub()
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -1988,7 +2041,8 @@
 
         "emits test:error if tearDown throws assertion error": function (test) {
             var context = testCase("My case", {
-                tearDown: sinon.stub().throws(), testIt: sinon.spy()
+                tearDown: sinon.stub().throws(),
+                testIt: sinon.spy()
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -2080,7 +2134,8 @@
 
         "test:setUp event data": function (test) {
             var context = testCase("My case", {
-                setUp: function () {}, test1: function () {}
+                setUp: function () {},
+                test1: function () {}
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -2092,7 +2147,8 @@
 
         "test:tearDown event data": function (test) {
             var context = testCase("My case", {
-                setUp: function () {}, test1: function () {}
+                setUp: function () {},
+                test1: function () {}
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -2104,7 +2160,8 @@
 
         "test:start event data": function (test) {
             var context = testCase("My case", {
-                setUp: function () {}, test1: function () {}
+                setUp: function () {},
+                test1: function () {}
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -2116,7 +2173,8 @@
 
         "test:error event data": function (test) {
             var context = testCase("My case", {
-                setUp: function () {}, test1: sinon.stub().throws("TypeError")
+                setUp: function () {},
+                test1: sinon.stub().throws("TypeError")
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -2130,7 +2188,8 @@
 
         "test:fail event data": function (test) {
             var context = testCase("My case", {
-                setUp: function () {}, test1: sinon.stub().throws("AssertionError")
+                setUp: function () {},
+                test1: sinon.stub().throws("AssertionError")
             });
 
             this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
@@ -2144,7 +2203,8 @@
 
         "test:success event data": function (test) {
             var context = testCase("My case", {
-                setUp: function () {}, test1: sinon.spy()
+                setUp: function () {},
+                test1: sinon.spy()
             });
 
             sinon.stub(this.runner, "assertionCount").returns(2);
@@ -2208,7 +2268,7 @@
 
             sinon.stub(this.runner, "assertionCount").returns(2);
 
-            this.runner.runSuite([context,context]).then(test.end(B.bind(this, function () {
+            this.runner.runSuite([context, context]).then(test.end(B.bind(this, function () {
                 var args = this.listeners["suite:end"].args[0];
                 assert.equals(args[0].contexts, 2);
                 assert.equals(args[0].tests, 10);
@@ -2249,7 +2309,7 @@
         },
 
         "uncaughtException event data": function (test) {
-            if (typeof document != "undefined") {
+            if (typeof document !== "undefined") {
                 console.log("'uncaughtException event data':\n Aborting test, as " +
                             "browsers may not have enough information to extract " +
                             "useful event data");
@@ -2266,7 +2326,7 @@
 
             this.runner.handleUncaughtExceptions = true;
             this.runner.timeout = 5;
-            var listener = this.listeners["uncaughtException"];
+            var listener = this.listeners.uncaughtException;
 
             setTimeout(test.end(function () {
                 assert(listener.calledOnce);
@@ -2276,33 +2336,4 @@
             this.runner.runSuite([context]);
         }
     });
-
-    function numericSort(a, b) {
-        return a == b ? 0 : (a < b ? - 1 : 1);
-    }
-
-    function tick(times, fn) {
-        function next() {
-            if (times == 0) {
-                fn();
-            } else {
-                times -= 1;
-                buster.nextTick(next);
-            }
-        }
-
-        next();
-    }
-
-    function assertionError(message) {
-        var error = new Error(message);
-        error.name = "AssertionError";
-        return error;
-    }
-
-    function spyOnPromise(promise) {
-        var promiseResolution = sinon.spy();
-        promise.then(promiseResolution);
-        return promiseResolution;
-    }
 }(this.buster, this.sinon, this.when));
