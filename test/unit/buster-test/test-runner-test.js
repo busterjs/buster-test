@@ -876,7 +876,6 @@
             }), assert.fail);
         },
 
-        // Started failing after fixing a lint error ;)
         "prefers test error over tearDown failure with non-throwing assertion": function (test) {
             var listener = sinon.spy();
             this.runner.on("test:error", listener);
@@ -885,11 +884,11 @@
             var a, runner = this.runner;
             var error = assertionError("Oops");
             var context = testCase("Test", {
-                tearDown: function () { runner.assertionFailure(error); },
+                tearDown: function () { runner.error(error); },
                 test: function () { a.b.c = 42; }
             });
 
-            this.runner.runSuite([context]).then(test.end(function () {
+            this.runner.runSuite([context]).then(test.end(function (results) {
                 assert(listener.calledOnce);
                 assert.equals(listener.args[0][0].error.name, "TypeError");
             }), assert.fail);
