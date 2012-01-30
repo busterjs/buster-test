@@ -1,4 +1,4 @@
-if (typeof require != "undefined") {
+if (typeof module === "object" && typeof require === "function") {
     var sinon = require("sinon");
 
     var buster = {

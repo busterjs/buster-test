@@ -3,7 +3,7 @@
     var sinon = this.sinon || {};
     var assert;
 
-    if (typeof require == "function") {
+    if (typeof module === "object" && typeof require === "function") {
         buster = {
             assertions: require("buster-assertions"),
             autoRun: require("../../../lib/buster-test/auto-run"),
