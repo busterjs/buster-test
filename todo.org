@@ -64,3 +64,6 @@
 * TODO Missing assertion count wiring -> NaN assertions
 * TODO Possible to not get red report for 0 assertions
 * TODO Flag duplicate test names
+* TODO Exception in async function is not being caught (causes timeout)
+* TODO Test runner is catching exceptions that it's not handling
+** If an exception is thrown before the tests start running (failed require)
