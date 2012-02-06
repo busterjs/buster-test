@@ -1,4 +1,4 @@
-if (typeof require != "undefined") {
+if (typeof module === "object" && typeof require === "function") {
     var sinon = require("sinon");
     var buster = require("buster-core");
 
@@ -91,14 +91,6 @@ buster.spec.expose();
             var events = recordEvents(runner);
 
             var expected = "start: TestCase\n" +
-                "setUp: TestCase test1\n" +
-                "start: TestCase test1\n" +
-                "tearDown: TestCase test1\n" +
-                "passed: TestCase test1\n" +
-                "setUp: TestCase test2\n" +
-                "start: TestCase test2\n" +
-                "tearDown: TestCase test2\n" +
-                "failed: TestCase test2\n" +
                 "start: context1\n" +
                 "setUp: TestCase context1 test11\n" +
                 "start: TestCase context1 test11\n" +
@@ -119,13 +111,20 @@ buster.spec.expose();
                 "tearDown: TestCase context2 test22\n" +
                 "passed: TestCase context2 test22\n" +
                 "end: context2\n" +
+                "setUp: TestCase test1\n" +
+                "start: TestCase test1\n" +
+                "tearDown: TestCase test1\n" +
+                "passed: TestCase test1\n" +
+                "setUp: TestCase test2\n" +
+                "start: TestCase test2\n" +
+                "tearDown: TestCase test2\n" +
+                "failed: TestCase test2\n" +
                 "end: TestCase";
 
-            runner.run(context).then(function () {
+            runner.runSuite([context]).then(test.end(function () {
                 Math.random = mathRandom;
                 assert.equals(events.join("\n"), expected);
-                test.end();
-            });
+            }));
         },
 
         "should emit all spec events in proper order": function (test) {
@@ -161,14 +160,6 @@ buster.spec.expose();
             var events = recordEvents(runner);
 
             var expected = "start: TestCase\n" +
-                "setUp: TestCase test1\n" +
-                "start: TestCase test1\n" +
-                "tearDown: TestCase test1\n" +
-                "passed: TestCase test1\n" +
-                "setUp: TestCase test2\n" +
-                "start: TestCase test2\n" +
-                "tearDown: TestCase test2\n" +
-                "failed: TestCase test2\n" +
                 "start: context1\n" +
                 "setUp: TestCase context1 test11\n" +
                 "start: TestCase context1 test11\n" +
@@ -189,13 +180,20 @@ buster.spec.expose();
                 "tearDown: TestCase context2 test22\n" +
                 "passed: TestCase context2 test22\n" +
                 "end: context2\n" +
+                "setUp: TestCase test1\n" +
+                "start: TestCase test1\n" +
+                "tearDown: TestCase test1\n" +
+                "passed: TestCase test1\n" +
+                "setUp: TestCase test2\n" +
+                "start: TestCase test2\n" +
+                "tearDown: TestCase test2\n" +
+                "failed: TestCase test2\n" +
                 "end: TestCase";
 
-            runner.run(context).then(function () {
+            runner.runSuite([context]).then(test.end(function () {
                 Math.random = mathRandom;
                 assert.equals(events.join("\n"), expected);
-                test.end();
-            });
+            }));
         }
     });
 }());

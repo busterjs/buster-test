@@ -1,4 +1,4 @@
-if (typeof require == "function") {
+if (typeof module === "object" && typeof require === "function") {
     var buster = { reporters: require("../../../lib/buster-test/reporters") };
     buster.util = require("buster-util");
     buster.moduleLoader = require("buster-module-loader");
