@@ -506,7 +506,19 @@
             this.reporter.addStats({});
             var h1 = this.root.getElementsByTagName('h1')[0];
             assert.equals(this.stats(), h1.nextSibling);
-        }
+        },
+
+        "should have the success class when all successful": function() {
+            sinon.stub(this.reporter, 'success').returns(true);
+            this.reporter.addStats({});
+            assert.className(this.stats(), 'success');
+        },
+
+        "should have the failure class when not all successful": function() {
+            sinon.stub(this.reporter, 'success').returns(false);
+            this.reporter.addStats({});
+            assert.className(this.stats(), 'failure');
+        },
     });
 
     busterUtil.testCase("HTMLReporterEventMappingTest", sinon.testCase({
