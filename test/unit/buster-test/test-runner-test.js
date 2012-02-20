@@ -1157,6 +1157,31 @@
             }));
         },
 
+        "emits setUp, async, timeout for async setup": function (test) {
+            var listeners = {
+                timeout: sinon.spy(),
+                async: sinon.spy(),
+                setUp: sinon.spy()
+            };
+
+            this.runner.on("test:setUp", listeners.setUp);
+            this.runner.on("test:async", listeners.async);
+            this.runner.on("test:timeout", listeners.timeout);
+
+            var context = testCase("Test", {
+                setUp: function (done) {},
+                test: sinon.spy()
+            });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(listeners.setUp.calledOnce);
+                assert(listeners.async.calledOnce);
+                assert(listeners.timeout.calledOnce);
+                assert(listeners.setUp.calledBefore(listeners.async));
+                assert(listeners.async.calledBefore(listeners.timeout));
+            }));
+        },
+
         "emits test:async when setUp is async": function (test) {
             var listener = sinon.spy();
             this.runner.on("test:async", listener);
