@@ -50,8 +50,13 @@ body.buster-test {
 
 .buster-test .timeout h3,
 .buster-test .failure h3,
-.buster-test .error-message {
+.buster-test .error-message,
+.buster-test .stats.failure {
     color: #c33;
+}
+
+.buster-test .stats.success {
+    color: #3c3;
 }
 
 .buster-test .error h3,
