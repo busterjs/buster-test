@@ -60,6 +60,14 @@ buster.util.testCase("JSONProxyTest", {
         });
     },
 
+    "should emit serializable test object to test:async": function () {
+        var listener = sinon.spy();
+        this.proxy.on("test:async", listener);
+        this.runner.emit("test:async", { name: "should go", func: function (done) {} });
+
+        assert.equals(listener.args[0][0], { name: "should go" });
+    },
+
     "should emit serializable test object to test:setUp": function () {
         var listener = sinon.spy();
         this.proxy.on("test:setUp", listener);
@@ -136,6 +144,25 @@ buster.util.testCase("JSONProxyTest", {
                 name: "AssertionError",
                 message: "Expected a to be equal to b",
                 stack: "Trouble@here"
+            }
+        });
+    },
+
+    "should emit serializable test object to test:timeout": function () {
+        var listener = sinon.spy();
+        this.proxy.on("test:timeout", listener);
+        this.runner.emit("test:timeout", {
+            name: "should go",
+            func: function () {},
+            error: { name: "TimeoutError", message: "Yo", stack: "" }
+        });
+
+        assert.equals(listener.args[0][0], {
+            name: "should go",
+            error: {
+                name: "TimeoutError",
+                message: "Yo",
+                stack: ""
             }
         });
     },
