@@ -450,7 +450,11 @@
 
     busterUtil.testCase("HTMLReporterStatsTest", {
         setUp: function () {
-            reporterSetUp.call(this);
+            this.doc = createDocument();
+            reporterSetUp.call(this, {
+                document: this.doc,
+                root: this.doc.body
+            });
             this.reporter.contextStart({ name: "Some context" });
             this.reporter.testSuccess({ name: "should do it" });
             this.reporter.contextStart({ name: "Some context" });
@@ -496,6 +500,12 @@
             assert.match(stats.childNodes[4].innerHTML, "1 error");
             assert.match(stats.childNodes[5].innerHTML, "1 timeout");
             assert.match(stats.childNodes[6].innerHTML, "2 deferred");
+        },
+
+        "should add stats directly after h1": function() {
+            this.reporter.addStats({});
+            var h1 = this.root.getElementsByTagName('h1')[0];
+            assert.equals(this.stats(), h1.nextSibling);
         }
     });
 
