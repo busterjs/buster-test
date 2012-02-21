@@ -1,9 +1,9 @@
-(function () {
+(function (buster, sinon) {
     var assert, refute, htmlReporter, busterUtil;
 
     if (typeof module === "object" && typeof require === "function") {
-        var sinon = require("sinon");
-        var buster = require("buster-core");
+        sinon = require("sinon");
+        buster = require("buster-core");
         var helper = require("./test-helper");
         var assertions = require("buster-assertions");
         var jsdom = require("jsdom").jsdom;
@@ -19,6 +19,7 @@
     }
 
     function createDocument() {
+        if (typeof document != "undefined") { return document; }
         var dom = jsdom("<!DOCTYPE html><html><head></head><body></body></html>");
         return dom.createWindow().document;
     }
@@ -26,7 +27,7 @@
     function reporterSetUp(options) {
         options = options || {};
         this.runner = buster.create(buster.eventEmitter);
-        this.doc = typeof document != "undefined" ? document : createDocument();
+        this.doc = createDocument();
         this.root = options.root || this.doc.createElement("div");
 
         this.reporter = htmlReporter.create(buster.extend({
@@ -420,33 +421,35 @@
         }
     });
 
-    busterUtil.testCase("HTMLReporterConsoleTest", {
-        setUp: function () {
-            this.io = helper.io();
-            this.assertIO = helper.assertIO;
-            this.doc = createDocument();
+    if (typeof document == "undefined") {
+        busterUtil.testCase("HTMLReporterConsoleTest", {
+            setUp: function () {
+                this.io = helper.io();
+                this.assertIO = helper.assertIO;
+                this.doc = createDocument();
 
-            reporterSetUp.call(this, {
-                document: this.doc,
-                root: this.doc.body,
-                io: this.io
-            });
-        },
+                reporterSetUp.call(this, {
+                    document: this.doc,
+                    root: this.doc.body,
+                    io: this.io
+                });
+            },
 
-        "should render entire document to output stream": function () {
-            this.reporter.contextStart({ name: "Some stuff" });
-            this.reporter.testSuccess({ name: "should do it" });
-            this.reporter.contextEnd({ name: "Some stuff" });
-            this.reporter.contextStart({ name: "Other stuff" });
-            this.reporter.testSuccess({ name: "should do more" });
-            this.reporter.contextEnd({ name: "Other stuff" });
-            this.reporter.addStats({});
+            "should render entire document to output stream": function () {
+                this.reporter.contextStart({ name: "Some stuff" });
+                this.reporter.testSuccess({ name: "should do it" });
+                this.reporter.contextEnd({ name: "Some stuff" });
+                this.reporter.contextStart({ name: "Other stuff" });
+                this.reporter.testSuccess({ name: "should do more" });
+                this.reporter.contextEnd({ name: "Other stuff" });
+                this.reporter.addStats({});
 
-            this.assertIO("should do it");
-            this.assertIO("<!DOCTYPE html>");
-            this.assertIO(".buster-logo");
-        }
-    });
+                this.assertIO("should do it");
+                this.assertIO("<!DOCTYPE html>");
+                this.assertIO(".buster-logo");
+            }
+        });
+    }
 
     busterUtil.testCase("HTMLReporterStatsTest", {
         setUp: function () {
@@ -533,7 +536,7 @@
             this.stub(htmlReporter, "log");
             this.stub(htmlReporter, "addStats");
 
-            this.doc = typeof document != "undefined" ? document : createDocument();
+            this.doc = createDocument();
             this.runner = buster.create(buster.eventEmitter);
             this.runner.console = buster.create(buster.eventEmitter);
             this.reporter = htmlReporter.create({
@@ -595,4 +598,5 @@
             assert(this.reporter.testDeferred.calledOnce);
         }
 }, "should"));
-}());
+}(typeof buster !== "undefined" ? buster : null,
+  typeof sinon !== "undefined" ? sinon : null));
