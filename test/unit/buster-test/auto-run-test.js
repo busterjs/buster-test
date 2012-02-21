@@ -9,8 +9,7 @@
             autoRun: require("../../../lib/buster-test/auto-run"),
             testCase: require("../../../lib/buster-test/test-case"),
             testRunner: require("../../../lib/buster-test/test-runner"),
-            reporters: require("../../../lib/buster-test/reporters"),
-            moduleLoader: require("buster-module-loader")
+            reporters: require("../../../lib/buster-test/reporters")
         };
 
         assert = buster.assertions.assert;
@@ -207,11 +206,10 @@
         "should use custom reporter": function () {
             if (typeof document != "undefined") return;
             var reporter = { create: sinon.stub().returns({ listen: sinon.spy() }) };
-            this.sandbox.stub(buster.moduleLoader, "load").returns(reporter);
 
-            buster.autoRun.run([this.context], { reporter: "mod#report", });
-
-            assert(reporter.create.calledOnce);
+            assert.exception(function () {
+                buster.autoRun.run([this.context], { reporter: "mod", });
+            });
         },
 
         "should initialize reporter with options": function () {
