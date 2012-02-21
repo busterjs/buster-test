@@ -21,7 +21,6 @@
     "dependencies": {
         "buster-core": ">=0.5.1",
         "buster-terminal": ">=0.3",
-        "buster-module-loader": ">=0.3",
         "jsdom": "~0.2.10",
         "when": "https://github.com/cujojs/when/tarball/1.0.2"
     },
