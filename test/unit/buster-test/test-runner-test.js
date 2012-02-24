@@ -1408,6 +1408,32 @@
                 assert(!listeners[0].called);
                 assert(listeners[1].calledOnce);
             }));
+        },
+
+        "does not run setUp for deferred test": function (test) {
+            var setUp = sinon.spy();
+            var runner = this.runner;
+            var context = testCase("Test", {
+                setUp: setUp,
+                "//test": function () {}
+            });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(!setUp.called);
+            }));
+        },
+
+        "does not run tearDown for deferred test": function (test) {
+            var tearDown = sinon.spy();
+            var runner = this.runner;
+            var context = testCase("Test", {
+                tearDown: tearDown,
+                "//test": function () {}
+            });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(!tearDown.called);
+            }));
         }
     });
 
