@@ -1,6 +1,6 @@
 {
     "name": "buster-test",
-    "version": "0.4.2",
+    "version": "0.4.3",
     "description": "Promised based evented xUnit and BDD style test runner for JavaScript",
     "homepage": "http://busterjs.org/docs/buster-test",
     "author": { "name": "August Lilleaas and Christian Johansen" },
@@ -21,8 +21,10 @@
     "dependencies": {
         "buster-core": ">=0.5.1",
         "buster-terminal": ">=0.3",
-        "jsdom": "~0.2.10",
         "when": "https://github.com/cujojs/when/tarball/1.0.2"
+    },
+    "optionalDependencies": {
+        "jsdom": "~0.2.10"
     },
     "devDependencies": {
         "buster-assertions": ">=0.9",
