@@ -1,9 +1,9 @@
 var sinon = require("sinon");
 var buster = require("buster-core");
-var assertions = require("buster-assertions");
 var teamcityReporter = require("../../../../lib/buster-test/reporters/teamcity");
 var busterUtil = require("buster-util");
-var assert = assertions.assert;
+var util = require("util");
+var assert = require("buster-assertions").assert;
 
 busterUtil.testCase("TeamcityReporterTest", sinon.testCase({
     setUp:function () {
@@ -11,13 +11,13 @@ busterUtil.testCase("TeamcityReporterTest", sinon.testCase({
         that.reporter = teamcityReporter.create();
         that.log = [];
 
-        sinon.stub(console, 'log', function (msg) {
+        sinon.stub(util, "puts", function (msg) {
             that.log.push(msg);
-        })
+        });
     },
 
     tearDown:function () {
-        console.log.restore();
+        util.puts.restore();
     },
 
     "should print testsuite element with stats on context:end":function () {
