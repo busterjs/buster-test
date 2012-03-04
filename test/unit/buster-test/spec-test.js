@@ -132,7 +132,7 @@
 
             assert(spec.tests[0].deferred);
             assert.equals("Because it should", spec.tests[0].comment);
-            assert.typeOf(spec.tests[0].func, "function");
+            assert.isFunction(spec.tests[0].func);
         },
 
         "makes commented deferred test with itEventually with no function": function () {
@@ -154,6 +154,29 @@
             });
 
             assert(spec.tests[0].deferred);
+        },
+
+        "makes deferred test with commented out example name": function () {
+            var test = function () {};
+
+            var spec = bspec.describe("Stuff", function () {
+                bspec.it("// does it", function () {});
+            });
+
+            assert.equals("does it", spec.tests[0].name);
+            assert(spec.tests[0].deferred);
+        },
+
+        "makes commented deferred test with commented out name": function () {
+            var test = function () {};
+
+            var spec = bspec.describe("Stuff", function () {
+                bspec.it("// does it", "Because it should", function () {});
+            });
+
+            assert(spec.tests[0].deferred);
+            assert.equals("Because it should", spec.tests[0].comment);
+            assert.isFunction(spec.tests[0].func);
         },
 
         "adds setUp function by calling bspec.before": function () {
