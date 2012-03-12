@@ -33,16 +33,17 @@
             });
         },
 
-        "throws without spec": function () {
-            assert.exception(function () {
-                var spec = bspec.describe("Some test");
-            });
-        },
-
         "throws if specs is not a function": function () {
             assert.exception(function () {
                 var spec = bspec.describe("Some test", {});
             });
+        },
+
+        "treats empty describe as deferred": function () {
+            var spec = bspec.describe("Deferred");
+
+            assert.equals("Deferred", spec.tests[0].name);
+            assert(spec.tests[0].deferred);
         },
 
         "returns context object": function () {
