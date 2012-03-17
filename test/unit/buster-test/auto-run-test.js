@@ -78,6 +78,27 @@
             assert(buster.testRunner.on.calledWith("suite:end", callback));
         },
 
+        "should call end callback when runner emits suite:end": function () {
+            var callback = function () {};
+            var runner = buster.autoRun({}, { end: callback });
+
+            runner(buster.testCase("Auto running test case", this.tc));
+            this.clock.tick(0);
+
+            assert(buster.testRunner.on.calledWith("suite:end", callback));
+        },
+
+        "should call start callback with runner": function () {
+            var callback = sinon.spy();
+            var runner = buster.autoRun({}, { start: callback });
+
+            runner(buster.testCase("Auto running test case", this.tc));
+            this.clock.tick(0);
+
+            assert(callback.calledOnce);
+            assert(typeof callback.args[0][0].runSuite === "function");
+        },
+
         "should not autorun if a runner was already created": function () {
             var spy = this.onRun = sinon.spy();
             var runner = buster.autoRun();
