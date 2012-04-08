@@ -262,5 +262,18 @@ buster.util.testCase("ContextFilterTest", {
 
         assert.equals(contexts.length, 1);
         assert.equals(contexts[0].tests.length, 2);
+    },
+
+    "should return promise for promise input": function () {
+        var context = buster.testCase("Some tests", {
+            "test 1": function () {},
+            "test 2": function () {},
+            "should be dropped": function () {}
+        });
+        var promise = when(context);
+        var contexts = buster.testContext.compile([promise], "test ");
+
+        assert.equals(contexts.length, 1);
+        assert.isFunction(contexts[0].then);
     }
 });
