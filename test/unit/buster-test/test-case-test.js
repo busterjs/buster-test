@@ -401,5 +401,26 @@ buster.util.testCase("AsyncTestContextTest", {
             assert.equals(ctx.setUp, setUp);
             test.end();
         });
+    },
+
+    "passes deferred context promise to onCreate": function () {
+        var context;
+        buster.testCase.onCreate = function (ctx) { context = ctx; };
+
+        var promise = buster.testCase("Some spec", function (run) {
+            run({ "Does stuff": function () {} });
+        });
+
+        assert.same(context, promise);
+    },
+
+    "does not pass promise to onCreate if not present": function () {
+        delete buster.testCase.onCreate;
+
+        refute.exception(function () {
+            var promise = buster.testCase("Some spec", function (run) {
+                run({ "Does stuff": function () {} });
+            });
+        });
     }
 });

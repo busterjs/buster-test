@@ -433,6 +433,27 @@
             });
         },
 
+        "passes deferred context promise to onCreate": function () {
+            var context;
+            bspec.describe.onCreate = function (ctx) { context = ctx; };
+
+            var promise = bspec.describe("Some spec", function (run) {
+                run(function () { bspec.it("Does stuff", function () {}); });
+            });
+
+            assert.same(context, promise);
+        },
+
+        "does not pass promise to onCreate if not present": function () {
+            delete bspec.describe.onCreate;
+
+            refute.exception(function () {
+                bspec.describe("Some spec", function (run) {
+                    run(function () { bspec.it("Does stuff", function () {}); });
+                });
+            });
+        },
+
         "handles multiple async specs": function (test) {
             var runSpec1, runSpec2;
 
