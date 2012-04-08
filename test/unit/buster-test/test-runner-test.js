@@ -1154,6 +1154,7 @@
 
             this.runner.runSuite([context]).then(test.end(function () {
                 assert(listener.calledOnce);
+                assert.equals(listener.args[0][0].error.source, "setUp");
             }));
         },
 
@@ -1340,6 +1341,7 @@
 
             this.runner.runSuite([context]).then(test.end(function () {
                 assert(listener.calledOnce);
+                assert.equals(listener.args[0][0].error.source, "tearDown");
             }));
         },
 
