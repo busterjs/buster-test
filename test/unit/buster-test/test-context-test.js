@@ -1,6 +1,7 @@
 if (typeof module === "object" && typeof require === "function") {
     var sinon = require("sinon");
     var buster = require("buster-core");
+    var when = require("when");
 
     buster.extend(buster, {
         assertions: require("buster-assertions"),
@@ -235,5 +236,31 @@ buster.util.testCase("ContextFilterTest", {
         var context2 = buster.testContext.filter(context, []);
 
         assert.equals(context2.contexts.length, 1);
+    },
+
+    "should exclude tests from filter when compiling": function () {
+        var contexts = buster.testContext.compile([buster.testCase("Some tests", {
+            "test 1": function () {},
+            "test 2": function () {},
+            "should be dropped": function () {}
+        })], "test ");
+
+        assert.equals(contexts.length, 1);
+        assert.equals(contexts[0].tests.length, 2);
+    },
+
+    "should exclude empty contexts in compile output": function () {
+        var input = [buster.testCase("Some tests", {
+            "test 1": function () {},
+            "test 2": function () {}
+        }), buster.testCase("Other tests", {
+            "test A": function () {},
+            "test B": function () {}
+        })];
+
+        var contexts = buster.testContext.compile(input, /\d/);
+
+        assert.equals(contexts.length, 1);
+        assert.equals(contexts[0].tests.length, 2);
     }
 });
