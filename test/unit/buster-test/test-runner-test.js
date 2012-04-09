@@ -790,7 +790,10 @@
 
             this.runner.runSuite([this.context]).then(test.end(function () {
                 assert(listener.called);
-                assert.match(listener.args[0], [{ name: "test" }]);
+                assert.match(listener.args[0], [{
+                    name: "test",
+                    error: { source: "test function" }
+                }]);
             }));
         },
 

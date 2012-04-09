@@ -154,7 +154,12 @@ buster.util.testCase("JSONProxyTest", {
         this.runner.emit("test:timeout", {
             name: "should go",
             func: function () {},
-            error: { name: "TimeoutError", message: "Yo", stack: "" }
+            error: {
+                name: "TimeoutError",
+                message: "Yo",
+                stack: "",
+                source: "setUp"
+            }
         });
 
         assert.equals(listener.args[0][0], {
@@ -162,7 +167,8 @@ buster.util.testCase("JSONProxyTest", {
             error: {
                 name: "TimeoutError",
                 message: "Yo",
-                stack: ""
+                stack: "",
+                source: "setUp"
             }
         });
     },

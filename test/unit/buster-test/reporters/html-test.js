@@ -347,6 +347,18 @@
             });
         },
 
+        "should print test timeout with source": function () {
+            var err = generateError("Timed out after 250ms", "TimeoutError");
+            err.source = "setUp";
+            this.reporter.testTimeout({
+                name: "should do something",
+                error: err
+            });
+
+            assert.equals(this.list().firstChild.firstChild.innerHTML,
+                          "should do something (setUp timed out)");
+        },
+
         "should print timed out test name with full contextual name": function () {
             this.reporter.contextStart({ name: "Some stuff" });
             this.reporter.contextStart({ name: "in some state" });

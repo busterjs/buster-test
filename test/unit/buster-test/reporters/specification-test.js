@@ -15,7 +15,7 @@ function runnerSetUp() {
         content: "",
         puts: function (str) { this.print(str + "\n"); },
         print: function (str) { this.content += str; },
-        toString: function () { return this.content }
+        toString: function () { return this.content; }
     };
 
     this.runner = buster.create(buster.eventEmitter);

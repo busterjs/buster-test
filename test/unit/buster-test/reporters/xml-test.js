@@ -317,6 +317,22 @@ busterUtil.testCase("XMLReporterTest", sinon.testCase({
         this.reporter.contextEnd({ name: "Context" });
 
         this.assertIO('Stack: &amp;&lt;&gt;&quot;');
+    },
+
+    "should include failure element for timed out test": function () {
+        this.reporter.contextStart({ name: "Context" });
+        this.reporter.testTimeout({ name: "#1", error: {
+            name: "TimeoutError",
+            message: "Timed out after 250ms",
+            stack: "STACK\nSTACK",
+            source: "setUp"
+        } });
+        this.reporter.contextEnd({ name: "Context" });
+
+        this.assertIO('            <failure type="TimeoutError" ' +
+                      'message="setUp timed out after 250ms">' +
+                      "\n                STACK\n                STACK" +
+                      "\n            </failure>");
     }
 }, "should"));
 
