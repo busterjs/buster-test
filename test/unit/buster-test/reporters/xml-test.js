@@ -333,6 +333,38 @@ busterUtil.testCase("XMLReporterTest", sinon.testCase({
                       'message="setUp timed out after 250ms">' +
                       "\n                STACK\n                STACK" +
                       "\n            </failure>");
+    },
+
+    "should include failure element for uncaught exceptions": function () {
+        this.reporter.uncaughtException({
+            name: "TypeError",
+            message: "Thingamagiggy",
+            stack: "STACK\nSTACK"
+        });
+        this.reporter.suiteEnd();
+
+        this.assertIO("<testsuite errors=\"1\" tests=\"1\" failures=\"0\" name=\"Uncaught exceptions\">");
+        this.assertIO("<testcase classname=\"Uncaught exception\" name=\"#1\">");
+        this.assertIO('<failure type="TypeError" ' +
+                      'message="Thingamagiggy">' +
+                      "\n                STACK\n                STACK" +
+                      "\n            </failure>");
+    },
+
+    "should default uncaught exception type": function () {
+        this.reporter.uncaughtException({
+            message: "Thingamagiggy"
+        });
+        this.reporter.suiteEnd();
+
+        this.assertIO("<testsuite errors=\"1\" tests=\"1\" failures=\"0\" name=\"Uncaught exceptions\">");
+        this.assertIO("<testcase classname=\"Uncaught exception\" name=\"#1\">");
+        this.assertIO('<failure type="Error" message="Thingamagiggy"></failure>');
+    },
+
+    "should not include element for uncaught exceptions when there are none": function () {
+        this.reporter.suiteEnd();
+        refute.match(this.io, "Uncaught exceptions");
     }
 }, "should"));
 
@@ -347,6 +379,7 @@ busterUtil.testCase("XMLReporterEventMappingTest", sinon.testCase({
         this.stub(xmlReporter, "testFailure");
         this.stub(xmlReporter, "testTimeout");
         this.stub(xmlReporter, "testStart");
+        this.stub(xmlReporter, "uncaughtException");
 
         this.runner = buster.create(buster.eventEmitter);
         this.runner.console = buster.create(buster.eventEmitter);
@@ -399,6 +432,12 @@ busterUtil.testCase("XMLReporterEventMappingTest", sinon.testCase({
         this.runner.emit("test:timeout");
 
         assert(this.reporter.testTimeout.calledOnce);
+    },
+
+    "should map uncaughtException to uncaughtException": function () {
+        this.runner.emit("uncaughtException");
+
+        assert(this.reporter.uncaughtException.calledOnce);
     },
 
     "should map test:start to testStart": function () {
