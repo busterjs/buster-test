@@ -189,11 +189,31 @@
             assert.equals(setUp, spec.setUp);
         },
 
-        "adds setUp function by calling this..before": function () {
+        "adds setUp function by calling bspec.beforeEach": function () {
+            var setUp = function () {};
+
+            var spec = bspec.describe("Stuff", function () {
+                bspec.beforeEach(setUp);
+            });
+
+            assert.equals(setUp, spec.setUp);
+        },
+
+        "adds setUp function by calling this.before": function () {
             var setUp = function () {};
 
             var spec = bspec.describe("Stuff", function () {
                 this.before(setUp);
+            });
+
+            assert.equals(setUp, spec.setUp);
+        },
+
+        "adds setUp function by calling this.beforeEach": function () {
+            var setUp = function () {};
+
+            var spec = bspec.describe("Stuff", function () {
+                this.beforeEach(setUp);
             });
 
             assert.equals(setUp, spec.setUp);
@@ -204,6 +224,26 @@
 
             var spec = bspec.describe("Stuff", function () {
                 bspec.after(tearDown);
+            });
+
+            assert.equals(tearDown, spec.tearDown);
+        },
+
+        "adds tearDown function by calling bspec.afterEach": function () {
+            var tearDown = function () {};
+
+            var spec = bspec.describe("Stuff", function () {
+                bspec.afterEach(tearDown);
+            });
+
+            assert.equals(tearDown, spec.tearDown);
+        },
+
+        "adds tearDown function by calling this.afterEach": function () {
+            var tearDown = function () {};
+
+            var spec = bspec.describe("Stuff", function () {
+                this.afterEach(tearDown);
             });
 
             assert.equals(tearDown, spec.tearDown);
@@ -226,7 +266,9 @@
 
             var spec = bspec.describe("Spec", function () {
                 bspec.before(function () {});
+                bspec.beforeEach(function () {});
                 bspec.after(function () {});
+                bspec.afterEach(function () {});
 
                 bspec.it("test1", funcs[0]);
                 bspec.it("test2", funcs[1]);
@@ -310,11 +352,13 @@
             bspec.expose(this.env);
         },
 
-        "calls exposed describe, it, itEventually, before and after": function () {
+        "calls exposed describe, it, itEventually, before, beforeEach, after and afterEach": function () {
             var env = this.env;
             var test = function () {};
             var before = function () {};
+            var beforeEach = function () {};
             var after = function () {};
+            var afterEach = function () {};
             var eventually = function () {};
 
             var spec = env.describe("Stuff", function () {
@@ -324,12 +368,20 @@
                 env.itEventually("sometime", eventually);
             });
 
+            // Cannot test these in the same context as before() and after()
+            var beforeAfterEachSpec = env.describe("More Stuff", function() {
+                env.beforeEach(beforeEach);
+                env.afterEach(afterEach);
+            });
+
             assert.equals(2, spec.tests.length);
             assert.equals("does it", spec.tests[0].name);
             assert.equals(test, spec.tests[0].func);
             assert.equals("sometime", spec.tests[1].name);
             assert.equals(before, spec.setUp);
             assert.equals(after, spec.tearDown);
+            assert.equals(beforeEach, beforeAfterEachSpec.setUp);
+            assert.equals(afterEach, beforeAfterEachSpec.tearDown);
         },
 
         "parses nested spec properly": function () {
