@@ -414,6 +414,17 @@ buster.util.testCase("AsyncTestContextTest", {
         assert.same(context, promise);
     },
 
+    "does not pass resolved context to onCreate when deferred resolves": function () {
+        var listener = buster.testCase.onCreate = sinon.spy();
+
+        var promise = buster.testCase("Some spec", function (run) {
+            run({ "Does stuff": function () {} });
+        });
+
+        assert(listener.calledOnce,
+               listener.printf("Expected once, but was called %c"));
+    },
+
     "does not pass promise to onCreate if not present": function () {
         delete buster.testCase.onCreate;
 

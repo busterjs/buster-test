@@ -444,6 +444,17 @@
             assert.same(context, promise);
         },
 
+        "does not pass resolved context to onCreate when deferred resolves": function () {
+            bspec.describe.onCreate = sinon.spy();
+
+            var promise = bspec.describe("Some spec", function (run) {
+                run(function () { bspec.it("Does stuff", function () {}); });
+            });
+
+            assert(bspec.describe.onCreate.calledOnce,
+                   bspec.describe.onCreate.printf("Expected once, but was called %c"));
+        },
+
         "does not pass promise to onCreate if not present": function () {
             delete bspec.describe.onCreate;
 
