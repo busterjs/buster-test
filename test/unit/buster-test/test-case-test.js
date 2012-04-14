@@ -116,6 +116,22 @@ buster.util.testCase("TestContextTestsTest", {
         assert.equals(context.tests.length, 0);
     },
 
+    "should exclude prepare": function () {
+        var context = buster.testCase("Name", {
+            prepare: function () {}
+        });
+
+        assert.equals(context.tests.length, 0);
+    },
+
+    "should exclude conclude": function () {
+        var context = buster.testCase("Name", {
+            conclude: function () {}
+        });
+
+        assert.equals(context.tests.length, 0);
+    },
+
     "should exclude non-function property": function () {
         var context = buster.testCase("Name", {
             id: 42
@@ -211,6 +227,28 @@ buster.util.testCase("TestContextSetUpTearDownTest", {
         });
 
         assert.equals(context.tearDown, tearDown);
+    },
+
+    "should keep reference to prepare method": function () {
+        var prepare = function () {};
+
+        var context = buster.testCase("Name", {
+            prepare: prepare,
+            test: function () {}
+        });
+
+        assert.equals(context.contextSetUp, prepare);
+    },
+
+    "should keep reference to conclude method": function () {
+        var conclude = function () {};
+
+        var context = buster.testCase("Name", {
+            conclude: conclude,
+            test: function () {}
+        });
+
+        assert.equals(context.contextTearDown, conclude);
     }
 });
 
