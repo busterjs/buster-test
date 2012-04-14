@@ -257,6 +257,26 @@
             });
 
             assert.equals(tearDown, spec.tearDown);
+        },
+
+        "adds contextSetUp function by calling bspec.beforeAll": function () {
+            var setUp = function () {};
+
+            var spec = bspec.describe("Stuff", function () {
+                bspec.beforeAll(setUp);
+            });
+
+            assert.equals(setUp, spec.contextSetUp);
+        },
+
+        "adds contextSetUp function by calling this.beforeAll": function () {
+            var setUp = function () {};
+
+            var spec = bspec.describe("Stuff", function () {
+                this.beforeAll(setUp);
+            });
+
+            assert.equals(setUp, spec.contextSetUp);
         }
     });
 
@@ -352,17 +372,21 @@
             bspec.expose(this.env);
         },
 
-        "calls exposed describe, it, itEventually, before, beforeEach, after and afterEach": function () {
+        "calls exposed describe, it, itEventually, before, beforeEach, beforeAll, after, afterEach and afterAll": function () {
             var env = this.env;
             var test = function () {};
             var before = function () {};
             var beforeEach = function () {};
+            var beforeAll = function () {};
             var after = function () {};
             var afterEach = function () {};
+            var afterAll = function () {};
             var eventually = function () {};
 
             var spec = env.describe("Stuff", function () {
+                env.beforeAll(beforeAll);
                 env.before(before);
+                env.afterAll(afterAll);
                 env.after(after);
                 env.it("does it", test);
                 env.itEventually("sometime", eventually);
@@ -378,7 +402,9 @@
             assert.equals("does it", spec.tests[0].name);
             assert.equals(test, spec.tests[0].func);
             assert.equals("sometime", spec.tests[1].name);
+            assert.equals(beforeAll, spec.contextSetUp);
             assert.equals(before, spec.setUp);
+            assert.equals(afterAll, spec.contextTearDown);
             assert.equals(after, spec.tearDown);
             assert.equals(beforeEach, beforeAfterEachSpec.setUp);
             assert.equals(afterEach, beforeAfterEachSpec.tearDown);
