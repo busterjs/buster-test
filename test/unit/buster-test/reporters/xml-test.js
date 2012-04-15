@@ -440,8 +440,8 @@ busterUtil.testCase("XMLReporterEventMappingTest", sinon.testCase({
         assert(this.reporter.uncaughtException.calledOnce);
     },
 
-    "should map test:start to testStart": function () {
-        this.runner.emit("test:start");
+    "should map test:setup to testStart": function () {
+        this.runner.emit("test:setup");
 
         assert(this.reporter.testStart.calledOnce);
     }
