@@ -363,6 +363,13 @@
             });
 
             refute.same(spec.testCase, spec.contexts[0].testCase);
+        },
+
+        "context testCase has name function": function () {
+            var spec = bspec.describe("Name", function () {});
+
+            assert.isFunction(spec.testCase.name);
+            assert.equals(spec.testCase.name("contextSetUp"), "beforeAll");
         }
     });
 

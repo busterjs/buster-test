@@ -203,6 +203,13 @@ buster.util.testCase("TestContextContextsTest", {
         var contexts = context.contexts;
 
         refute.same(contexts[0].testCase, context.testCase);
+    },
+
+    "context test case object has name function": function () {
+        var context = buster.testCase("Name", {});
+
+        assert.isFunction(context.testCase.name);
+        assert.equals(context.testCase.name("contextSetUp"), "prepare");
     }
 });
 
