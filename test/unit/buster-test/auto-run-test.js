@@ -113,15 +113,12 @@
         "should not autorun if a runner was created asynchronously": function () {
             var spy = this.onRun = sinon.spy();
 
-            setTimeout(function () {
-                var testRunner = buster.testRunner.create();
-            }, 0);
+            var runner = buster.autoRun();
+            runner(buster.testCase("Auto running test case", {
+                testIt: function () {}
+            }));
 
-            setTimeout(function () {
-                var runner = buster.autoRun();
-                runner(buster.testCase("Auto running test case", this.tc));
-            }, 0);
-
+            var testRunner = buster.testRunner.create();
             this.clock.tick(1);
             assert(!spy.called);
         },
