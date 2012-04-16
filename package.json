@@ -24,7 +24,7 @@
         "when": "https://github.com/cujojs/when/tarball/1.0.2"
     },
     "optionalDependencies": {
-        "jsdom": "~0.2.10"
+        "jsdom": "~0.2.14"
     },
     "devDependencies": {
         "buster-assertions": ">=0.9",
