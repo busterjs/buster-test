@@ -127,7 +127,10 @@ function runnerSetUp() {
 
 function reporterSetUp() {
     runnerSetUp.call(this);
-    this.reporter = buster.dotsReporter.create({ io: this.io }).listen(this.runner);
+    this.reporter = buster.dotsReporter.create({
+        io: this.io,
+        logPassedMessages: true
+    }).listen(this.runner);
 }
 
 buster.util.testCase("DotsReporterTestsRunningTest", {
@@ -277,6 +280,37 @@ buster.util.testCase("DotsReporterMessagesTest", {
         this.reporter.printDetails();
 
         assert.match(this.io.toString(), "Deferred: Stuff some test\nLater");
+    },
+
+    "should not print messages for passed test if not configured to": function () {
+        var reporter = buster.dotsReporter.create({
+            io: this.io,
+            logPassedMessages: false
+        }).listen(this.runner);
+        reporter.startContext({ name: "Stuff" });
+        reporter.testSetUp({ name: "some test" });
+        reporter.log({ level: "log", message: "Is message" });
+        reporter.success({ name: "some test" });
+        reporter.endContext({ name: "Stuff" });
+        reporter.printDetails();
+
+        refute.match(this.io.toString(), "Passed: Stuff some test");
+        refute.match(this.io.toString(), "[LOG] Is message");
+    },
+
+    "should print global messages when configured not to log passed": function () {
+        var reporter = buster.dotsReporter.create({
+            io: this.io,
+            logPassedMessages: false
+        }).listen(this.runner);
+        reporter.log({ level: "log", message: "Is message" });
+        reporter.startContext({ name: "Stuff" });
+        reporter.testFailure({ name: "some test" });
+        reporter.endContext({ name: "Stuff" });
+        reporter.printDetails();
+
+        assert.match(this.io.toString(), "Global message log:");
+        assert.match(this.io.toString(), "[LOG] Is message");
     }
 });
 
@@ -632,7 +666,8 @@ buster.util.testCase("DotsReporterColorizedMessagesTest", {
 
         this.reporter = buster.dotsReporter.create({
             io: this.io,
-            color: true
+            color: true,
+            logPassedMessages: true
         }).listen(this.runner);
 
         sinon.stub(this.reporter, "printStats");
