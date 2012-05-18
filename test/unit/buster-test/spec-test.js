@@ -55,12 +55,13 @@
         },
 
         "calls create callback when a spec is created": function () {
-            bspec.describe.onCreate = sinon.spy();
+            var listener = sinon.spy();
+            buster.testContext.on("create", listener);
 
             var spec = bspec.describe("Some test", function () {});
 
-            assert(bspec.describe.onCreate.calledOnce);
-            assert.equals(bspec.describe.onCreate.args[0][0], spec);
+            assert(listener.calledOnce);
+            assert.equals(listener.args[0][0], spec);
         }
     });
 
@@ -518,9 +519,9 @@
             });
         },
 
-        "passes deferred context promise to onCreate": function () {
+        "passes deferred context promise to create event": function () {
             var context;
-            bspec.describe.onCreate = function (ctx) { context = ctx; };
+            buster.testContext.on("create", function (ctx) { context = ctx; });
 
             var promise = bspec.describe("Some spec", function (run) {
                 run(function () { bspec.it("Does stuff", function () {}); });
@@ -529,25 +530,16 @@
             assert.same(context, promise);
         },
 
-        "does not pass resolved context to onCreate when deferred resolves": function () {
-            bspec.describe.onCreate = sinon.spy();
+        "does not pass resolved context to create event when deferred resolves": function () {
+            var listener = sinon.spy();
+            buster.testContext.on("create", listener);
 
             var promise = bspec.describe("Some spec", function (run) {
                 run(function () { bspec.it("Does stuff", function () {}); });
             });
 
-            assert(bspec.describe.onCreate.calledOnce,
-                   bspec.describe.onCreate.printf("Expected once, but was called %c"));
-        },
-
-        "does not pass promise to onCreate if not present": function () {
-            delete bspec.describe.onCreate;
-
-            refute.exception(function () {
-                bspec.describe("Some spec", function (run) {
-                    run(function () { bspec.it("Does stuff", function () {}); });
-                });
-            });
+            assert(listener.calledOnce,
+                   listener.printf("Expected once, but was called %c"));
         },
 
         "handles multiple async specs": function (test) {
