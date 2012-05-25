@@ -307,6 +307,13 @@ busterUtil.testCase("XMLReporterTest", sinon.testCase({
         this.assertIO('<failure type="Error" message="&lt;Oops&gt; &amp; stuff">');
     },
 
+    "should escape quotes in test names": function () {
+        this.reporter.contextStart({ name: "Context" });
+        this.reporter.testSuccess({ name: 'it tests the "foo" part'});
+        this.reporter.contextEnd({ name: "Context" });
+        this.assertIO(/name="it tests the &quot;foo&quot; part".*/);
+    },
+
     "should escape stack trace": function () {
         this.reporter.contextStart({ name: "Context" });
         this.reporter.testError({ name: "#1", error: {
