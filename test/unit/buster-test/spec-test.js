@@ -339,7 +339,7 @@
         "fails for non-function contexts": function () {
             var spec = bspec.describe("Name", function () {
                 assert.exception(function () {
-                    bspec.context("doingIt", {});
+                    bspec.describe("doingIt", {});
                 });
             });
 
