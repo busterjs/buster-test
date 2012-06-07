@@ -405,21 +405,21 @@ buster.util.testCase("DotsReporterStatsTest", {
     },
 
     "should print warning when no tests": function () {
-        this.reporter.printStats({ contexts:  1, tests: 0, assertions: 0 });
+        this.reporter.printStats({ contexts:  0, tests: 0, assertions: 0 });
 
-        assert.match(this.io.toString(), "WARNING: No tests!");
+        assert.match(this.io.toString(), "No tests");
     },
 
     "should print warning when no assertions": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, assertions: 0 });
 
-        assert.match(this.io.toString(), "WARNING: No assertions!");
+        assert.match(this.io.toString(), "WARNING: No assertions");
     },
 
     "should not print warning for no assertions when no tests": function () {
         this.reporter.printStats({ contexts:  1, tests: 0, assertions: 0 });
 
-        refute.match(this.io.toString(), "WARNING: No assertions!");
+        refute.match(this.io.toString(), "WARNING: No assertions");
     }
 });
 
@@ -718,9 +718,9 @@ buster.util.testCase("DotsReporterColorizedStatsTest", {
     },
 
     "should print in red when no tests": function () {
-        this.reporter.printStats({ contexts: 1, tests: 0 });
+        this.reporter.printStats({ contexts: 0, tests: 0 });
 
-        var expected = "\033[31m1 test case, 0 tests, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
+        var expected = "\033[31mNo tests\033[0m\n";
         assert.match(this.io.toString(), expected);
     },
 
@@ -732,15 +732,15 @@ buster.util.testCase("DotsReporterColorizedStatsTest", {
     },
 
     "should print no test warning in red": function () {
-        this.reporter.printStats({ contexts: 1, tests: 0, assertions: 0 });
+        this.reporter.printStats({ contexts: 0, tests: 0, assertions: 0 });
 
-        assert.match(this.io.toString(), "\033[31mWARNING: No tests!\033[0m");
+        assert.match(this.io.toString(), "\033[31mNo tests\033[0m");
     },
 
     "should print no assertion warning in red": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
-        assert.match(this.io.toString(), "\033[31mWARNING: No assertions!\033[0m");
+        assert.match(this.io.toString(), "\033[31mWARNING: No assertions\033[0m");
     }
 });
 
@@ -878,9 +878,9 @@ buster.util.testCase("DotsReporterBrightlyColorizedStatsTest", {
     },
 
     "should print in bright red when no tests": function () {
-        this.reporter.printStats({ contexts: 1, tests: 0 });
+        this.reporter.printStats({ contexts: 0, tests: 0 });
 
-        var expected = "\033[1m\033[31m1 test case, 0 tests, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
+        var expected = "\033[1m\033[31mNo tests\033[0m\n";
         assert.match(this.io.toString(), expected);
     },
 
@@ -894,13 +894,13 @@ buster.util.testCase("DotsReporterBrightlyColorizedStatsTest", {
     "should print no test warning in bright red": function () {
         this.reporter.printStats({ tests: 0 });
 
-        assert.match(this.io.toString(), "\033[1m\033[31mWARNING: No tests!\033[0m");
+        assert.match(this.io.toString(), "\033[1m\033[31mNo tests\033[0m");
     },
 
     "should print no assertion warning in bright red": function () {
         this.reporter.printStats({ tests: 1, assertions: 0 });
 
-        assert.match(this.io.toString(), "\033[1m\033[31mWARNING: No assertions!\033[0m");
+        assert.match(this.io.toString(), "\033[1m\033[31mWARNING: No assertions\033[0m");
     }
 });
 

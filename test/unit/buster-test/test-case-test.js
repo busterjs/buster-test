@@ -3,7 +3,8 @@ if (typeof module === "object" && typeof require === "function") {
 
     var buster = {
         assertions: require("buster-assertions"),
-        testCase: require("../../../lib/buster-test/test-case")
+        testCase: require("../../../lib/buster-test/test-case"),
+        testContext: require("../../../lib/buster-test/test-context")
     };
 
     buster.util = require("buster-util");
@@ -71,12 +72,13 @@ buster.util.testCase("BusterTestCaseTest", {
     },
 
     "should call create callback when a test case is created": function () {
-        buster.testCase.onCreate = sinon.spy();
+        var spy = sinon.spy();
+        buster.testContext.on("create", spy);
 
         var testCase = buster.testCase("Some test", {});
 
-        assert(buster.testCase.onCreate.calledOnce);
-        assert.equals(buster.testCase.onCreate.args[0][0], testCase);
+        assert(spy.calledOnce);
+        assert.equals(spy.args[0][0], testCase);
     }
 });
 
@@ -448,9 +450,9 @@ buster.util.testCase("AsyncTestContextTest", {
         });
     },
 
-    "passes deferred context promise to onCreate": function () {
+    "passes deferred context promise to create event": function () {
         var context;
-        buster.testCase.onCreate = function (ctx) { context = ctx; };
+        buster.testContext.on("create", function (ctx) { context = ctx; });
 
         var promise = buster.testCase("Some spec", function (run) {
             run({ "Does stuff": function () {} });
@@ -459,8 +461,9 @@ buster.util.testCase("AsyncTestContextTest", {
         assert.same(context, promise);
     },
 
-    "does not pass resolved context to onCreate when deferred resolves": function () {
-        var listener = buster.testCase.onCreate = sinon.spy();
+    "does not pass resolved context to create event when deferred resolves": function () {
+        var listener = sinon.spy();
+        buster.testContext.on("create", listener);
 
         var promise = buster.testCase("Some spec", function (run) {
             run({ "Does stuff": function () {} });
@@ -468,15 +471,94 @@ buster.util.testCase("AsyncTestContextTest", {
 
         assert(listener.calledOnce,
                listener.printf("Expected once, but was called %c"));
+    }
+});
+
+buster.util.testCase("FocusedTestTest", {
+    "should not be focused by default": function () {
+        var testCase = buster.testCase("Some test", {
+            "focus here": function () {}
+        });
+
+        refute(testCase.tests[0].focused);
     },
 
-    "does not pass promise to onCreate if not present": function () {
-        delete buster.testCase.onCreate;
-
-        refute.exception(function () {
-            var promise = buster.testCase("Some spec", function (run) {
-                run({ "Does stuff": function () {} });
-            });
+    "should mark test as focused when starting with =>": function () {
+        var testCase = buster.testCase("Some test", {
+            "=> focus here": function () {}
         });
+
+        assert(testCase.focused);
+    },
+
+    "should mark test's containing context as focused": function () {
+        var testCase = buster.testCase("Some test", {
+            "=> focus here": function () {}
+        });
+
+        assert(testCase.tests[0].focused);
+    },
+
+    "should mark all test's containing contexts as focused": function () {
+        var testCase = buster.testCase("Some test", {
+            "nested": {
+                "=> focus here": function () {}
+            }
+        });
+
+        assert(testCase.focused);
+        assert(testCase.contexts[0].focused);
+        assert(testCase.contexts[0].tests[0].focused);
+    },
+
+    "should not mark all test's sibling tests as focused": function () {
+        var testCase = buster.testCase("Some test", {
+            "nested": {
+                "=> focus here": function () {},
+                "not here": function () {}
+            }
+        });
+
+        assert.equals(testCase.contexts[0].tests[1].name, "not here");
+        refute(testCase.contexts[0].tests[1].focused);
+    },
+
+    "should mark all tests in context as focused": function () {
+        var testCase = buster.testCase("Some test", {
+            "=> nested": {
+                "focus here": function () {},
+                "not here": function () {}
+            }
+        });
+
+        assert(testCase.contexts[0].tests[0].focused);
+        assert(testCase.contexts[0].tests[1].focused);
+    },
+
+    "should strip rocket from context name": function () {
+        var testCase = buster.testCase("Some test", {
+            "=> nested": {
+                "focus here": function () {},
+                "not here": function () {}
+            }
+        });
+
+        assert.equals(testCase.contexts[0].name, "nested");
+    },
+
+    "should strip rocket from focused test name": function () {
+        var testCase = buster.testCase("Some test", {
+            "=> focus here": function () {}
+        });
+
+        assert.equals(testCase.tests[0].name, "focus here");
+    },
+
+    "should strip rocket and surrounding white-space from name": function () {
+        var testCase = buster.testCase("Some test", {
+            "   =>  focus here": function () {}
+        });
+
+        assert.equals(testCase.tests[0].name, "focus here");
     }
 });

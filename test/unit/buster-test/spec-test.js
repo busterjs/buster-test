@@ -55,12 +55,13 @@
         },
 
         "calls create callback when a spec is created": function () {
-            bspec.describe.onCreate = sinon.spy();
+            var listener = sinon.spy();
+            buster.testContext.on("create", listener);
 
             var spec = bspec.describe("Some test", function () {});
 
-            assert(bspec.describe.onCreate.calledOnce);
-            assert.equals(bspec.describe.onCreate.args[0][0], spec);
+            assert(listener.calledOnce);
+            assert.equals(listener.args[0][0], spec);
         }
     });
 
@@ -338,7 +339,7 @@
         "fails for non-function contexts": function () {
             var spec = bspec.describe("Name", function () {
                 assert.exception(function () {
-                    bspec.context("doingIt", {});
+                    bspec.describe("doingIt", {});
                 });
             });
 
@@ -518,9 +519,9 @@
             });
         },
 
-        "passes deferred context promise to onCreate": function () {
+        "passes deferred context promise to create event": function () {
             var context;
-            bspec.describe.onCreate = function (ctx) { context = ctx; };
+            buster.testContext.on("create", function (ctx) { context = ctx; });
 
             var promise = bspec.describe("Some spec", function (run) {
                 run(function () { bspec.it("Does stuff", function () {}); });
@@ -529,25 +530,16 @@
             assert.same(context, promise);
         },
 
-        "does not pass resolved context to onCreate when deferred resolves": function () {
-            bspec.describe.onCreate = sinon.spy();
+        "does not pass resolved context to create event when deferred resolves": function () {
+            var listener = sinon.spy();
+            buster.testContext.on("create", listener);
 
             var promise = bspec.describe("Some spec", function (run) {
                 run(function () { bspec.it("Does stuff", function () {}); });
             });
 
-            assert(bspec.describe.onCreate.calledOnce,
-                   bspec.describe.onCreate.printf("Expected once, but was called %c"));
-        },
-
-        "does not pass promise to onCreate if not present": function () {
-            delete bspec.describe.onCreate;
-
-            refute.exception(function () {
-                bspec.describe("Some spec", function (run) {
-                    run(function () { bspec.it("Does stuff", function () {}); });
-                });
-            });
+            assert(listener.calledOnce,
+                   listener.printf("Expected once, but was called %c"));
         },
 
         "handles multiple async specs": function (test) {
@@ -601,6 +593,95 @@
                 refute.defined(innerRun);
                 test.end();
             });
+        }
+    });
+
+    testCase("FocusedSpecTest", {
+        "is not focused by default": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.it("focus here", function () {});
+            });
+
+            refute(spec.tests[0].focused);
+        },
+
+        "marks example as focused when name starts with =>": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.it("=> focus here", function () {});
+            });
+
+            assert(spec.tests[0].focused);
+        },
+
+        "marks focused example's containing context as focused": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.it("=> focus here", function () {});
+            });
+
+            assert(spec.focused);
+        },
+
+        "marks all example's parent contexts as focused": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.describe("nested", function () {
+                    bspec.it("=> focus here", function () {});
+                });
+            });
+
+            assert(spec.contexts[0].tests[0].focused);
+            assert(spec.contexts[0].focused);
+            assert(spec.focused);
+        },
+
+        "does not mark all test's sibling tests as focused": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.describe("nested", function () {
+                    bspec.it("=> focus here", function () {});
+                    bspec.it("not here", function () {});
+                });
+            });
+
+            assert.equals(spec.contexts[0].tests[1].name, "not here");
+            refute(spec.contexts[0].tests[1].focused);
+        },
+
+        "marks all examples in context as focused": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.describe("=> nested", function () {
+                    bspec.it("focus here", function () {});
+                    bspec.it("not here", function () {});
+                });
+            });
+
+            assert(spec.contexts[0].tests[0].focused);
+            assert(spec.contexts[0].tests[1].focused);
+        },
+
+        "strips rocket from context name": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.describe("=> nested", function () {
+                    bspec.it("focus here", function () {});
+                    bspec.it("not here", function () {});
+                });
+            });
+
+            assert.equals(spec.contexts[0].name, "nested");
+        },
+
+        "strips rocket from focused example name": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.it("=> focus here", function () {});
+            });
+
+            assert.equals(spec.tests[0].name, "focus here");
+        },
+
+        "strips rocket and surrounding white-space from name": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.it("   =>  focus here", function () {});
+            });
+
+            assert.equals(spec.tests[0].name, "focus here");
         }
     });
 }(this.buster, this.sinon));

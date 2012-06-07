@@ -35,7 +35,7 @@
             this.sandbox.stub(buster.autoRun, "run");
             var runner = buster.autoRun(options.autoRunOptions);
             runner(buster.testCase("Auto running test case", this.tc));
-            this.clock.tick(0);
+            this.clock.tick(10);
 
             assert.match(buster.autoRun.run.args[0][1], options.options);
         };
@@ -63,7 +63,7 @@
             var runner = buster.autoRun();
 
             runner(buster.testCase("Auto running test case", this.tc));
-            this.clock.tick(0);
+            this.clock.tick(10);
 
             assert(this.onRun.calledOnce);
         },
@@ -73,7 +73,7 @@
             var runner = buster.autoRun(callback);
 
             runner(buster.testCase("Auto running test case", this.tc));
-            this.clock.tick(0);
+            this.clock.tick(10);
 
             assert(buster.testRunner.on.calledWith("suite:end", callback));
         },
@@ -83,7 +83,7 @@
             var runner = buster.autoRun({}, { end: callback });
 
             runner(buster.testCase("Auto running test case", this.tc));
-            this.clock.tick(0);
+            this.clock.tick(10);
 
             assert(buster.testRunner.on.calledWith("suite:end", callback));
         },
@@ -93,7 +93,7 @@
             var runner = buster.autoRun({}, { start: callback });
 
             runner(buster.testCase("Auto running test case", this.tc));
-            this.clock.tick(0);
+            this.clock.tick(10);
 
             assert(callback.calledOnce);
             assert(typeof callback.args[0][0].runSuite === "function");
@@ -105,7 +105,7 @@
             var testRunner = buster.testRunner.create();
 
             runner(buster.testCase("Auto running test case", this.tc));
-            this.clock.tick(0);
+            this.clock.tick(10);
 
             assert(!spy.called);
         },

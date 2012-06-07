@@ -2662,4 +2662,63 @@
             }));
         }
     });
+
+    bu.testCase("TestRunnerFocusTest", {
+        setUp: function () {
+            this.runner = testRunner.create();
+        },
+
+        "runs focused test": function (test) {
+            var tfn = sinon.spy();
+            var context = testCase("Test", { "=> do it": tfn });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(tfn.calledOnce);
+            }));
+        },
+
+        "only runs focused test": function (test) {
+            var focused = sinon.spy();
+            var unfocused = sinon.spy();
+            var context = testCase("Test", {
+                "=> do it": focused,
+                "don't do it": unfocused
+            });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(focused.calledOnce);
+                refute(unfocused.called);
+            }));
+        },
+
+        "runs nested focused test": function (test) {
+            var focused = sinon.spy();
+            var unfocused = sinon.spy();
+            var context = testCase("Test", {
+                "don't do it": unfocused,
+                "nested": {
+                    "=> do it": focused
+                }
+            });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(focused.calledOnce);
+                refute(unfocused.called);
+            }));
+        },
+
+        "runs all focused tests": function (test) {
+            var focused = sinon.spy();
+            var context = testCase("Test", {
+                "=> nested": {
+                    "don't do it": focused,
+                    "do it": focused
+                }
+            });
+
+            this.runner.runSuite([context]).then(test.end(function () {
+                assert(focused.calledTwice);
+            }));
+        }
+    });
 }(this.buster, this.sinon, this.when));
