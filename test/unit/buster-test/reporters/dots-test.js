@@ -119,7 +119,7 @@ function runnerSetUp() {
         content: "",
         puts: function (str) { this.print(str + "\n"); },
         print: function (str) { this.content += str; },
-        toString: function () { return this.content }
+        toString: function () { return this.content; }
     };
 
     this.runner = buster.create(buster.eventEmitter);
@@ -420,6 +420,13 @@ buster.util.testCase("DotsReporterStatsTest", {
         this.reporter.printStats({ contexts:  1, tests: 0, assertions: 0 });
 
         refute.match(this.io.toString(), "WARNING: No assertions");
+    },
+
+    "should include time taken": function () {
+        this.runner.emit("suite:start");
+        this.reporter.printStats({ contexts:  1, tests: 5, assertions: 10 });
+
+        assert.match(this.io.toString(), "Finished in");
     }
 });
 
@@ -469,10 +476,13 @@ buster.util.testCase("DotsReporterFailureTest", {
         try { throw error; } catch (e) { error = e; }
         this.reporter.startContext({ name: "Stuff" });
 
-        this.reporter.testFailure({ name: "should do stuff", error: {
-            message: "Expected a to be equal to b",
-            stack: error.stack
-        } });
+        this.reporter.testFailure({
+            name: "should do stuff",
+            error: {
+                message: "Expected a to be equal to b",
+                stack: error.stack
+            }
+        });
 
         this.reporter.endContext({ name: "Stuff" });
         this.reporter.printFailures();
