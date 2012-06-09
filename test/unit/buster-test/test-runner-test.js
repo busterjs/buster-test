@@ -1742,6 +1742,19 @@
                 assert.equals(result.assertions, 3);
                 test.end();
             });
+        },
+        
+        "does not fail async tests without assertions": function (test) {
+            this.runner.on("test:failure", this.listener);
+
+            var context = testCase("AsyncTest + Assertions", { test1: function (done) {
+                assert(true);
+                setTimeout(done, 0);
+            }});
+
+            this.runner.runSuite([context]).then(B.bind(this, test.end(function () {
+                assert(!this.listener.called);
+            })));
         }
     });
 
