@@ -2719,6 +2719,15 @@
             this.runner.runSuite([context]).then(test.end(function () {
                 assert(focused.calledTwice);
             }));
+        },
+
+        "emits runner:focus event": function (test) {
+            var context = testCase("Test", {
+                "=>don't do it": function () {}
+            });
+
+            this.runner.on("runner:focus", test.end(function () {}));
+            this.runner.runSuite([context]);
         }
     });
 }(this.buster, this.sinon, this.when));
