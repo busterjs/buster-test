@@ -118,10 +118,37 @@
             assert.equals(meta.content, "text/html; charset=utf-8");
         },
 
-        "should inject CSS file from same directory if buster-test.js is not found":
+        "should use custom CSS file when specified by cssPath option":
+        function () {
+            if (typeof document == "undefined") return;
+            htmlReporter.create({ document: this.doc, root: this.doc.body, cssPath: 'custom.css' });
+
+            var links = this.doc.getElementsByTagName("link");
+            var link = links[links.length - 1];
+
+            assert.match(link, {
+                rel: "stylesheet",
+                type: "text/css",
+                media: "all",
+                href: "custom.css"
+            });
+        },
+
+        "should not inject CSS file unless detectCssPath option is passed":
         function () {
             if (typeof document == "undefined") return;
             htmlReporter.create({ document: this.doc, root: this.doc.body });
+
+            var links = this.doc.getElementsByTagName("link");
+            var link = links[links.length - 1];
+
+            refute.equals(link.href, "buster-test.css");
+        },
+
+        "should inject CSS file from same directory if buster-test.js is not found":
+        function () {
+            if (typeof document == "undefined") return;
+            htmlReporter.create({ document: this.doc, root: this.doc.body, detectCssPath: true });
 
             var links = this.doc.getElementsByTagName("link");
             var link = links[links.length - 1];
@@ -137,7 +164,7 @@
         "should inject CSS file if logging on body": function () {
             if (typeof document == "undefined") return;
             this.doc.body.innerHTML += "<script src=\"/some/path/buster-test.js\"></script>";
-            htmlReporter.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body, detectCssPath: true });
 
             var links = this.doc.getElementsByTagName("link");
             var link = links[links.length - 1];
@@ -152,7 +179,7 @@
 
         "should inject CSS file in style tag if on node": function () {
             if (typeof document != "undefined") return;
-            htmlReporter.create({ document: this.doc, root: this.doc.body });
+            htmlReporter.create({ document: this.doc, root: this.doc.body, detectCssPath: true });
 
             var styles = this.doc.getElementsByTagName("style");
             var style = styles[styles.length - 1];
@@ -443,7 +470,8 @@
                 reporterSetUp.call(this, {
                     document: this.doc,
                     root: this.doc.body,
-                    io: this.io
+                    io: this.io,
+                    detectCssPath: true
                 });
             },
 
