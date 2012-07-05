@@ -707,7 +707,14 @@ buster.util.testCase("DotsReporterColorizedStatsTest", {
     },
 
     "should print in green when OK": function () {
-        this.reporter.printStats({ contexts: 1, tests: 1, assertions: 1, failures: 0, errors: 0 });
+        this.reporter.printStats({
+            contexts: 1,
+            tests: 1,
+            assertions: 1,
+            failures: 0,
+            errors: 0,
+            timeouts: 0
+        });
 
         var expected = "\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\033[0m\n";
         assert.match(this.io.toString(), expected);
@@ -735,9 +742,16 @@ buster.util.testCase("DotsReporterColorizedStatsTest", {
     },
 
     "should print in red when timeouts": function () {
-        this.reporter.printStats({ contexts: 1, tests: 1, timeouts: 1 });
+        this.reporter.printStats({
+            contexts: 1,
+            tests: 2,
+            errors: 0,
+            failures: 0,
+            timeouts: 1,
+            assertions: 2
+        });
 
-        var expected = "\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\033[0m\n";
+        var expected = "\033[31m1 test case, 2 tests, 2 assertions, 0 failures, 0 errors, 1 timeout\033[0m\n";
         assert.match(this.io.toString(), expected);
     },
 
@@ -867,7 +881,14 @@ buster.util.testCase("DotsReporterBrightlyColorizedStatsTest", {
     },
 
     "should print in bright green when OK": function () {
-        this.reporter.printStats({ contexts: 1, tests: 1, failures: 0, errors: 0, assertions: 1 });
+        this.reporter.printStats({
+            contexts: 1,
+            tests: 1,
+            failures: 0,
+            errors: 0,
+            assertions: 1,
+            timeouts: 0
+        });
 
         var expected = "\033[1m\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\033[0m\n";
         assert.match(this.io.toString(), expected);
