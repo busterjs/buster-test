@@ -657,6 +657,46 @@
             assert(spec.contexts[0].tests[1].focused);
         },
 
+        "marks all nested examples in context as focused": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.describe("=> nested", function () {
+                    bspec.it("focus here", function () {});
+                    bspec.it("not here", function () {});
+                    bspec.describe("more nesting", function () {
+                        bspec.it("focus here", function () {});
+                    });
+                });
+            });
+
+            assert(spec.contexts[0].contexts[0].tests[0].focused);
+        },
+
+        "marks all examples in spec as focused": function () {
+            var spec = bspec.describe("=>Something", function () {
+                bspec.describe("nested", function () {
+                    bspec.it("focus here", function () {});
+                    bspec.it("not here", function () {});
+                });
+            });
+
+            assert(spec.contexts[0].tests[0].focused);
+            assert(spec.contexts[0].tests[1].focused);
+        },
+
+        "does not mark nested examples focused when one is focused": function () {
+            var spec = bspec.describe("Something", function () {
+                bspec.describe("nested", function () {
+                    bspec.it("=> focus here", function () {});
+                    bspec.it("not here", function () {});
+                    bspec.describe("more nesting", function () {
+                        bspec.it("not here please", function () {});
+                    });
+                });
+            });
+
+            refute(spec.contexts[0].contexts[0].tests[0].focused);
+        },
+
         "strips rocket from context name": function () {
             var spec = bspec.describe("Something", function () {
                 bspec.describe("=> nested", function () {

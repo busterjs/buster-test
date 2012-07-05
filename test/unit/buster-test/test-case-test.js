@@ -535,11 +535,51 @@ buster.util.testCase("FocusedTestTest", {
         assert(testCase.contexts[0].tests[1].focused);
     },
 
+    "should mark all nested tests in context as focused": function () {
+        var testCase = buster.testCase("Some test", {
+            "=> nested": {
+                "focus here": function () {},
+                "and here": function () {},
+                "more nesting": {
+                    "focus here": function () {}
+                }
+            }
+        });
+
+        assert(testCase.contexts[0].contexts[0].tests[0].focused);
+    },
+
+    "should mark all tests in test case as focused": function () {
+        var testCase = buster.testCase("=> Some test", {
+            "nested": {
+                "focus here": function () {},
+                "not here": function () {}
+            }
+        });
+
+        assert(testCase.contexts[0].tests[0].focused);
+        assert(testCase.contexts[0].tests[1].focused);
+    },
+
+    "should not mark nested tests focused when one test is focused": function () {
+        var testCase = buster.testCase("Some test", {
+            "nested": {
+                "=> focus here": function () {},
+                "not here": function () {},
+                "more nesting": {
+                    "not here please": function () {}
+                }
+            }
+        });
+
+        refute(testCase.contexts[0].contexts[0].tests[0].focused);
+    },
+
     "should strip rocket from context name": function () {
         var testCase = buster.testCase("Some test", {
             "=> nested": {
                 "focus here": function () {},
-                "not here": function () {}
+                "and here": function () {}
             }
         });
 
