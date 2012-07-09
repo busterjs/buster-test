@@ -1161,6 +1161,22 @@
             }));
         },
 
+        "times out async setUp after custom timeout": function (test) {
+            var listener = sinon.spy();
+            this.runner.on("test:timeout", listener);
+
+            var context = testCase("Test", {
+                setUp: function (done) { this.timeout = 100; },
+                test: sinon.spy()
+            });
+
+            this.runner.runSuite([context]);
+            setTimeout(test.end(function () {
+                assert(listener.calledOnce);
+                assert.equals(listener.args[0][0].error.source, "setUp");
+            }), 150);
+        },
+
         "emits setUp, async, timeout for async setup": function (test) {
             var listeners = {
                 timeout: sinon.spy(),
@@ -1346,6 +1362,23 @@
                 assert(listener.calledOnce);
                 assert.equals(listener.args[0][0].error.source, "tearDown");
             }));
+        },
+
+        "times out async tearDown after custom timeout": function (test) {
+            var listener = sinon.spy();
+            this.runner.on("test:timeout", listener);
+
+            var context = testCase("Test", {
+                tearDown: function (done) { this.timeout = 100; },
+                test: sinon.spy()
+            });
+
+            this.runner.runSuite([context]);
+
+            setTimeout(test.end(function () {
+                assert(listener.calledOnce);
+                assert.equals(listener.args[0][0].error.source, "tearDown");
+            }), 150);
         },
 
         "should emit test:async when tearDown is async": function (test) {
@@ -2540,6 +2573,20 @@
             this.runner.runContext(context).then(test.end(function () {
                 assert(listener.called);
             }));
+        },
+
+        "times out prepare after custom timeout": function (test) {
+            var listener = sinon.spy();
+            this.runner.on("uncaughtException", listener);
+            var context = testCase("Test", {
+                prepare: function (done) { this.timeout = 100; }
+            });
+
+            this.runner.runContext(context);
+
+            setTimeout(test.end(function () {
+                assert(listener.called);
+            }), 150);
         }
     });
 
