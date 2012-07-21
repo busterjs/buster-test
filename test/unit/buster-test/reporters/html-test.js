@@ -47,8 +47,8 @@
         try { throw error; } catch (e) { return e; }
     }
 
-    function assertMessage(list, level, message) {
-        var messages = list.firstChild.getElementsByTagName("ul")[0];
+    function assertMessage(list, level, message, level) {
+        var messages = list.firstChild.getElementsByTagName("ul")[level || 0];
 
         assert.className(messages, "messages");
 
@@ -229,11 +229,18 @@
             });
         },
 
-        "should not add context name as h2 when entering nested context": function () {
+        "should add context name as h2 in a nested ul when entering nested context": function () {
             this.reporter.contextStart({ name: "Some context" });
             this.reporter.contextStart({ name: "Some other context" });
 
-            assert.equals(this.root.getElementsByTagName("h2").length, 1);
+            var first = this.root.firstChild;
+            assert.match(first, { tagName: "h2", innerHTML: "Some context" });
+            var ul = first.nextSibling;
+            assert.match(ul, { tagName: "ul" });
+            assert.equals(ul.children.length, 1);
+            var li = ul.firstChild;
+            assert.match(li, { tagName: "li" });
+            assert.match(li.firstChild, { tagName: "h2", innerHTML: "Some other context" });
         },
 
         "should print passing test name as list item with success class": function () {
@@ -246,13 +253,13 @@
             });
         },
 
-        "should print passing test name with full contextual name": function () {
+        "should print passing test name in correct nesting": function () {
             this.reporter.contextStart({ name: "Some stuff" });
             this.reporter.contextStart({ name: "in some state" });
             this.reporter.testSuccess({ name: "should do it" });
 
-            assert.match(this.list().firstChild, {
-                innerHTML: /in some state should do it/
+            assert.match(this.root.getElementsByTagName("ul")[1], {
+                innerHTML: /should do it/
             });
         },
 
@@ -263,9 +270,13 @@
             this.reporter.contextStart({ name: "in some other state" });
             this.reporter.testSuccess({ name: "should do it" });
 
-            assert.match(this.list().firstChild, {
-                innerHTML: /in some other state should do it/
-            });
+            var testLi = this.list().firstChild // > ul:first > li
+               .nextSibling // current context li
+               .firstChild  // h2(in some other state)
+               .nextSibling // current sub-context ul
+               .firstChild  // test li
+
+            assert.match(testLi, { innerHTML: /should do it/ });
         },
 
         "should print failed test name as list item with error class": function () {
@@ -296,16 +307,6 @@
             assert.match(stack.firstChild, { innerHTML: /html-test.js/ });
         },
 
-        "should print failed test name with full contextual name": function () {
-            this.reporter.contextStart({ name: "Some stuff" });
-            this.reporter.contextStart({ name: "in some state" });
-            this.reporter.testFailure({ name: "should do it" });
-
-            assert.match(this.list().firstChild,{
-                innerHTML: /in some state should do it/
-            });
-        },
-
         "should print errored test name as list item with error class": function () {
             this.reporter.testError({ name: "should do something" });
 
@@ -334,16 +335,6 @@
             assert.match(stack.firstChild, { innerHTML: /html-test.js/ });
         },
 
-        "should print errored test name with full contextual name": function () {
-            this.reporter.contextStart({ name: "Some stuff" });
-            this.reporter.contextStart({ name: "in some state" });
-            this.reporter.testError({ name: "should do it" });
-
-            assert.match(this.list().firstChild,{
-                innerHTML: /in some state should do it/
-            });
-        },
-
         "should print deferred test as list item with deferred class": function () {
             this.reporter.testDeferred({ name: "should do something" });
 
@@ -351,16 +342,6 @@
                 tagName: "li",
                 className: "deferred",
                 innerHTML: /<[hH]3>should do something<\/[hH]3>/
-            });
-        },
-
-        "should print deferred test name with full contextual name": function () {
-            this.reporter.contextStart({ name: "Some stuff" });
-            this.reporter.contextStart({ name: "in some state" });
-            this.reporter.testDeferred({ name: "should do it" });
-
-            assert.match(this.list().firstChild, {
-                innerHTML: /in some state should do it/
             });
         },
 
@@ -386,23 +367,13 @@
                           "should do something (setUp timed out)");
         },
 
-        "should print timed out test name with full contextual name": function () {
-            this.reporter.contextStart({ name: "Some stuff" });
-            this.reporter.contextStart({ name: "in some state" });
-            this.reporter.testTimeout({ name: "should do it" });
-
-            assert.match(this.list().firstChild, {
-                innerHTML: /<[hH]3>in some state should do it<\/[hH]3>/
-            });
-        },
-
         "should print log message for passing test": function () {
             this.reporter.contextStart({ name: "Some stuff" });
             this.reporter.contextStart({ name: "in some state" });
             this.reporter.log({ level: "log", message: "Is message" });
             this.reporter.testSuccess({ name: "should do it" });
 
-            assertMessage(this.list(), "log", "Is message");
+            assertMessage(this.list(), "log", "Is message", 1);
         },
 
         "should print log message for failing test": function () {
@@ -411,7 +382,7 @@
             this.reporter.log({ level: "log", message: "Is message" });
             this.reporter.testFailure({ name: "should do it" });
 
-            assertMessage(this.list(), "log", "Is message");
+            assertMessage(this.list(), "log", "Is message", 1);
         },
 
         "should print log message for errored test": function () {
@@ -420,7 +391,7 @@
             this.reporter.log({ level: "log", message: "Is message" });
             this.reporter.testError({ name: "should do it" });
 
-            assertMessage(this.list(), "log", "Is message");
+            assertMessage(this.list(), "log", "Is message", 1);
         },
 
         "should print log message for timed out test": function () {
@@ -429,7 +400,7 @@
             this.reporter.log({ level: "log", message: "Is message" });
             this.reporter.testTimeout({ name: "should do it" });
 
-            assertMessage(this.list(), "log", "Is message");
+            assertMessage(this.list(), "log", "Is message", 1);
         },
 
         "should not re-print previous log messages": function () {

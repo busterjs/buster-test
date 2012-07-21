@@ -105,11 +105,11 @@ body.buster-test {
 .buster-test h6,
 .buster-test p {
     font-weight: normal;
-    margin: 0 0 1em;
+    margin: 0.2em 0;
 }
 
 .buster-test ul {
-    margin: 0 0 1em 15px;
+    margin: 0.2em 0 0.2em 15px;
 }
 
 /* Masthead */
