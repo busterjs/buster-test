@@ -412,6 +412,14 @@ buster.util.testCase("AsyncTestContextTest", {
         refute.defined(testCase.tearDown);
     },
 
+    "//should give context promise name": function () {
+        // Had problems making this pass - promise wouldn't "take" name.
+        // TODO: Fix
+        var testCase = buster.testCase("Some test", function () {});
+
+        assert.equals(testCase.name, "Some test");
+    },
+
     "should call async context with run argument": function () {
         var spy = sinon.spy();
         var testCase = buster.testCase("Some test", spy);
