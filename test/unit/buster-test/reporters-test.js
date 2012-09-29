@@ -1,12 +1,11 @@
 if (typeof module === "object" && typeof require === "function") {
-    var buster = { reporters: require("../../../lib/buster-test/reporters") };
-    buster.util = require("buster-util");
-    var assert = require("buster-assertions").assert;
-    var sinon = require("sinon");
+    var helper = require("../../test-helper");
+    var assert = require("referee").assert;
+    var reporters = require("../../../lib/buster-test/reporters");
 
-    buster.util.testCase("Reporters test", sinon.testCase({
-        "should load built-in reporter": function () {
-            assert.equals(buster.reporters.xml, buster.reporters.load("xml"));
+    helper.testCase("Reporters test", {
+        "loads built-in reporter": function () {
+            assert.equals(reporters.xml, reporters.load("xml"));
         }
-    }, "should"));
+    });
 }

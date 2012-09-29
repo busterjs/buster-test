@@ -1,20 +1,16 @@
-(function (B, sinon) {
-    var assert, refute, bspec, testCase;
+(typeof require === "function" && function (reqs, callback) {
+    callback.apply(this, reqs.map(function (req) { return require(req); }));
+} || define)([
+    "sinon",
+    "referee",
+    "../../../lib/buster-test/spec",
+    "../../../lib/buster-test/test-context",
+    "../../test-helper"
+], function (sinon, referee, bspec, testContext, helper) {
+    var assert = referee.assert;
+    var refute = referee.refute;
 
-    if (typeof require == "function" && typeof module == "object") {
-        sinon = require("sinon");
-        testCase = require("buster-util").testCase;
-        assert = require("buster-assertions").assert;
-        refute = require("buster-assertions").refute;
-        bspec = require("../../../lib/buster-test/spec");
-    } else {
-        testCase = buster.util.testCase;
-        assert = buster.assertions.assert;
-        refute = buster.assertions.refute;
-        bspec = buster.spec;
-    }
-
-    testCase("SpecTest", {
+    helper.testCase("SpecTest", {
         "throws without name": function () {
             assert.exception(function () {
                 var spec = bspec.describe();
@@ -56,7 +52,7 @@
 
         "calls create callback when a spec is created": function () {
             var listener = sinon.spy();
-            buster.testContext.on("create", listener);
+            testContext.on("create", listener);
 
             var spec = bspec.describe("Some test", function () {});
 
@@ -65,7 +61,7 @@
         }
     });
 
-    testCase("SpecCallbackTest", {
+    helper.testCase("SpecCallbackTest", {
         "adds test function by calling it": function () {
             var test = function () {};
 
@@ -281,7 +277,7 @@
         }
     });
 
-    testCase("SpecContextTestsTest", {
+    helper.testCase("SpecContextTestsTest", {
         "extracts only test functions": function () {
             var funcs = [function () {}, function () {}, function () {}];
 
@@ -316,7 +312,7 @@
         }
     });
 
-    testCase("SpecContextContextsTest", {
+    helper.testCase("SpecContextContextsTest", {
         "gets contexts as list of context objects": function () {
             var spec = bspec.describe("Spec", function () {
                 bspec.describe("Some context", function () {});
@@ -374,7 +370,7 @@
         }
     });
 
-    testCase("SpecExposeTest", {
+    helper.testCase("SpecExposeTest", {
         setUp: function () {
             this.env = {};
             bspec.expose(this.env);
@@ -436,7 +432,7 @@
         }
     });
 
-    testCase("SpecRequiresSupportForTest", {
+    helper.testCase("SpecRequiresSupportForTest", {
         "sets requiresSupportForAll property": function () {
             var spec = bspec.ifSupported({
                 "feature A": true
@@ -474,7 +470,7 @@
         }
     });
 
-    testCase("AsyncSpecTest", {
+    helper.testCase("AsyncSpecTest", {
         "makes context promise when describe callback expects argument": function () {
             var spec = bspec.describe("Some spec", function (run) {});
 
@@ -493,13 +489,13 @@
             assert.isFunction(run);
         },
 
-        "calling run resolves promise": function (test) {
+        "calling run resolves promise": function (done) {
             var run;
-            bspec.describe("Some spec", function (r) { run = r; }).then(test.end);
+            bspec.describe("Some spec", function (r) { run = r; }).then(done);
             run(function () {});
         },
 
-        "resolves promise with test context data": function (test) {
+        "resolves promise with test context data": function (done) {
             var before = function () {};
             var example = function () {};
 
@@ -515,13 +511,13 @@
                 assert.equals(ctx.tests[0].name, "Does stuff");
                 assert.equals(ctx.tests[0].func, example);
                 assert.equals(ctx.setUp, before);
-                test.end();
+                done();
             });
         },
 
         "passes deferred context promise to create event": function () {
             var context;
-            buster.testContext.on("create", function (ctx) { context = ctx; });
+            testContext.on("create", function (ctx) { context = ctx; });
 
             var promise = bspec.describe("Some spec", function (run) {
                 run(function () { bspec.it("Does stuff", function () {}); });
@@ -532,7 +528,7 @@
 
         "does not pass resolved context to create event when deferred resolves": function () {
             var listener = sinon.spy();
-            buster.testContext.on("create", listener);
+            testContext.on("create", listener);
 
             var promise = bspec.describe("Some spec", function (run) {
                 run(function () { bspec.it("Does stuff", function () {}); });
@@ -542,7 +538,7 @@
                    listener.printf("Expected once, but was called %c"));
         },
 
-        "handles multiple async specs": function (test) {
+        "handles multiple async specs": function (done) {
             var runSpec1, runSpec2;
 
             var spec1 = bspec.describe("Some spec", function (run) {
@@ -579,11 +575,11 @@
                 assert.equals(ctx.contexts[0].name, "Inner examples");
                 assert.equals(ctx.contexts[0].tests.length, 1);
                 assert.equals(ctx.contexts[0].tests[0].name, "Is sure");
-                test.end();
+                done();
             });
         },
 
-        "does not allow nested async specs": function (test) {
+        "does not allow nested async specs": function (done) {
             var innerRun;
             bspec.describe("Some spec", function (run) {
                 run(function (r2) {
@@ -591,12 +587,12 @@
                 });
             }).then(function (ctx) {
                 refute.defined(innerRun);
-                test.end();
+                done();
             });
         }
     });
 
-    testCase("FocusedSpecTest", {
+    helper.testCase("FocusedSpecTest", {
         "is not focused by default": function () {
             var spec = bspec.describe("Something", function () {
                 bspec.it("focus here", function () {});
@@ -724,4 +720,4 @@
             assert.equals(spec.tests[0].name, "focus here");
         }
     });
-}(this.buster, this.sinon));
+});

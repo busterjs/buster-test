@@ -1,40 +1,48 @@
-(function (buster, sinon) {
-    var assert = buster.assertions.assert;
-    var refute = buster.assertions.refute;
+(typeof require === "function" && function (reqs, callback) {
+    callback.apply(this, reqs.map(function (req) { return require(req); }));
+} || define)([
+    "bane",
+    "referee",
+    "../../../lib/buster-test/browser-env",
+    "../../test-helper"
+], function (bane, referee, browserEnv, helper) {
+    if (typeof document === "undefined") { return; }
+    var assert = referee.assert;
+    var refute = referee.refute;
 
-    buster.util.testCase("BrowserEnvTest", {
+    helper.testCase("BrowserEnvTest", {
         setUp: function () {
-            this.emitter = buster.eventEmitter.create();
+            this.emitter = bane.createEventEmitter();
             this.div = document.createElement("div");
-            this.env = buster.browserEnv.create(this.div);
+            this.env = browserEnv.create(this.div);
             this.env.listen(this.emitter);
         },
 
-        "test should reset element content on test:success": function () {
+        "resets element content on test:success": function () {
             this.div.innerHTML = "Hey";
             this.emitter.emit("test:success");
             assert.equals(this.div.innerHTML, "");
         },
 
-        "test should reset element content on test:failure": function () {
+        "resets element content on test:failure": function () {
             this.div.innerHTML = "Hey";
             this.emitter.emit("test:failure");
             assert.equals(this.div.innerHTML, "");
         },
 
-        "test should reset element content on test:error": function () {
+        "resets element content on test:error": function () {
             this.div.innerHTML = "Hey";
             this.emitter.emit("test:error");
             assert.equals(this.div.innerHTML, "");
         },
 
-        "test should reset element content on test:timeout": function () {
+        "resets element content on test:timeout": function () {
             this.div.innerHTML = "Hey";
             this.emitter.emit("test:timeout");
             assert.equals(this.div.innerHTML, "");
         },
 
-        "test should restore original element innerHTML": function () {
+        "restores original element innerHTML": function () {
             this.div.innerHTML = "Hey";
             this.emitter.emit("suite:start");
             this.div.innerHTML = "Hey!!!";
@@ -42,5 +50,4 @@
             assert.equals(this.div.innerHTML, "Hey");
         }
     });
-}(typeof buster !== "undefined" ? buster : null,
-  typeof sinon !== "undefined" ? sinon : null));
+});
