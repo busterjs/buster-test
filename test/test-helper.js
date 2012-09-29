@@ -14,19 +14,21 @@
 
         function complete() {
             try {
-                tearDown();
+                tearDown.call(ctx);
             } catch (e) {
                 return handleError(e);
             }
             next(true);
         }
 
+        var ctx = {};
+
         try {
-            setUp();
+            setUp.call(ctx);
             if (test.length > 0) {
-                test(complete);
+                test.call(ctx, complete);
             } else {
-                test();
+                test.call(ctx);
                 complete();
             }
         } catch (e) {

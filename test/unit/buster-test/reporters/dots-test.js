@@ -1,4 +1,5 @@
 var helper = require("../../../test-helper");
+var rhelper = require("./test-helper");
 var bane = require("bane");
 var referee = require("referee");
 var sinon = require("sinon");
@@ -7,20 +8,14 @@ var assert = referee.assert;
 var refute = referee.refute;
 
 function runnerSetUp() {
-    this.io = {
-        content: "",
-        puts: function (str) { this.print(str + "\n"); },
-        print: function (str) { this.content += str; },
-        toString: function () { return this.content; }
-    };
-
+    this.out = rhelper.writableStream();
     this.runner = bane.createEventEmitter();
 }
 
 function reporterSetUp() {
     runnerSetUp.call(this);
     this.reporter = dotsReporter.create({
-        io: this.io,
+        outputStream: this.out,
         logPassedMessages: true
     }).listen(this.runner);
 }
@@ -31,38 +26,38 @@ helper.testCase("DotsReporterTestsRunningTest", {
     "prints dot when test passes": function () {
         this.runner.emit("test:success", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), ".");
+        assert.equals(this.out.toString(), ".");
     },
 
     "does not print dot when test passes if not printing progress": function () {
         this.reporter.displayProgress = false;
         this.runner.emit("test:success", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "");
+        assert.equals(this.out.toString(), "");
     },
 
     "prints capital E when test errors": function () {
         this.runner.emit("test:error", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "E");
+        assert.equals(this.out.toString(), "E");
     },
 
     "prints capital F when test fails": function () {
         this.runner.emit("test:failure", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "F");
+        assert.equals(this.out.toString(), "F");
     },
 
     "prints capital T when test times out": function () {
         this.runner.emit("test:timeout", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "T");
+        assert.equals(this.out.toString(), "T");
     },
 
     "prints capital A when test is asynchronous": function () {
         this.runner.emit("test:async", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "A");
+        assert.equals(this.out.toString(), "A");
     },
 
     "replaces async marker when test completes": function () {
@@ -73,27 +68,27 @@ helper.testCase("DotsReporterTestsRunningTest", {
         this.runner.emit("test:async", { name: "Stuff #3" });
         this.runner.emit("test:error", { name: "Stuff #3" });
 
-        assert.equals(this.io.toString(), "A\033[1D.A\033[1DFA\033[1DE");
+        assert.equals(this.out.toString(), "A\033[1D.A\033[1DFA\033[1DE");
     },
 
     "prints context name when starting top-level context": function () {
         this.runner.emit("context:start", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "Stuff: ");
+        assert.equals(this.out.toString(), "Stuff: ");
     },
 
     "does not print context name when starting inner context": function () {
         this.runner.emit("context:start", { name: "Stuff" });
         this.runner.emit("context:start", { name: "Inner" });
 
-        assert.equals(this.io.toString(), "Stuff: ");
+        assert.equals(this.out.toString(), "Stuff: ");
     },
 
     "prints line break when ending top-level context": function () {
         this.runner.emit("context:start", { name: "Stuff" });
         this.runner.emit("context:end", { name: "Stuff" });
 
-        assert.match(this.io.toString(), "Stuff: \n");
+        assert.match(this.out.toString(), "Stuff: \n");
     },
 
     "does not print line break when ending inner context": function () {
@@ -102,7 +97,7 @@ helper.testCase("DotsReporterTestsRunningTest", {
         this.runner.emit("context:end", { name: "Inner" });
         this.runner.emit("context:end", { name: "Stuff" });
 
-        assert.match(this.io.toString(), "Stuff: \n");
+        assert.match(this.out.toString(), "Stuff: \n");
     },
 
     "prints all top-level context names": function () {
@@ -111,7 +106,7 @@ helper.testCase("DotsReporterTestsRunningTest", {
         this.runner.emit("context:start", { name: "Second" });
         this.runner.emit("context:end", { name: "Second" });
 
-        assert.match(this.io.toString(), "Stuff: \nSecond: \n");
+        assert.match(this.out.toString(), "Stuff: \nSecond: \n");
     }
 });
 
@@ -129,8 +124,8 @@ helper.testCase("DotsReporterMessagesTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "Passed: Stuff some test");
-        assert.match(this.io.toString(), "[LOG] Is message");
+        assert.match(this.out.toString(), "Passed: Stuff some test");
+        assert.match(this.out.toString(), "[LOG] Is message");
     },
 
     "does not re-print messages for failed test": function () {
@@ -141,7 +136,7 @@ helper.testCase("DotsReporterMessagesTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        refute.match(this.io.toString(), "Passed: Stuff some test");
+        refute.match(this.out.toString(), "Passed: Stuff some test");
     },
 
     "prints messages not belonging to a specific test": function () {
@@ -151,9 +146,9 @@ helper.testCase("DotsReporterMessagesTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        refute.match(this.io.toString(), "undefined");
-        assert.match(this.io.toString(), "Global message log:");
-        assert.match(this.io.toString(), "[LOG] Is message");
+        refute.match(this.out.toString(), "undefined");
+        assert.match(this.out.toString(), "Global message log:");
+        assert.match(this.out.toString(), "[LOG] Is message");
     },
 
     "prints list of deferred tests": function () {
@@ -162,7 +157,7 @@ helper.testCase("DotsReporterMessagesTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "Deferred: Stuff some test");
+        assert.match(this.out.toString(), "Deferred: Stuff some test");
     },
 
     "prints deferred test comment": function () {
@@ -171,13 +166,13 @@ helper.testCase("DotsReporterMessagesTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "Deferred: Stuff some test\nLater");
+        assert.match(this.out.toString(), "Deferred: Stuff some test\nLater");
     },
 
     "does not print messages for passed test if not configured to": function () {
         // Create new reporter with different config
         var reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             logPassedMessages: false
         }).listen(this.runner);
 
@@ -190,13 +185,13 @@ helper.testCase("DotsReporterMessagesTest", {
         reporter["context:end"]({ name: "Stuff" });
         reporter["suite:end"]();
 
-        refute.match(this.io.toString(), "Passed: Stuff some test");
-        refute.match(this.io.toString(), "[LOG] Is message");
+        refute.match(this.out.toString(), "Passed: Stuff some test");
+        refute.match(this.out.toString(), "[LOG] Is message");
     },
 
     "prints global messages when configured not to log passed": function () {
         var reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             logPassedMessages: false
         }).listen(this.runner);
         reporter.log({ level: "log", message: "Is message" });
@@ -205,8 +200,8 @@ helper.testCase("DotsReporterMessagesTest", {
         reporter["context:end"]({ name: "Stuff" });
         reporter["suite:end"]();
 
-        assert.match(this.io.toString(), "Global message log:");
-        assert.match(this.io.toString(), "[LOG] Is message");
+        assert.match(this.out.toString(), "Global message log:");
+        assert.match(this.out.toString(), "[LOG] Is message");
     }
 });
 
@@ -220,7 +215,7 @@ helper.testCase("DotsReporterStatsTest", {
             unsupported: ["localStorage"]
         });
 
-        refute.match(this.io.toString(), "localStorage");
+        refute.match(this.out.toString(), "localStorage");
     },
 
     "prints warning when skipping unsupported context": function () {
@@ -231,7 +226,7 @@ helper.testCase("DotsReporterStatsTest", {
 
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
+        assert.match(this.out.toString(), "Skipping Stuff, unsupported requirement: localStorage\n");
     },
 
     "prints warning when skipping nested unsupported context": function () {
@@ -244,7 +239,7 @@ helper.testCase("DotsReporterStatsTest", {
 
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
+        assert.match(this.out.toString(), "Skipping Test Stuff, unsupported requirement: localStorage\n");
     },
 
     "prints all unsupported features": function () {
@@ -255,74 +250,74 @@ helper.testCase("DotsReporterStatsTest", {
 
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
+        assert.match(this.out.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
     },
 
     "prints for one test case with one test": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, assertions: 1, failures: 0, errors: 0 });
 
         var expected = "1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints for two test cases": function () {
         this.reporter.printStats({ contexts:  2, tests: 2, assertions: 2, failures: 0, errors: 0 });
 
         var expected = "2 test cases, 2 tests, 2 assertions, 0 failures, 0 errors, 0 timeouts\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints for errors and failures": function () {
         this.reporter.printStats({ contexts:  2, tests: 4, assertions: 5, failures: 1, errors: 1 });
 
         var expected = "2 test cases, 4 tests, 5 assertions, 1 failure, 1 error, 0 timeouts\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "reports 0 assertions when assertions property is missing from test success": function () {
         this.reporter.printStats({ contexts:  1, tests: 1 });
 
         var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "reports timeouts": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, timeouts: 1 });
 
         var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "reports deferred tests": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, deferred: 2 });
 
         var expected = "1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts, 2 deferred\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints warning when no tests": function () {
         this.reporter.printStats({ contexts:  0, tests: 0, assertions: 0 });
 
-        assert.match(this.io.toString(), "No tests");
+        assert.match(this.out.toString(), "No tests");
     },
 
     "prints warning when no assertions": function () {
         this.reporter.printStats({ contexts:  1, tests: 1, assertions: 0 });
 
-        assert.match(this.io.toString(), "WARNING: No assertions");
+        assert.match(this.out.toString(), "WARNING: No assertions");
     },
 
     "does not print warning for no assertions when no tests": function () {
         this.reporter.printStats({ contexts:  1, tests: 0, assertions: 0 });
 
-        refute.match(this.io.toString(), "WARNING: No assertions");
+        refute.match(this.out.toString(), "WARNING: No assertions");
     },
 
     "includes time taken": function () {
         this.runner.emit("suite:start");
         this.reporter.printStats({ contexts:  1, tests: 5, assertions: 10 });
 
-        assert.match(this.io.toString(), "Finished in");
+        assert.match(this.out.toString(), "Finished in");
     }
 });
 
@@ -335,7 +330,7 @@ helper.testCase("DotsReporterFailureTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printFailures();
 
-        assert.match(this.io.toString(), "Failure: Stuff should do stuff");
+        assert.match(this.out.toString(), "Failure: Stuff should do stuff");
     },
 
     "prints error message": function () {
@@ -348,7 +343,7 @@ helper.testCase("DotsReporterFailureTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printFailures();
 
-        assert.match(this.io.toString(), "    Expected a to be equal to b");
+        assert.match(this.out.toString(), "    Expected a to be equal to b");
     },
 
     "prints log messages": function () {
@@ -363,7 +358,7 @@ helper.testCase("DotsReporterFailureTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printFailures();
 
-        assert.match(this.io.toString(), "[LOG] Hey");
+        assert.match(this.out.toString(), "[LOG] Hey");
     },
 
     "prints stack trace": function () {
@@ -383,7 +378,7 @@ helper.testCase("DotsReporterFailureTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printFailures();
 
-        assert.match(this.io.toString(), "\n    at runTest");
+        assert.match(this.out.toString(), "\n    at runTest");
     }
 });
 
@@ -396,7 +391,7 @@ helper.testCase("DotsReporterErrorTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printErrors();
 
-        assert.match(this.io.toString(), "Error: Stuff should do stuff");
+        assert.match(this.out.toString(), "Error: Stuff should do stuff");
     },
 
     "prints error message": function () {
@@ -410,7 +405,7 @@ helper.testCase("DotsReporterErrorTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printErrors();
 
-        assert.match(this.io.toString(), "    ReferenceError: a is not defined");
+        assert.match(this.out.toString(), "    ReferenceError: a is not defined");
     },
 
     "prints log messages": function () {
@@ -425,7 +420,7 @@ helper.testCase("DotsReporterErrorTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printErrors();
 
-        assert.match(this.io.toString(), "[LOG] Hey");
+        assert.match(this.out.toString(), "[LOG] Hey");
     },
 
     "prints stack trace": function () {
@@ -443,7 +438,7 @@ helper.testCase("DotsReporterErrorTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printErrors();
 
-        assert.match(this.io.toString(), "\n    at runTest");
+        assert.match(this.out.toString(), "\n    at runTest");
     }
 });
 
@@ -456,7 +451,7 @@ helper.testCase("DotsReporterUncaughtExceptionTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printUncaughtExceptions();
 
-        assert.match(this.io.toString(), "Uncaught exception!");
+        assert.match(this.out.toString(), "Uncaught exception!");
     },
 
     "prints error message": function () {
@@ -469,7 +464,7 @@ helper.testCase("DotsReporterUncaughtExceptionTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printUncaughtExceptions();
 
-        assert.match(this.io.toString(), "    Expected a to be equal to b");
+        assert.match(this.out.toString(), "    Expected a to be equal to b");
     },
 
     "prints stack trace": function () {
@@ -486,7 +481,7 @@ helper.testCase("DotsReporterUncaughtExceptionTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printUncaughtExceptions();
 
-        assert.match(this.io.toString(), "\n    at runTest");
+        assert.match(this.out.toString(), "\n    at runTest");
     }
 });
 
@@ -495,7 +490,7 @@ helper.testCase("DotsReporterColorOutputTest", {
         runnerSetUp.call(this);
 
         this.reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             color: true
         }).listen(this.runner);
     },
@@ -503,37 +498,37 @@ helper.testCase("DotsReporterColorOutputTest", {
     "prints green dot when test passes": function () {
         this.runner.emit("test:success", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[32m.\033[0m");
+        assert.equals(this.out.toString(), "\033[32m.\033[0m");
     },
 
     "prints green dot when test passes": function () {
         this.runner.emit("test:success", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[32m.\033[0m");
+        assert.equals(this.out.toString(), "\033[32m.\033[0m");
     },
 
     "prints yellow capital E when test errors": function () {
         this.runner.emit("test:error", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[33mE\033[0m");
+        assert.equals(this.out.toString(), "\033[33mE\033[0m");
     },
 
     "prints red capital F when test fails": function () {
         this.runner.emit("test:failure", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[31mF\033[0m");
+        assert.equals(this.out.toString(), "\033[31mF\033[0m");
     },
 
     "prints red capital T when test times out": function () {
         this.runner.emit("test:timeout", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[31mT\033[0m");
+        assert.equals(this.out.toString(), "\033[31mT\033[0m");
     },
 
     "prints purple capital A when test is asynchronous": function () {
         this.runner.emit("test:async", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[35mA\033[0m");
+        assert.equals(this.out.toString(), "\033[35mA\033[0m");
     },
 
     "prints deferred test in cyan": function () {
@@ -542,7 +537,7 @@ helper.testCase("DotsReporterColorOutputTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "\033[36mDeferred: Stuff some test\033[0m");
+        assert.match(this.out.toString(), "\033[36mDeferred: Stuff some test\033[0m");
     },
 
     "prints deferred test comment in light grey": function () {
@@ -551,7 +546,7 @@ helper.testCase("DotsReporterColorOutputTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "\033[38;5;8mLater\033[0m");
+        assert.match(this.out.toString(), "\033[38;5;8mLater\033[0m");
     },
 
     "prints unsupported test in yellow": function () {
@@ -562,7 +557,7 @@ helper.testCase("DotsReporterColorOutputTest", {
 
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "\033[33mSkipping Stuff, unsupported requirement: localStorage\n\033[0m");
+        assert.match(this.out.toString(), "\033[33mSkipping Stuff, unsupported requirement: localStorage\n\033[0m");
     }
 });
 
@@ -571,7 +566,7 @@ helper.testCase("DotsReporterColorizedMessagesTest", {
         reporterSetUp.call(this);
 
         this.reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             color: true,
             logPassedMessages: true
         }).listen(this.runner);
@@ -587,7 +582,7 @@ helper.testCase("DotsReporterColorizedMessagesTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(),
+        assert.match(this.out.toString(),
                             "\033[32mPassed: Stuff some test\033[0m");
     }
 });
@@ -597,7 +592,7 @@ helper.testCase("DotsReporterColorizedStatsTest", {
         runnerSetUp.call(this);
 
         this.reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             color: true
         }).listen(this.runner);
     },
@@ -613,28 +608,28 @@ helper.testCase("DotsReporterColorizedStatsTest", {
         });
 
         var expected = "\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints in red when errors and failures": function () {
         this.reporter.printStats({ contexts: 1, tests: 2, assertions: 2, failures: 1, errors: 1 });
 
         var expected = "\033[31m1 test case, 2 tests, 2 assertions, 1 failure, 1 error, 0 timeouts\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints in red when no assertions": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
         var expected = "\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints in red when no tests": function () {
         this.reporter.printStats({ contexts: 0, tests: 0 });
 
         var expected = "\033[31mNo tests\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints in red when timeouts": function () {
@@ -648,19 +643,19 @@ helper.testCase("DotsReporterColorizedStatsTest", {
         });
 
         var expected = "\033[31m1 test case, 2 tests, 2 assertions, 0 failures, 0 errors, 1 timeout\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints no test warning in red": function () {
         this.reporter.printStats({ contexts: 0, tests: 0, assertions: 0 });
 
-        assert.match(this.io.toString(), "\033[31mNo tests\033[0m");
+        assert.match(this.out.toString(), "\033[31mNo tests\033[0m");
     },
 
     "prints no assertion warning in red": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
-        assert.match(this.io.toString(), "\033[31mWARNING: No assertions\033[0m");
+        assert.match(this.out.toString(), "\033[31mWARNING: No assertions\033[0m");
     }
 });
 
@@ -669,7 +664,7 @@ helper.testCase("DotsReporterColorizedExceptionTest", {
         runnerSetUp.call(this);
 
         this.reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             color: true
         }).listen(this.runner);
     },
@@ -680,7 +675,7 @@ helper.testCase("DotsReporterColorizedExceptionTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printFailures();
 
-        assert.match(this.io.toString(), "\033[31mFailure\033[0m: Stuff should do stuff");
+        assert.match(this.out.toString(), "\033[31mFailure\033[0m: Stuff should do stuff");
     },
 
     "prints full test name with yellow label when error": function () {
@@ -689,7 +684,7 @@ helper.testCase("DotsReporterColorizedExceptionTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printErrors();
 
-        assert.match(this.io.toString(), "\033[33mError\033[0m: Stuff should do stuff");
+        assert.match(this.out.toString(), "\033[33mError\033[0m: Stuff should do stuff");
     }
 });
 
@@ -698,7 +693,7 @@ helper.testCase("DotsReporterBrightColorOutputTest", {
         runnerSetUp.call(this);
 
         this.reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             color: true,
             bright: true
         }).listen(this.runner);
@@ -707,31 +702,31 @@ helper.testCase("DotsReporterBrightColorOutputTest", {
     "prints bright green dot when test passes": function () {
         this.runner.emit("test:success", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[1m\033[32m.\033[0m");
+        assert.equals(this.out.toString(), "\033[1m\033[32m.\033[0m");
     },
 
     "prints bright yellow capital E when test errors": function () {
         this.runner.emit("test:error", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[1m\033[33mE\033[0m");
+        assert.equals(this.out.toString(), "\033[1m\033[33mE\033[0m");
     },
 
     "prints bright red capital F when test fails": function () {
         this.runner.emit("test:failure", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[1m\033[31mF\033[0m");
+        assert.equals(this.out.toString(), "\033[1m\033[31mF\033[0m");
     },
 
     "prints bright red capital T when test times out": function () {
         this.runner.emit("test:timeout", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[1m\033[31mT\033[0m");
+        assert.equals(this.out.toString(), "\033[1m\033[31mT\033[0m");
     },
 
     "prints bright purple capital A when test is asynchronous": function () {
         this.runner.emit("test:async", { name: "Stuff" });
 
-        assert.equals(this.io.toString(), "\033[1m\033[35mA\033[0m");
+        assert.equals(this.out.toString(), "\033[1m\033[35mA\033[0m");
     },
 
     "prints deferred test in bright cyan": function () {
@@ -740,7 +735,7 @@ helper.testCase("DotsReporterBrightColorOutputTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(),
+        assert.match(this.out.toString(),
                      "\033[1m\033[36mDeferred: Stuff some test\033[0m");
     },
 
@@ -750,7 +745,7 @@ helper.testCase("DotsReporterBrightColorOutputTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "\033[1m\033[38;5;8mLater\033[0m");
+        assert.match(this.out.toString(), "\033[1m\033[38;5;8mLater\033[0m");
     },
 
     "prints unsupported test in bright yellow": function () {
@@ -761,7 +756,7 @@ helper.testCase("DotsReporterBrightColorOutputTest", {
 
         this.runner.emit("suite:end");
 
-        assert.match(this.io.toString(), "\033[1m\033[33mSkipping Stuff, unsupported requirement: localStorage\n\033[0m");
+        assert.match(this.out.toString(), "\033[1m\033[33mSkipping Stuff, unsupported requirement: localStorage\n\033[0m");
     }
 });
 
@@ -770,7 +765,7 @@ helper.testCase("DotsReporterBrightlyColorizedStatsTest", {
         runnerSetUp.call(this);
 
         this.reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             color: true,
             bright: true
         }).listen(this.runner);
@@ -787,47 +782,47 @@ helper.testCase("DotsReporterBrightlyColorizedStatsTest", {
         });
 
         var expected = "\033[1m\033[32m1 test case, 1 test, 1 assertion, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints in bright red when errors and failures": function () {
         this.reporter.printStats({ contexts: 1, tests: 2, failures: 1, errors: 1 });
 
         var expected = "\033[1m\033[31m1 test case, 2 tests, 0 assertions, 1 failure, 1 error, 0 timeouts\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints in bright red when no assertions": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, assertions: 0 });
 
         var expected = "\033[1m\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 0 timeouts\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints in bright red when no tests": function () {
         this.reporter.printStats({ contexts: 0, tests: 0 });
 
         var expected = "\033[1m\033[31mNo tests\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints in bright red when timeouts": function () {
         this.reporter.printStats({ contexts: 1, tests: 1, timeouts: 1 });
 
         var expected = "\033[1m\033[31m1 test case, 1 test, 0 assertions, 0 failures, 0 errors, 1 timeout\033[0m\n";
-        assert.match(this.io.toString(), expected);
+        assert.match(this.out.toString(), expected);
     },
 
     "prints no test warning in bright red": function () {
         this.reporter.printStats({ tests: 0 });
 
-        assert.match(this.io.toString(), "\033[1m\033[31mNo tests\033[0m");
+        assert.match(this.out.toString(), "\033[1m\033[31mNo tests\033[0m");
     },
 
     "prints no assertion warning in bright red": function () {
         this.reporter.printStats({ tests: 1, assertions: 0 });
 
-        assert.match(this.io.toString(), "\033[1m\033[31mWARNING: No assertions\033[0m");
+        assert.match(this.out.toString(), "\033[1m\033[31mWARNING: No assertions\033[0m");
     }
 });
 
@@ -836,7 +831,7 @@ helper.testCase("DotsReporterBrightlyColorizedExceptionTest", {
         runnerSetUp.call(this);
 
         this.reporter = dotsReporter.create({
-            io: this.io,
+            outputStream: this.out,
             color: true,
             bright: true
         }).listen(this.runner);
@@ -848,7 +843,7 @@ helper.testCase("DotsReporterBrightlyColorizedExceptionTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printFailures();
 
-        assert.match(this.io.toString(), "\033[1m\033[31mFailure\033[0m: Stuff should do stuff");
+        assert.match(this.out.toString(), "\033[1m\033[31mFailure\033[0m: Stuff should do stuff");
     },
 
     "prints full test name with yellow label when error": function () {
@@ -857,6 +852,6 @@ helper.testCase("DotsReporterBrightlyColorizedExceptionTest", {
         this.runner.emit("context:end", { name: "Stuff" });
         this.reporter.printErrors();
 
-        assert.match(this.io.toString(), "\033[1m\033[33mError\033[0m: Stuff should do stuff");
+        assert.match(this.out.toString(), "\033[1m\033[33mError\033[0m: Stuff should do stuff");
     }
 });

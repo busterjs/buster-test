@@ -1,25 +1,24 @@
-var assert = require("buster-assertions").assert;
+var assert = require("referee").assert;
 
 module.exports = {
     assertIO: function (string) {
         try {
-            assert.match(this.io.toString(), string);
+            assert.match(this.outputStream.toString(), string);
         } catch (e) {
             e.message = "\nassert.match failed\n" +
                 "===================\nIO:\n" +
-                this.io.toString() + "\n" +
+                this.outputStream.toString() + "\n" +
                 "===================\nPattern:\n" +
                 string + "\n-------------------\n";
             throw e;
         }
     },
 
-    io: function () {
+    writableStream: function () {
         return {
             content: "",
-            puts: function (str) { this.print(str + "\n"); },
-            print: function (str) { this.content += str; },
-            toString: function () { return this.content }
+            write: function (str) { this.content += str; },
+            toString: function () { return this.content; }
         };
     }
 };
