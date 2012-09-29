@@ -11,7 +11,7 @@ require("./test/unit/buster-test/reporters-test");
 require("./test/unit/buster-test/reporters/dots-test");
 require("./test/unit/buster-test/reporters/html-test");
 require("./test/unit/buster-test/reporters/json-proxy-test");
-// require("./test/unit/buster-test/reporters/specification-test");
+require("./test/unit/buster-test/reporters/specification-test");
 // require("./test/unit/buster-test/reporters/tap-test");
 // require("./test/unit/buster-test/reporters/teamcity-test");
 // require("./test/unit/buster-test/reporters/xml-test");
