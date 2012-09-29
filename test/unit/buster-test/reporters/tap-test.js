@@ -1,31 +1,29 @@
+var helper = require("../../../test-helper");
+var rhelper = require("./test-helper");
+var bane = require("bane");
+var assert = require("referee").assert;
 var sinon = require("sinon");
-var buster = require("buster-core");
-var assertions = require("buster-assertions");
 var tapReporter = require("../../../../lib/buster-test/reporters/tap");
-var busterUtil = require("buster-util");
-var assert = assertions.assert;
-var refute = assertions.refute;
-var helper = require("./test-helper");
 
-busterUtil.testCase("TAPReporterTest", sinon.testCase({
+helper.testCase("TAPReporterTest", {
     setUp: function () {
-        this.io = helper.io();
-        this.assertIO = helper.assertIO;
-        this.runner = buster.eventEmitter.create();
-        this.runner.console = buster.eventEmitter.create();
-
+        this.outputStream = rhelper.writableStream();
+        this.assertIO = rhelper.assertIO;
+        this.runner = bane.createEventEmitter();
+        this.runner.console = bane.createEventEmitter();
         this.reporter = tapReporter.create({
-            io: this.io
+            outputStream: this.outputStream
         }).listen(this.runner);
 
         this.test = function (name, result, data) {
-            var event = buster.extend({ name: "no. 1" }, data);
+            var event = data || {};
+            event.name = "no. 1";
             this.runner.emit("test:start", event);
             this.runner.emit("test:" + result, event);
         };
     },
 
-    "should print the plan": function () {
+    "prints the plan": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.test("no. 1", "success");
@@ -35,7 +33,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("1..1");
     },
 
-    "should print the plan for three tests": function () {
+    "prints the plan for three tests": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.test("no. 1", "success");
@@ -47,7 +45,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("1..3");
     },
 
-    "should print the plan for five tests in nested contexts": function () {
+    "prints the plan for five tests in nested contexts": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context no. 1" });
         this.test("no. 1", "success");
@@ -67,7 +65,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("1..5");
     },
 
-    "should print ok line for passed test": function () {
+    "prints ok line for passed test": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.test("no. 1", "success");
@@ -77,7 +75,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("ok 1 Context no. 1");
     },
 
-    "should print not ok line for failed test": function () {
+    "prints not ok line for failed test": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.test("no. 1", "failure");
@@ -87,7 +85,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("not ok 1 Context no. 1");
     },
 
-    "should print not ok line for errored test": function () {
+    "prints not ok line for errored test": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.test("no. 1", "error");
@@ -97,7 +95,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("not ok 1 Context no. 1");
     },
 
-    "should print not ok line for timed out test": function () {
+    "prints not ok line for timed out test": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.test("no. 1", "timeout");
@@ -107,7 +105,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("not ok 1 Context no. 1");
     },
 
-    "should print TODO directive for pending tests": function () {
+    "prints TODO directive for pending tests": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.test("no. 1", "deferred");
@@ -117,7 +115,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("not ok 1 Context no. 1 # TODO Deferred");
     },
 
-    "should print TODO directive with comment": function () {
+    "prints TODO directive with comment": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.test("no. 1", "deferred", { comment: "Later y'all" });
@@ -127,7 +125,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("not ok 1 Context no. 1 # TODO Later y'all");
     },
 
-    "should print SKIP directive for unsupported requirement": function () {
+    "prints SKIP directive for unsupported requirement": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.runner.emit("context:unsupported", {
@@ -140,7 +138,7 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
         this.assertIO("not ok 1 Context 2 # SKIP Unsupported requirement: A");
     },
 
-    "should print SKIP directive for all unsupported requirements": function () {
+    "prints SKIP directive for all unsupported requirements": function () {
         this.runner.emit("suite:start");
         this.runner.emit("context:start", { name: "Context" });
         this.runner.emit("context:unsupported", {
@@ -152,4 +150,4 @@ busterUtil.testCase("TAPReporterTest", sinon.testCase({
 
         this.assertIO("not ok 1 Context 2 # SKIP Unsupported requirements: A, B");
     }
-}, "should"));
+});
