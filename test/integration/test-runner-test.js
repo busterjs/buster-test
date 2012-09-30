@@ -1,20 +1,15 @@
-if (typeof module === "object" && typeof require === "function") {
-    var sinon = require("sinon");
-    var buster = require("buster-core");
-
-    buster.extend(buster, {
-        assertions: require("buster-assertions"),
-        testCase: require("../../lib/buster-test/test-case"),
-        testRunner: require("../../lib/buster-test/test-runner"),
-        spec: require("../../lib/buster-test/spec"),
-        util: require("buster-util")
-    });
-}
-
-buster.spec.expose();
-
-(function () {
-    var assert = buster.assertions.assert;
+(typeof require === "function" && function (reqs, callback) {
+    callback.apply(this, reqs.map(function (req) { return require(req); }));
+} || define)([
+    "sinon",
+    "referee",
+    "../../lib/buster-test/test-case",
+    "../../lib/buster-test/test-runner",
+    "../../lib/buster-test/spec",
+    "../test-helper"
+], function (sinon, referee, testCase, testRunner, spec, helper) {
+    var assert = referee.assert;
+    spec.expose();
 
     function recordEvents(runner) {
         var contexts = [];
@@ -57,15 +52,15 @@ buster.spec.expose();
         return events;
     }
 
-    buster.util.testCase("TestRunnerIntegrationTest", {
-        "emits all test case events in proper order": function (test) {
+    helper.testCase("TestRunnerIntegrationTest", {
+        "emits all test case events in proper order": function (done) {
             var mathRandom = Math.random;
             Math.random = function () { return 0; };
             var assertionError = new Error("Test failed");
             assertionError.name = "AssertionError";
             var error = new Error("Oops");
 
-            var context = buster.testCase("TestCase", {
+            var context = testCase("TestCase", {
                 setUp: function () {},
                 tearDown: function () {},
                 test1: function () {},
@@ -86,48 +81,48 @@ buster.spec.expose();
                 }
             });
 
-            var runner = buster.create(buster.testRunner);
+            var runner = testRunner.create();
             runner.failOnNoAssertions = false;
             var events = recordEvents(runner);
 
             var expected = "start: TestCase\n" +
-                "start: context1\n" +
-                "setUp: TestCase context1 test11\n" +
-                "start: TestCase context1 test11\n" +
-                "tearDown: TestCase context1 test11\n" +
-                "error: TestCase context1 test11\n" +
-                "setUp: TestCase context1 test12\n" +
-                "start: TestCase context1 test12\n" +
-                "tearDown: TestCase context1 test12\n" +
-                "passed: TestCase context1 test12\n" +
-                "end: context1\n" +
-                "start: context2\n" +
-                "setUp: TestCase context2 test21\n" +
-                "start: TestCase context2 test21\n" +
-                "tearDown: TestCase context2 test21\n" +
-                "passed: TestCase context2 test21\n" +
-                "setUp: TestCase context2 test22\n" +
-                "start: TestCase context2 test22\n" +
-                "tearDown: TestCase context2 test22\n" +
-                "passed: TestCase context2 test22\n" +
-                "end: context2\n" +
-                "setUp: TestCase test1\n" +
-                "start: TestCase test1\n" +
-                "tearDown: TestCase test1\n" +
-                "passed: TestCase test1\n" +
-                "setUp: TestCase test2\n" +
-                "start: TestCase test2\n" +
-                "tearDown: TestCase test2\n" +
-                "failed: TestCase test2\n" +
-                "end: TestCase";
+                    "start: context1\n" +
+                    "setUp: TestCase context1 test11\n" +
+                    "start: TestCase context1 test11\n" +
+                    "tearDown: TestCase context1 test11\n" +
+                    "error: TestCase context1 test11\n" +
+                    "setUp: TestCase context1 test12\n" +
+                    "start: TestCase context1 test12\n" +
+                    "tearDown: TestCase context1 test12\n" +
+                    "passed: TestCase context1 test12\n" +
+                    "end: context1\n" +
+                    "start: context2\n" +
+                    "setUp: TestCase context2 test21\n" +
+                    "start: TestCase context2 test21\n" +
+                    "tearDown: TestCase context2 test21\n" +
+                    "passed: TestCase context2 test21\n" +
+                    "setUp: TestCase context2 test22\n" +
+                    "start: TestCase context2 test22\n" +
+                    "tearDown: TestCase context2 test22\n" +
+                    "passed: TestCase context2 test22\n" +
+                    "end: context2\n" +
+                    "setUp: TestCase test1\n" +
+                    "start: TestCase test1\n" +
+                    "tearDown: TestCase test1\n" +
+                    "passed: TestCase test1\n" +
+                    "setUp: TestCase test2\n" +
+                    "start: TestCase test2\n" +
+                    "tearDown: TestCase test2\n" +
+                    "failed: TestCase test2\n" +
+                    "end: TestCase";
 
-            runner.runSuite([context]).then(test.end(function () {
+            runner.runSuite([context]).then(done(function () {
                 Math.random = mathRandom;
                 assert.equals(events.join("\n"), expected);
             }));
         },
 
-        "should emit all spec events in proper order": function (test) {
+        "should emit all spec events in proper order": function (done) {
             var mathRandom = Math.random;
             Math.random = function () { return 0; };
             var assertionError = new Error("Test failed");
@@ -155,45 +150,45 @@ buster.spec.expose();
                 });
             });
 
-            var runner = buster.create(buster.testRunner);
+            var runner = testRunner.create();
             runner.failOnNoAssertions = false;
             var events = recordEvents(runner);
 
             var expected = "start: TestCase\n" +
-                "start: context1\n" +
-                "setUp: TestCase context1 test11\n" +
-                "start: TestCase context1 test11\n" +
-                "tearDown: TestCase context1 test11\n" +
-                "error: TestCase context1 test11\n" +
-                "setUp: TestCase context1 test12\n" +
-                "start: TestCase context1 test12\n" +
-                "tearDown: TestCase context1 test12\n" +
-                "passed: TestCase context1 test12\n" +
-                "end: context1\n" +
-                "start: context2\n" +
-                "setUp: TestCase context2 test21\n" +
-                "start: TestCase context2 test21\n" +
-                "tearDown: TestCase context2 test21\n" +
-                "passed: TestCase context2 test21\n" +
-                "setUp: TestCase context2 test22\n" +
-                "start: TestCase context2 test22\n" +
-                "tearDown: TestCase context2 test22\n" +
-                "passed: TestCase context2 test22\n" +
-                "end: context2\n" +
-                "setUp: TestCase test1\n" +
-                "start: TestCase test1\n" +
-                "tearDown: TestCase test1\n" +
-                "passed: TestCase test1\n" +
-                "setUp: TestCase test2\n" +
-                "start: TestCase test2\n" +
-                "tearDown: TestCase test2\n" +
-                "failed: TestCase test2\n" +
-                "end: TestCase";
+                    "start: context1\n" +
+                    "setUp: TestCase context1 test11\n" +
+                    "start: TestCase context1 test11\n" +
+                    "tearDown: TestCase context1 test11\n" +
+                    "error: TestCase context1 test11\n" +
+                    "setUp: TestCase context1 test12\n" +
+                    "start: TestCase context1 test12\n" +
+                    "tearDown: TestCase context1 test12\n" +
+                    "passed: TestCase context1 test12\n" +
+                    "end: context1\n" +
+                    "start: context2\n" +
+                    "setUp: TestCase context2 test21\n" +
+                    "start: TestCase context2 test21\n" +
+                    "tearDown: TestCase context2 test21\n" +
+                    "passed: TestCase context2 test21\n" +
+                    "setUp: TestCase context2 test22\n" +
+                    "start: TestCase context2 test22\n" +
+                    "tearDown: TestCase context2 test22\n" +
+                    "passed: TestCase context2 test22\n" +
+                    "end: context2\n" +
+                    "setUp: TestCase test1\n" +
+                    "start: TestCase test1\n" +
+                    "tearDown: TestCase test1\n" +
+                    "passed: TestCase test1\n" +
+                    "setUp: TestCase test2\n" +
+                    "start: TestCase test2\n" +
+                    "tearDown: TestCase test2\n" +
+                    "failed: TestCase test2\n" +
+                    "end: TestCase";
 
-            runner.runSuite([context]).then(test.end(function () {
+            runner.runSuite([context]).then(done(function () {
                 Math.random = mathRandom;
                 assert.equals(events.join("\n"), expected);
             }));
         }
     });
-}());
+});
