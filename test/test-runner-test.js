@@ -1,7 +1,7 @@
 /*jslint maxlen: 100*/
-(typeof require === "function" && function (reqs, callback) {
+((typeof require === "function" && function (reqs, callback) {
     callback.apply(this, reqs.map(function (req) { return require(req); }));
-} || define)([
+}) || define)([
     "when",
     "sinon",
     "referee",
@@ -1092,7 +1092,7 @@
             }));
         },
 
-        "should disarm callback when test times out": function (done) {
+        "disarms callback when test times out": function (done) {
             var callback;
             var context = testCase("My case", {
                 test1: function (done) { callback = done; }
@@ -1427,7 +1427,7 @@
             }), 150);
         },
 
-        "should emit test:async when tearDown is async": function (done) {
+        "emits test:async when tearDown is async": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:async", listener);
 
@@ -1537,12 +1537,12 @@
         },
 
         "emits failure event": function (done) {
-            var _assert = this.assert;
+            var sAssert = this.assert;
             var listener = sinon.spy();
             this.runner.on("test:failure", listener);
 
             var context = testCase("Test", {
-                "test it": function () { _assert(false); }
+                "test it": function () { sAssert(false); }
             });
 
             this.runner.runSuite([context]).then(done(function () {
@@ -2018,7 +2018,7 @@
             }));
         },
 
-        "should emit test:fail when test throws assertion error": function (done) {
+        "emits test:fail when test throws assertion error": function (done) {
             var fn = sinon.stub().throws(this.assertionError);
             var context = testCase("My case", { testIt: fn });
 
@@ -2773,7 +2773,7 @@
                         "completes properly. Figure out why. Suspected bug " +
                         "in 'uncaught exception may be assertion error' code");
             return done();
-
+            /*
             var runner = testRunner.create();
             var listeners = [sinon.spy(), sinon.spy()];
             runner.on("uncaughtException", listeners[0]);
@@ -2791,6 +2791,7 @@
                 refute(listeners[0].called);
                 assert(listeners[1].calledOnce);
             }));
+             */
         }
     });
 });
