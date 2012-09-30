@@ -13,7 +13,7 @@
     "bane",
     "referee",
     "sinon",
-    "../../lib/buster-test/reporters/html"
+    "../../lib/reporters/html"
 ], function (helper, rhelper, _, bane, referee, sinon, htmlReporter) {
     "use strict";
     var assert = referee.assert;

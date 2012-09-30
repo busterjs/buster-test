@@ -3,8 +3,8 @@
 } || define)([
     "sinon",
     "referee",
-    "../lib/buster-test/test-case",
-    "../lib/buster-test/test-context",
+    "../lib/test-case",
+    "../lib/test-context",
     "./test-helper"
 ], function (sinon, referee, bTestCase, testContext, helper) {
     var assert = referee.assert;

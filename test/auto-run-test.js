@@ -3,10 +3,10 @@
 } || define)([
     "sinon",
     "referee",
-    "../lib/buster-test/test-case",
-    "../lib/buster-test/test-runner",
-    "../lib/buster-test/auto-run",
-    "../lib/buster-test/reporters",
+    "../lib/test-case",
+    "../lib/test-runner",
+    "../lib/auto-run",
+    "../lib/reporters",
     "./test-helper"
 ], function (sinon, referee, testCase, testRunner, autoRun, reporters, helper) {
     var assert = referee.assert;

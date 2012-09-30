@@ -3,7 +3,7 @@ var rhelper = require("./test-helper");
 var bane = require("bane");
 var assert = require("referee").assert;
 var sinon = require("sinon");
-var tapReporter = require("../../lib/buster-test/reporters/tap");
+var tapReporter = require("../../lib/reporters/tap");
 
 helper.testCase("TAPReporterTest", {
     setUp: function () {

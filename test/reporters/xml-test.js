@@ -5,7 +5,7 @@ var referee = require("referee");
 var assert = referee.assert;
 var refute = referee.refute;
 var sinon = require("sinon");
-var xmlReporter = require("../../lib/buster-test/reporters/xml");
+var xmlReporter = require("../../lib/reporters/xml");
 
 helper.testCase("XMLReporterTest", {
     setUp: function () {

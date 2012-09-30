@@ -4,8 +4,8 @@
     "when",
     "sinon",
     "referee",
-    "../lib/buster-test/test-case",
-    "../lib/buster-test/test-context",
+    "../lib/test-case",
+    "../lib/test-context",
     "./test-helper"
 ], function (when, sinon, referee, testCase, testContext, helper) {
     var assert = referee.assert;

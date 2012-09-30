@@ -36,7 +36,7 @@
         "email": "stein.magnus@jodal.no",
         "url": "http://jodal.no"
     },
-    "main": "./lib/buster-test",
+    "main": "./lib",
     "repository": {
         "type": "git",
         "url": "https://github.com/busterjs/buster-test.git"

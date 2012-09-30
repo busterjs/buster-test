@@ -3,7 +3,7 @@ var rhelper = require("./test-helper");
 var bane = require("bane");
 var assert = require("referee").assert;
 var sinon = require("sinon");
-var spec = require("../../lib/buster-test/reporters/specification");
+var spec = require("../../lib/reporters/specification");
 
 function runnerSetUp() {
     this.out = rhelper.writableStream();

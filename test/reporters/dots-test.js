@@ -3,7 +3,7 @@ var rhelper = require("./test-helper");
 var bane = require("bane");
 var referee = require("referee");
 var sinon = require("sinon");
-var dotsReporter = require("../../lib/buster-test/reporters/dots");
+var dotsReporter = require("../../lib/reporters/dots");
 var assert = referee.assert;
 var refute = referee.refute;
 

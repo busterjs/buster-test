@@ -13,7 +13,7 @@
     "bane",
     "referee",
     "sinon",
-    "../../lib/buster-test/reporters/json-proxy"
+    "../../lib/reporters/json-proxy"
 ], function (helper, rhelper, _, bane, referee, sinon, jsonProxyReporter) {
     "use strict";
     var assert = referee.assert;

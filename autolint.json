@@ -1,8 +1,8 @@
 {
     "paths": [
         "lib/*.js",
-        "lib/buster-test/*.js",
-        "lib/buster-test/reporters/*.js",
+        "lib/*.js",
+        "lib/reporters/*.js",
         "test/unit/buster-test/*.js",
         "test/unit/buster-test/reporters/*.js",
         "test/integration/*.js"

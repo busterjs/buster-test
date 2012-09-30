@@ -3,7 +3,7 @@
 } || define)([
     "bane",
     "referee",
-    "../lib/buster-test/browser-env",
+    "../lib/browser-env",
     "./test-helper"
 ], function (bane, referee, browserEnv, helper) {
     if (typeof document === "undefined") { return; }
