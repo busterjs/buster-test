@@ -10,6 +10,7 @@ module.exports = {
         sloppy: true,
         vars: true,
         forin: true,
+        nomen: true,
         predef: [
             "define",
             "assert",

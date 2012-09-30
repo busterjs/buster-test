@@ -1,6 +1,6 @@
-(typeof require === "function" && function (reqs, callback) {
+((typeof require === "function" && function (reqs, callback) {
     callback.apply(this, reqs.map(function (req) { return require(req); }));
-} || define)([
+}) || define)([
     "sinon",
     "referee",
     "../lib/test-case",
@@ -335,8 +335,9 @@
                 }
             });
 
-            assert.equals(context.contexts[0].requiresSupportForAny, { featureA: true });
-            assert.equals(context.contexts[0].contexts.length, 0);
+            var ctx = context.contexts[0];
+            assert.equals(ctx.requiresSupportForAny, { featureA: true });
+            assert.equals(ctx.contexts.length, 0);
         }
     });
 
@@ -365,7 +366,7 @@
             assert.equals(context.tests[0].comment, "Later, peeps");
         },
 
-        "sets deferred flag when // is the first non-white-space characters in name": function () {
+        "sets deferred flag name starts with white-space and //": function () {
             var context = bTestCase("Name", {
                 "   // test": function () {}
             });
@@ -390,11 +391,11 @@
                 }
             });
 
-            var context = context.contexts[0];
-            assert.equals(context.name, "up next");
-            assert(context.tests[0].deferred);
-            assert(context.tests[1].deferred);
-            assert(context.tests[2].deferred);
+            var ctx = context.contexts[0];
+            assert.equals(ctx.name, "up next");
+            assert(ctx.tests[0].deferred);
+            assert(ctx.tests[1].deferred);
+            assert(ctx.tests[2].deferred);
         }
     });
 
@@ -467,7 +468,7 @@
             assert.same(context, promise);
         },
 
-        "does not pass resolved context to create event when deferred resolves": function () {
+        "does not pass context to create event when it resolves": function () {
             var listener = sinon.spy();
             testContext.on("create", listener);
 
@@ -567,7 +568,7 @@
             assert(testCase.contexts[0].tests[1].focused);
         },
 
-        "does not mark nested tests focused when one test is focused": function () {
+        "does not mark nested tests focused when one is focused": function () {
             var testCase = bTestCase("Some test", {
                 "nested": {
                     "=> focus here": function () {},

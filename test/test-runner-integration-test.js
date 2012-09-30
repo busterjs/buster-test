@@ -1,6 +1,6 @@
-(typeof require === "function" && function (reqs, callback) {
+((typeof require === "function" && function (reqs, callback) {
     callback.apply(this, reqs.map(function (req) { return require(req); }));
-} || define)([
+}) || define)([
     "sinon",
     "referee",
     "../lib/test-case",
@@ -122,7 +122,7 @@
             }));
         },
 
-        "should emit all spec events in proper order": function (done) {
+        "emits all spec events in proper order": function (done) {
             var mathRandom = Math.random;
             Math.random = function () { return 0; };
             var assertionError = new Error("Test failed");

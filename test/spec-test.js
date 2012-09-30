@@ -1,6 +1,7 @@
-(typeof require === "function" && function (reqs, callback) {
+/*jslint maxlen: 130*/
+((typeof require === "function" && function (reqs, callback) {
     callback.apply(this, reqs.map(function (req) { return require(req); }));
-} || define)([
+}) || define)([
     "sinon",
     "referee",
     "../lib/spec",
@@ -97,7 +98,7 @@
             assert(spec.tests[0].deferred);
         },
 
-        "converts test without callback but with comment to deferred": function () {
+        "converts test without callback with comment to deferred": function () {
             var test = function () {};
 
             var spec = bspec.describe("Stuff", function () {
@@ -124,7 +125,11 @@
             var test = function () {};
 
             var spec = bspec.describe("Stuff", function () {
-                bspec.itEventually("does it", "Because it should", function () {});
+                bspec.itEventually(
+                    "does it",
+                    "Because it should",
+                    function () {}
+                );
             });
 
             assert(spec.tests[0].deferred);
@@ -132,7 +137,7 @@
             assert.isFunction(spec.tests[0].func);
         },
 
-        "makes commented deferred test with itEventually with no function": function () {
+        "makes commented deferred test w/itEventually without fn": function () {
             var test = function () {};
 
             var spec = bspec.describe("Stuff", function () {
@@ -397,7 +402,7 @@
             });
 
             // Cannot test these in the same context as before() and after()
-            var beforeAfterEachSpec = env.describe("More Stuff", function() {
+            var beforeAfterEachSpec = env.describe("More Stuff", function () {
                 env.beforeEach(beforeEach);
                 env.afterEach(afterEach);
             });

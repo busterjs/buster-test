@@ -2774,23 +2774,23 @@
                         "in 'uncaught exception may be assertion error' code");
             return done();
             /*
-            var runner = testRunner.create();
-            var listeners = [sinon.spy(), sinon.spy()];
-            runner.on("uncaughtException", listeners[0]);
-            runner.on("test:failure", listeners[1]);
+             var runner = testRunner.create();
+             var listeners = [sinon.spy(), sinon.spy()];
+             runner.on("uncaughtException", listeners[0]);
+             runner.on("test:failure", listeners[1]);
 
-            var context = testCase("Test", {
-                "should fail with regular AssertionError": function (done) {
-                    testRunner.nextTick(function () {
-                        throw assertionError("[assert] Failed assertion asynchronously");
-                    });
-                }
-            });
+             var context = testCase("Test", {
+             "should fail with regular AssertionError": function (done) {
+             testRunner.nextTick(function () {
+             throw assertionError("[assert] Failed assertion asynchronously");
+             });
+             }
+             });
 
-            runner.runSuite([context]).then(done(function () {
-                refute(listeners[0].called);
-                assert(listeners[1].calledOnce);
-            }));
+             runner.runSuite([context]).then(done(function () {
+             refute(listeners[0].called);
+             assert(listeners[1].calledOnce);
+             }));
              */
         }
     });

@@ -1,8 +1,8 @@
-(typeof require === "function" && function (reqs, callback) {
+((typeof require === "function" && function (reqs, callback) {
     module.exports = callback.apply(this, reqs.map(function (req) {
         return require(req);
     }));
-} || define)(["referee"], function (referee) {
+}) || define)(["referee"], function (referee) {
     "use strict";
 
     function runTest(name, test, setUp, tearDown, next) {
@@ -11,6 +11,8 @@
             console.log(e.stack);
             return next(false);
         }
+
+        var ctx = {};
 
         function complete(cb) {
             function doComplete() {
@@ -29,8 +31,6 @@
             }
             doComplete();
         }
-
-        var ctx = {};
 
         try {
             setUp.call(ctx);
@@ -57,8 +57,9 @@
         }
 
         function done() {
-            var color = passed == total ? "\x1b[32m" : "\x1b[31m";
-            console.log(color + testCase.name + ": " + passed + "/" + total + "\x1b[0m");
+            var color = passed === total ? "\x1b[32m" : "\x1b[31m";
+            console.log(color + testCase.name + ": " +
+                        passed + "/" + total + "\x1b[0m");
             cb();
         }
 

@@ -1,6 +1,7 @@
-(typeof require === "function" && function (reqs, callback) {
+/*jslint maxlen: 100*/
+((typeof require === "function" && function (reqs, callback) {
     callback.apply(this, reqs.map(function (req) { return require(req); }));
-} || define)([
+}) || define)([
     "sinon",
     "referee",
     "../lib/test-case",
@@ -13,13 +14,13 @@
 
     function testAutoRunOptions(options) {
         return function () {
-            var env = options.env || {};
+            var prop, env = options.env || {};
 
-            if (typeof process == "undefined" && options.env) {
+            if (typeof process === "undefined" && options.env) {
                 return;
             }
 
-            for (var prop in env) {
+            for (prop in env) {
                 process.env[prop] = env[prop];
             }
 
@@ -41,7 +42,7 @@
             var self = this;
 
             this.sandbox.stub(testRunner, "runSuite", function () {
-                self.onRun && self.onRun();
+                if (self.onRun) { self.onRun(); }
             });
         },
 
@@ -159,8 +160,7 @@
             options: { timeout: 45 }
         }),
 
-        "calls run with failOnNoAssertions from BUSTER_FAIL_ON_NO_ASSERTIONS":
-        testAutoRunOptions({
+        "calls run with failOnNoAssertions from BUSTER_FAIL_ON_NO_ASSERTIONS": testAutoRunOptions({
             env: { BUSTER_FAIL_ON_NO_ASSERTIONS: "false" },
             options: { failOnNoAssertions: false }
         })
@@ -205,34 +205,34 @@
         },
 
         "uses specified reporter": function () {
-            var reporter = typeof document == "undefined" ? reporters.xml : reporters.html;
+            var reporter = typeof document === "undefined" ? reporters.xml : reporters.html;
             this.sandbox.spy(reporter, "create");
-            autoRun.run([this.context], { reporter: "xml", });
+            autoRun.run([this.context], { reporter: "xml" });
 
             assert(reporter.create.calledOnce);
         },
 
         "uses custom reporter": function () {
-            if (typeof document != "undefined") return;
+            if (typeof document !== "undefined") { return; }
             var reporter = { create: sinon.stub().returns({ listen: sinon.spy() }) };
 
             assert.exception(function () {
-                autoRun.run([this.context], { reporter: "mod", });
+                autoRun.run([this.context], { reporter: "mod" });
             });
         },
 
         "initializes reporter with options": function () {
-            var reporter = typeof document == "undefined" ? reporters.dots : reporters.html;
+            var reporter = typeof document === "undefined" ? reporters.dots : reporters.html;
 
             this.sandbox.spy(reporter, "create");
             autoRun.run([this.context], {
                 color: false,
-                bright: false,
+                bright: false
             });
 
             assert.match(reporter.create.args[0][0], {
                 color: false,
-                bright: false,
+                bright: false
             });
         },
 
@@ -273,8 +273,7 @@
             assert.equals(testRunner.runSuite.args[0][0].length, 0);
         },
 
-        "does not skip contexts if tests are filtered but not sub-contexts":
-        function () {
+        "does not skip contexts if tests are filtered but not sub-contexts": function () {
             var context = testCase("Some tests", {
                 "test #1": function () {},
                 "test #2": function () {},
