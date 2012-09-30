@@ -18,4 +18,4 @@ require("./test/unit/buster-test/reporters/xml-test");
 require("./test/unit/buster-test/spec-test");
 require("./test/unit/buster-test/test-case-test");
 require("./test/unit/buster-test/test-context-test");
-// require("./test/unit/buster-test/test-runner-test");
+require("./test/unit/buster-test/test-runner-test");

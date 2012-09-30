@@ -12,13 +12,22 @@
             return next(false);
         }
 
-        function complete() {
-            try {
-                tearDown.call(ctx);
-            } catch (e) {
-                return handleError(e);
+        function complete(cb) {
+            function doComplete() {
+                try {
+                    tearDown.call(ctx);
+                } catch (e) {
+                    return handleError(e);
+                }
+                next(true);
             }
-            next(true);
+            if (typeof cb === "function") {
+                return function () {
+                    cb();
+                    doComplete();
+                };
+            }
+            doComplete();
         }
 
         var ctx = {};
@@ -59,7 +68,7 @@
             var name = names.shift();
             var timer = setTimeout(function () {
                 throw new Error(name + " timed out");
-            }, 250);
+            }, 500);
 
             runTest(name, testCase.tests[name], setUp, tearDown, function (ok) {
                 clearTimeout(timer);

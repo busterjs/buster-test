@@ -1,27 +1,16 @@
 /*jslint maxlen: 100*/
-(function (B, sinon, when) {
-    var testCase, testRunner, bu, assertions, format;
-
-    if (typeof require === "function" && typeof module === "object") {
-        sinon = require("sinon");
-        B = require("buster-core");
-        when = require("when");
-        testCase = require("../../../lib/buster-test/test-case");
-        testRunner = require("../../../lib/buster-test/test-runner");
-        bu = require("buster-util");
-        assertions = require("buster-assertions");
-        format = require("buster-format");
-    } else {
-        testCase = buster.testCase;
-        testRunner = buster.testRunner;
-        bu = buster.util;
-        assertions = buster.assertions;
-        format = buster.format;
-    }
-
-    var assert = assertions.assert;
-    var refute = assertions.refute;
-    assertions.format = format.ascii;
+(typeof require === "function" && function (reqs, callback) {
+    callback.apply(this, reqs.map(function (req) { return require(req); }));
+} || define)([
+    "when",
+    "sinon",
+    "referee",
+    "../../../lib/buster-test/test-case",
+    "../../../lib/buster-test/test-runner",
+    "../../test-helper"
+], function (when, sinon, referee, testCase, testRunner, helper) {
+    var assert = referee.assert;
+    var refute = referee.refute;
 
     function assertionError(message) {
         var error = new Error(message);
@@ -45,14 +34,14 @@
                 fn();
             } else {
                 times -= 1;
-                buster.nextTick(next);
+                testRunner.nextTick(next);
             }
         }
 
         next();
     }
 
-    bu.testCase("TestRunnerCreateTest", {
+    helper.testCase("TestRunnerCreateTest", {
         "emits newly created object to callback": function () {
             var listener = sinon.spy();
             testRunner.onCreate(listener);
@@ -73,7 +62,7 @@
         }
     });
 
-    bu.testCase("TestRunnerRunContextTest", {
+    helper.testCase("TestRunnerRunContextTest", {
         setUp: function () {
             this.runner = testRunner.create();
             this.mathRandom = Math.random;
@@ -91,82 +80,82 @@
             assert(promise.then);
         },
 
-        "rejects without context": function (test) {
+        "rejects without context": function (done) {
             var rejection = sinon.spy();
             this.runner.runContext().then(function () {}, function () {
-                test.end();
+                done();
             });
         },
 
-        "runs single test function": function (test) {
+        "runs single test function": function (done) {
             var testFn = sinon.spy();
             var context = testCase("Test", { test: testFn });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(testFn.calledOnce);
                 assert(context.testCase.isPrototypeOf(testFn.thisValues[0]));
             }));
         },
 
-        "runs test asynchronously": function (test) {
+        "runs test asynchronously": function (done) {
             var testFn = sinon.spy();
             var context = testCase("Test", { test: testFn });
             var runnerResult = this.runner.runContext(context);
 
             assert(!testFn.called);
 
-            runnerResult.then(test.end(function () {
+            runnerResult.then(done(function () {
                 assert(testFn.calledOnce);
             }));
         },
 
-        "does not reject if test throws": function (test) {
+        "does not reject if test throws": function (done) {
             var context = testCase("Test", { test: sinon.stub().throws() });
 
-            this.runner.runContext(context).then(test.end, test.end(function () {
+            this.runner.runContext(context).then(done, done(function () {
                 assert(false, "Promise rejected");
             }));
         },
 
-        "calls setUp on same test case object as test": function (test) {
+        "calls setUp on same test case object as test": function (done) {
             var setUp = sinon.spy();
             var testFn = sinon.spy();
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(setUp.calledOnce);
                 assert.same(testFn.thisValues[0], setUp.thisValues[0]);
             }));
         },
 
-        "calls setUp before test": function (test) {
+        "calls setUp before test": function (done) {
             var testFn = sinon.spy();
             var setUp = sinon.spy();
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(setUp.calledBefore(testFn));
             }));
         },
 
-        "does not call test until setUp resolves": function (test) {
+        "does not call test until setUp resolves": function (done) {
             var doneCb;
             var testFn = sinon.spy();
 
             var setUp = function (done) { doneCb = done; };
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            var testRun = this.runner.runContext(context).then(test.end(function () {
+            var testRun = this.runner.runContext(context).then(done(function () {
                 assert(testFn.calledOnce);
             }));
 
             refute(testFn.calledOnce);
-            buster.nextTick(function () {
+            testRunner.nextTick(function () {
                 doneCb();
             });
         },
 
-        "does not call test until setUp promise resolves": function (test) {
+        "does not call test until setUp promise resolves": function (done) {
             var deferred = when.defer(), resolved = false, testFn = sinon.spy();
 
             var setUp = sinon.spy(function () {
@@ -176,95 +165,95 @@
 
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(resolved);
                 assert(testFn.calledOnce);
             }));
 
-            buster.nextTick(function () {
+            testRunner.nextTick(function () {
                 resolved = true;
-                deferred.resolver.resolve();
+                deferred.resolve();
             });
         },
 
-        "does not reject if setUp fails": function (test) {
+        "does not reject if setUp fails": function (done) {
             var setUp = sinon.stub().throws();
             var context = testCase("Test", { setUp: setUp, test: sinon.spy() });
 
             this.runner.runContext(context).then(function () {
-                test.end();
+                done();
             }, function () {
                 assert.fail();
             });
         },
 
-        "does not call test if setUp throws": function (test) {
+        "does not call test if setUp throws": function (done) {
             var testFn = sinon.spy();
             var setUp = sinon.stub().throws();
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(!testFn.called);
             }));
         },
 
-        "does not call test if setUp rejects": function (test) {
+        "does not call test if setUp rejects": function (done) {
             var deferred = when.defer();
             var testFn = sinon.spy();
             var setUp = sinon.stub().returns(deferred.promise);
             var context = testCase("Test", { setUp: setUp, test: testFn });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(!testFn.called);
             }));
 
-            deferred.resolver.reject();
+            deferred.reject();
         },
 
-        "calls tearDown on same test case object as test": function (test) {
+        "calls tearDown on same test case object as test": function (done) {
             var fn = sinon.spy();
             var tearDown = sinon.spy();
             var context = testCase("Test", { tearDown: tearDown, test: fn });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDown.calledOnce);
                 assert.same(fn.thisValues[0], tearDown.thisValues[0]);
             }));
         },
 
-        "calls tearDown after test": function (test) {
+        "calls tearDown after test": function (done) {
             var fn = sinon.spy();
             var tearDown = sinon.spy();
             var context = testCase("Test", { tearDown: tearDown, test: fn });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDown.calledAfter(fn));
             }));
         },
 
-        "not resolve until tearDown resolves": function (test) {
+        "not resolve until tearDown resolves": function (done) {
             var deferred = when.defer();
             var tearDown = sinon.stub().returns(deferred.promise);
             var context = testCase("Test", { tearDown: tearDown, test: sinon.spy() });
-            var complete = sinon.spy(B.partial(B.nextTick, test.end));
+            var complete = sinon.spy(function () { testRunner.nextTick(done); });
 
             this.runner.runContext(context).then(complete);
 
-            buster.nextTick(function () {
+            testRunner.nextTick(function () {
                 assert(!complete.called);
-                deferred.resolver.resolve();
+                deferred.resolve();
             });
         },
 
-        "does not throw if tearDown throws": function (test) {
+        "does not throw if tearDown throws": function (done) {
             var fn = sinon.spy();
             var tearDown = sinon.stub().throws();
             var context = testCase("Test", { tearDown: tearDown, test: fn });
 
-            this.runner.runContext(context).then(test.end, assert.fail);
+            this.runner.runContext(context).then(done, assert.fail);
         },
 
-        "calls tearDown if setUp throws": function (test) {
+        "calls tearDown if setUp throws": function (done) {
             var tearDown = sinon.spy();
             var context = testCase("Test", {
                 setUp: sinon.stub().throws(),
@@ -272,12 +261,12 @@
                 test: sinon.spy()
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDown.calledOnce);
             }));
         },
 
-        "calls tearDown if test throws": function (test) {
+        "calls tearDown if test throws": function (done) {
             var tearDown = sinon.spy();
 
             var context = testCase("Test", {
@@ -286,12 +275,12 @@
                 test: sinon.stub().throws()
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDown.calledOnce);
             }));
         },
 
-        "runs all tests": function (test) {
+        "runs all tests": function (done) {
             var tests = [sinon.spy(), sinon.spy(), sinon.spy()];
 
             var context = testCase("Test", {
@@ -300,14 +289,14 @@
                 test3: tests[2]
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tests[0].calledOnce);
                 assert(tests[1].calledOnce);
                 assert(tests[2].calledOnce);
             }));
         },
 
-        "runs all tests in series": function (test) {
+        "runs all tests in series": function (done) {
             var events = [];
 
             var context = testCase("Test", {
@@ -322,14 +311,14 @@
                 }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert.equals(events, ["setUp", "test3", "tearDown",
                                        "setUp", "test2", "tearDown",
                                        "setUp", "test1", "tearDown"]);
             }));
         },
 
-        "runs all contexts in series": function (test) {
+        "runs all contexts in series": function (done) {
             var events = [];
 
             var context = testCase("Test", {
@@ -356,14 +345,14 @@
                 }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert.equals(events, ["su", "su 3", "test3", "td 3", "td",
                                        "su", "su 2", "test2", "td 2", "td",
                                        "su", "su 1", "test1", "td 1", "td"]);
             }));
         },
 
-        "runs tests in random order": function (test) {
+        "runs tests in random order": function (done) {
             // A tad bit too clever. Non-determinism is hard to test.
             var calls = 0;
             var numbers = [0.9, 0, 0.5];
@@ -384,12 +373,12 @@
                 test5: tests[4]
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 refute.equals(order, [1, 2, 3, 4, 5]);
             }));
         },
 
-        "runs all tests even if one fails": function (test) {
+        "runs all tests even if one fails": function (done) {
             var tests = [sinon.spy(), sinon.stub().throws(), sinon.spy()];
 
             var context = testCase("Test", {
@@ -398,14 +387,14 @@
                 test3: tests[2]
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tests[0].calledOnce);
                 assert(tests[1].calledOnce);
                 assert(tests[2].calledOnce);
             }));
         },
 
-        "runs setUp once for each test": function (test) {
+        "runs setUp once for each test": function (done) {
             var setUp = sinon.spy();
             var tests = [sinon.spy(), sinon.spy(), sinon.spy()];
 
@@ -416,7 +405,7 @@
                 test3: tests[2]
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 var calls = [tests[0].callIds[0], tests[1].callIds[0], tests[2].callIds[0]];
                 calls = calls.sort(numericSort);
 
@@ -428,7 +417,7 @@
             }));
         },
 
-        "runs tearDown once for each test": function (test) {
+        "runs tearDown once for each test": function (done) {
             var tearDown = sinon.spy();
             var tests = [sinon.spy(), sinon.spy(), sinon.spy()];
 
@@ -439,7 +428,7 @@
                 test3: tests[2]
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDown.calledThrice);
 
                 var calls = [tests[0].callIds[0], tests[1].callIds[0],
@@ -454,27 +443,28 @@
             }));
         },
 
-        "runs tests in sub context": function (test) {
+        "runs tests in sub context": function (done) {
             var fn = sinon.spy();
             var context = testCase("Test", { "context": { test1: fn } });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(fn.calledOnce);
             }));
         },
 
-        "does not fail without sub contexts": function (test) {
+        "does not fail without sub contexts": function (done) {
             var fn = sinon.spy();
             var context = { tests: [{ name: "sumptn", func: fn }] };
+            var self = this;
 
-            refute.exception(B.bind(this, function () {
-                this.runner.runContext(context).then(test.end(function () {
+            refute.exception(function () {
+                self.runner.runContext(context).then(done(function () {
                     assert(fn.calledOnce);
                 }));
-            }));
+            });
         },
 
-        "runs tests in all sub contexts": function (test) {
+        "runs tests in all sub contexts": function (done) {
             var tests = [sinon.spy(), sinon.spy()];
 
             var context = testCase("Test", {
@@ -482,13 +472,13 @@
                 "context2": { test1: tests[1] }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tests[0].calledOnce);
                 assert(tests[1].calledOnce);
             }));
         },
 
-        "runs sub context setUp for test in sub context": function (test) {
+        "runs sub context setUp for test in sub context": function (done) {
             var setUp = sinon.spy();
             var fn = sinon.spy();
 
@@ -498,13 +488,13 @@
 
             context.contexts[0].testCase.id = 42;
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(setUp.calledOnce);
                 assert.same(fn.thisValues[0], setUp.thisValues[0]);
             }));
         },
 
-        "runs parent setUp prior to local setUp": function (test) {
+        "runs parent setUp prior to local setUp": function (done) {
             var setUps = [sinon.spy(), sinon.spy()];
             var fn = sinon.spy();
 
@@ -513,14 +503,14 @@
                 "context": { setUp: setUps[1], test1: fn }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(setUps[0].calledOnce);
                 assert(setUps[1].calledOnce);
                 assert(setUps[0].calledBefore(setUps[1]));
             }));
         },
 
-        "waits for setUp promises to resolve": function (test) {
+        "waits for setUp promises to resolve": function (done) {
             var deferreds = [when.defer(), when.defer()];
             var outerSetUp = sinon.stub().returns(deferreds[0].promise);
             var innerSetUp = sinon.stub().returns(deferreds[1].promise);
@@ -530,11 +520,11 @@
                 "context": { setUp: innerSetUp, test1: fn }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(fn.called);
             }));
 
-            // One buster.nextTick per context
+            // One testRunner.nextTick per context
             tick(2, function () {
                 assert(outerSetUp.calledOnce);
                 assert(!innerSetUp.called);
@@ -545,7 +535,7 @@
             });
         },
 
-        "runs parent setUp on local test case object": function (test) {
+        "runs parent setUp on local test case object": function (done) {
             var setUp = sinon.spy();
             var fn = sinon.spy();
 
@@ -554,12 +544,12 @@
                 "context": { test1: fn }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert.same(fn.thisValues[0], setUp.thisValues[0]);
             }));
         },
 
-        "stops running setUps if one fails": function (test) {
+        "stops running setUps if one fails": function (done) {
             var setUps = [sinon.stub().throws(), sinon.spy()];
 
             var context = testCase("Test", {
@@ -567,12 +557,12 @@
                 "context": { setUp: setUps[1], test1: sinon.spy() }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(!setUps[1].called);
             }));
         },
 
-        "runs sub context tearDown for test in sub context": function (test) {
+        "runs sub context tearDown for test in sub context": function (done) {
             var tearDown = sinon.spy();
             var fn = sinon.spy();
 
@@ -580,13 +570,13 @@
                 "context": { tearDown: tearDown, test1: fn }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDown.calledOnce);
                 assert.same(fn.thisValues[0], tearDown.thisValues[0]);
             }));
         },
 
-        "runs parent tearDown after local tearDown": function (test) {
+        "runs parent tearDown after local tearDown": function (done) {
             var tearDowns = [sinon.spy(), sinon.spy()];
 
             var context = testCase("Test", {
@@ -594,7 +584,7 @@
                 "context": { tearDown: tearDowns[1], test1: sinon.spy() }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDowns[0].calledOnce);
                 assert(tearDowns[0].calledOnce);
                 assert(tearDowns[1].calledOnce);
@@ -602,7 +592,7 @@
             }));
         },
 
-        "runs parent tearDown on local test case object": function (test) {
+        "runs parent tearDown on local test case object": function (done) {
             var tearDown = sinon.spy();
             var fn = sinon.spy();
 
@@ -611,13 +601,13 @@
                 "context": { test1: fn }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDown.calledOnce);
                 assert.same(tearDown.thisValues[0], fn.thisValues[0]);
             }));
         },
 
-        "runs tearDowns inner -> outer": function (test) {
+        "runs tearDowns inner -> outer": function (done) {
             var tearDowns = [sinon.spy(), sinon.spy()];
             var fn = sinon.spy();
 
@@ -626,12 +616,12 @@
                 "context": { tearDown: tearDowns[1], test1: fn }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDowns[1].calledBefore(tearDowns[0]));
             }));
         },
 
-        "stops running tearDowns if one fails": function (test) {
+        "stops running tearDowns if one fails": function (done) {
             var tearDowns = [sinon.spy(), sinon.stub().throws()];
 
             var context = testCase("Test", {
@@ -639,13 +629,13 @@
                 "context": { tearDown: tearDowns[1], test1: sinon.spy() }
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(tearDowns[1].called);
                 assert(!tearDowns[0].called);
             }));
         },
 
-        "waits for tearDown promises to resolve": function (test) {
+        "waits for tearDown promises to resolve": function (done) {
             var deferreds = [when.defer(), when.defer()];
             var innerTearDown = sinon.stub().returns(deferreds[0].promise);
             var outerTearDown = sinon.stub().returns(deferreds[1].promise);
@@ -655,9 +645,9 @@
                 "context": { tearDown: innerTearDown, test1: fn }
             });
 
-            this.runner.runContext(context).then(test.end);
+            this.runner.runContext(context).then(done);
 
-            // One buster.nextTick per context
+            // One testRunner.nextTick per context
             tick(2, function () {
                 assert(fn.called);
                 assert(innerTearDown.calledOnce);
@@ -668,19 +658,19 @@
             });
         },
 
-        "skips deferred test": function (test) {
+        "skips deferred test": function (done) {
             var fn = sinon.spy();
 
             var context = testCase("Test", {
                 "//should do this": fn
             });
 
-            this.runner.runContext(context).then(test.end(function () {
+            this.runner.runContext(context).then(done(function () {
                 assert(!fn.called);
             }));
         },
 
-        "waits for async context": function (test) {
+        "waits for async context": function (done) {
             var runIt, completed = sinon.spy();
             var context = testCase("Test", function (run) {
                 runIt = run;
@@ -688,35 +678,34 @@
 
             this.runner.runContext(context).then(completed);
 
-            buster.nextTick(function () {
+            testRunner.nextTick(done(function () {
                 assert.isFunction(runIt);
                 refute(completed.called);
                 runIt({});
                 assert(completed.calledOnce);
-                test.end();
-            });
+            }));
         }
     });
 
-    bu.testCase("TestRunnerRunSuiteTest", {
+    helper.testCase("TestRunnerRunSuiteTest", {
         setUp: function () {
             this.runner = testRunner.create();
         },
 
-        "runs all contexts": function (test) {
+        "runs all contexts": function (done) {
             var tests = [sinon.spy(), sinon.spy()];
 
             var contexts = [testCase("Test", { test1: tests[0] }),
                             testCase("Test other", { test2: tests[1] })];
 
-            this.runner.runSuite(contexts).then(test.end(function () {
+            this.runner.runSuite(contexts).then(done(function () {
                 assert(tests[0].calledOnce);
                 assert(tests[1].calledOnce);
             }));
         }
     });
 
-    bu.testCase("TestRunnerAsyncTest", {
+    helper.testCase("TestRunnerAsyncTest", {
         setUp: function () {
             this.runner = testRunner.create();
             this.deferred = when.defer();
@@ -724,53 +713,54 @@
             this.context = testCase("Test", { test: this.fn });
         },
 
-        "resolves run when test has resolved": function (test) {
+        "resolves run when test has resolved": function (done) {
             var completed = sinon.spy();
             this.runner.runSuite([this.context]).then(completed);
+            var deferred = this.deferred;
 
-            buster.nextTick(B.bind(this, test.end(function () {
+            testRunner.nextTick(done(function () {
                 refute(completed.called);
-                this.deferred.resolver.resolve();
+                deferred.resolve();
                 assert(completed.calledOnce);
-            })));
+            }));
         },
 
-        "emits test:async event": function (test) {
+        "emits test:async event": function (done) {
             var listeners = [sinon.spy(), sinon.spy()];
             this.runner.on("test:async", listeners[0]);
             this.runner.on("test:success", listeners[1]);
 
-            this.runner.runSuite([this.context]).then(test.end(function () {
+            this.runner.runSuite([this.context]).then(done(function () {
                 assert(listeners[0].calledOnce);
                 assert.equals(listeners[0].args[0], [{ name: "test" }]);
                 assert(listeners[0].calledBefore(listeners[1]));
             }));
 
-            this.deferred.resolver.resolve();
+            this.deferred.resolve();
         },
 
-        "times out after 250ms": function (test) {
+        "times out after 250ms": function (done) {
             var runnerResolution = sinon.spy();
             var promiseResolution = spyOnPromise(this.deferred.promise);
             this.runner.runSuite([this.context]).then(runnerResolution);
 
-            setTimeout(test.end(function () {
+            setTimeout(done(function () {
                 assert(runnerResolution.called);
                 assert(!promiseResolution.called);
-            }), 350); // Timers in browsers are inaccurate beasts
+            }), 300); // Timers in browsers are inaccurate beasts
         },
 
-        "times out after custom timeout": function (test) {
+        "times out after custom timeout": function (done) {
             var runnerResolution = sinon.spy();
             this.runner.timeout = 100;
             this.runner.runSuite([this.context]).then(runnerResolution);
 
-            setTimeout(test.end(function () {
+            setTimeout(done(function () {
                 assert(runnerResolution.called);
             }), 150);
         },
 
-        "sets timeout as property on test case": function (test) {
+        "sets timeout as property on test case": function (done) {
             var runnerResolution = sinon.spy();
             this.runner.runSuite([testCase("Test", {
                 test: function (test) {
@@ -778,17 +768,17 @@
                 }
             })]).then(runnerResolution);
 
-            setTimeout(test.end(function () {
+            setTimeout(done(function () {
                 assert(runnerResolution.called);
             }), 100);
         },
 
-        "emits timeout event": function (test) {
+        "emits timeout event": function (done) {
             var listener = sinon.spy();
             this.runner.timeout = 20;
             this.runner.on("test:timeout", listener);
 
-            this.runner.runSuite([this.context]).then(test.end(function () {
+            this.runner.runSuite([this.context]).then(done(function () {
                 assert(listener.called);
                 assert.match(listener.args[0], [{
                     name: "test",
@@ -797,58 +787,60 @@
             }));
         },
 
-        "does not emit success when test times out": function (test) {
+        "does not emit success when test times out": function (done) {
             var listener = sinon.spy();
             this.runner.timeout = 20;
             this.runner.on("test:success", listener);
 
-            this.runner.runSuite([this.context]).then(test.end(function () {
+            this.runner.runSuite([this.context]).then(done(function () {
                 assert(!listener.called);
             }));
         },
 
-        "does not emit test:success event until test has completed": function (test) {
+        "does not emit test:success event until test has completed": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:success", listener);
 
-            this.runner.runSuite([this.context]).then(test.end(function () {
+            this.runner.runSuite([this.context]).then(done(function () {
                 assert(listener.calledOnce);
             }));
 
-            setTimeout(B.bind(this, function () {
+            var deferred = this.deferred;
+
+            setTimeout(function () {
                 assert(!listener.called);
-                this.deferred.resolver.resolve();
-            }), 10);
+                deferred.resolve();
+            }, 10);
         },
 
-        "errors if test rejects it's returned promise": function (test) {
+        "errors if test rejects it's returned promise": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:error", listener);
 
-            this.runner.runSuite([this.context]).then(test.end(function () {
+            this.runner.runSuite([this.context]).then(done(function () {
                 assert(listener.calledOnce);
                 assert.equals(listener.args[0][0].error.message, "Oh no");
             }));
 
-            this.deferred.resolver.reject(new Error("Oh no"));
+            this.deferred.reject(new Error("Oh no"));
         },
 
-        "fails if test rejects with an AssertionError": function (test) {
+        "fails if test rejects with an AssertionError": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:failure", listener);
 
-            this.runner.runSuite([this.context]).then(test.end(function () {
+            this.runner.runSuite([this.context]).then(done(function () {
                 assert(listener.calledOnce);
                 assert.equals(listener.args[0][0].error.message, "Oh no");
             }));
 
-            this.deferred.resolver.reject({
+            this.deferred.reject({
                 name: "AssertionError",
                 message: "Oh no"
             });
         },
 
-        "only emits one test:async event": function (test) {
+        "only emits one test:async event": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:async", listener);
 
@@ -857,12 +849,12 @@
                 test: function (done) { done(); }
             });
 
-            this.runner.runSuite([context]).then(test.end(function () {
+            this.runner.runSuite([context]).then(done(function () {
                 assert(listener.calledOnce);
             }));
         },
 
-        "prefers test error over tearDown failure": function (test) {
+        "prefers test error over tearDown failure": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:error", listener);
             this.runner.on("test:failure", listener);
@@ -873,13 +865,13 @@
                 test: function () { a.b.c = 42; }
             });
 
-            this.runner.runSuite([context]).then(test.end(function () {
+            this.runner.runSuite([context]).then(done(function () {
                 assert(listener.calledOnce);
                 assert.equals(listener.args[0][0].error.name, "TypeError");
             }), assert.fail);
         },
 
-        "prefers test error over tearDown failure with non-throwing assertion": function (test) {
+        "prefers test error over tearDown failure with non-throwing assertion": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:error", listener);
             this.runner.on("test:failure", listener);
@@ -891,1890 +883,1890 @@
                 test: function () { a.b.c = 42; }
             });
 
-            this.runner.runSuite([context]).then(test.end(function (results) {
+            this.runner.runSuite([context]).then(done(function (results) {
                 assert(listener.calledOnce);
                 assert.equals(listener.args[0][0].error.name, "TypeError");
             }), assert.fail);
         }
     });
 
-    bu.testCase("TestRunnerImplicitAsyncTest", {
+    helper.testCase("TestRunnerImplicitAsyncTest", {
         setUp: function () {
             this.runner = testRunner.create();
         },
 
-        "resolves run when test calls passed argument": function (test) {
+        "resolves run when test calls passed argument": function (done) {
             var callback, listener = sinon.spy();
             this.runner.on("test:async", listener);
 
             var context = testCase("Test", {
                 test: function (done) {
                     callback = done;
-                    buster.nextTick(function () {
+                    testRunner.nextTick(function () {
                         callback.called = true;
                         callback();
                     });
                 }
             });
 
-            this.runner.runSuite([context]).then(test.end(function () {
+            this.runner.runSuite([context]).then(done(function () {
                 assert(listener.called);
                 assert.isFunction(callback);
                 assert(callback.called);
             }));
         },
 
-        "emits test:success when test calls passed argument": function (test) {
+        "emits test:success when test calls passed argument": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:success", listener);
 
             var context = testCase("Test", {
-                test: function (done) { buster.nextTick(done); }
+                test: function (done) { testRunner.nextTick(done); }
             });
 
-            this.runner.runSuite([context]).then(test.end(function () {
+            this.runner.runSuite([context]).then(done(function () {
                 assert(listener.calledOnce);
             }));
 
-            buster.nextTick(function () {
+            testRunner.nextTick(function () {
                 assert(!listener.called);
             });
         },
 
-        "done returns actual done if called with a function": function (test) {
-            var innerDone;
-
-            var context = testCase("Test", {
-                test: function (done) {
-                    buster.nextTick(done(function () {
-                        innerDone = true;
-                    }));
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(innerDone);
-            }));
-
-            buster.nextTick(function () {
-                assert(!innerDone);
-            });
-        },
-
-        "done completes test when called with non-function": function (test) {
-            var context = testCase("Test", {
-                test: function (done) {
-                    buster.nextTick(done({ ok: function () {} }));
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(true);
-            }));
-        },
-
-        "done transparently proxies to its callback": function (test) {
-            var innerDone = sinon.stub().returns(42);
-            var thisp = { id: 42 };
-            var returnValue;
-            var fn = function (cb) {
-                returnValue = cb.apply(thisp, [1, 2, 3]);
-            };
-
-            var context = testCase("Test", {
-                test: function (done) { fn(done(innerDone)); }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(innerDone.calledOnce);
-                assert.equals(returnValue, 42);
-                assert(innerDone.calledOn(thisp));
-                assert(innerDone.calledWithExactly(1, 2, 3));
-            }));
-        },
-
-        "emits test:failure when AssertionError is thrown in callback": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:failure", listener);
-
-            var context = testCase("Test", {
-                test: function (done) {
-                    buster.nextTick(done(function () {
-                        var error = new Error("Oops");
-                        error.name = "AssertionError";
-                        throw error;
-                    }));
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.message, "Oops");
-            }));
-        },
-
-        "emits test:error when Error is thrown in done callback": function (t) {
-            var listener = sinon.spy();
-            this.runner.on("test:error", listener);
-
-            var context = testCase("Test", {
-                test: function (done) {
-                    buster.nextTick(done(function () {
-                        throw new Error("Oops");
-                    }));
-                }
-            });
-
-            this.runner.runSuite([context]).then(t.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.message, "Oops");
-            }));
-        },
-
-        "includes timeouts in suite:end results": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("suite:end", listener);
-
-            var context = testCase("My case", {
-                test1: function (done) {}
-            });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert.equals(listener.args[0][0].timeouts, 1);
-            }));
-        },
-
-        "should disarm callback when test times out": function (test) {
-            var callback;
-            var context = testCase("My case", {
-                test1: function (done) { callback = done; }
-            });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                refute.exception(function () {
-                    callback();
-                });
-            }));
-        }
-    });
-
-    bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
-        setUp: function () {
-            this.runner = testRunner.create();
-        },
-
-        "resolves run when setUp calls passed argument": function (test) {
-            var callback;
-            var context = testCase("Test", {
-                setUp: function (done) {
-                    callback = done;
-                    buster.nextTick(function () {
-                        callback.called = true;
-                        callback();
-                    });
-                },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert.defined(callback);
-                assert(callback.called);
-            }));
-        },
-
-        "emits test:start when setUp calls passed argument": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:start", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) {
-                    buster.nextTick(done);
-                },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
-
-            buster.nextTick(function () {
-                assert(!listener.called);
-            });
-        },
-
-        "emits test:failure when setUp done callback throws AssertionError": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:failure", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) {
-                    buster.nextTick(done(function () {
-                        var error = new Error("Oops");
-                        error.name = "AssertionError";
-                        throw error;
-                    }));
-                },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.message, "Oops");
-            }));
-        },
-
-        "emits test:error when setUp done callback throws Error": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:error", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) {
-                    buster.nextTick(done(function () {
-                        throw new Error("Oops");
-                    }));
-                },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.message, "Oops");
-            }));
-        },
-
-        "times out async setUp": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:timeout", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) {},
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.source, "setUp");
-            }));
-        },
-
-        "times out async setUp after custom timeout": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:timeout", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) { this.timeout = 100; },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]);
-            setTimeout(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.source, "setUp");
-            }), 150);
-        },
-
-        "emits setUp, async, timeout for async setup": function (test) {
-            var listeners = {
-                timeout: sinon.spy(),
-                async: sinon.spy(),
-                setUp: sinon.spy()
-            };
-
-            this.runner.on("test:setUp", listeners.setUp);
-            this.runner.on("test:async", listeners.async);
-            this.runner.on("test:timeout", listeners.timeout);
-
-            var context = testCase("Test", {
-                setUp: function (done) {},
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listeners.setUp.calledOnce);
-                assert(listeners.async.calledOnce);
-                assert(listeners.timeout.calledOnce);
-                assert(listeners.setUp.calledBefore(listeners.async));
-                assert(listeners.async.calledBefore(listeners.timeout));
-            }));
-        },
-
-        "emits test:async when setUp is async": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:async", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) { buster.nextTick(done); },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
-        },
-
-        "calling done synchronously does not make test asynchronous": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:async", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) { done(); },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(!listener.calledOnce);
-            }));
-        },
-
-        "does not emit test:async twice": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:async", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) { done(); },
-                test: function (done) { done(); }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
-        },
-
-        "does not emit test:async more than once in nested async context": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:async", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) { done(); },
-                context1: {
-                    setUp: function (done) { done(); },
-                    test: function (done) { done(); }
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
-        }
-    });
-
-    bu.testCase("TestRunnerImplicitAsyncTearDownTest", {
-        setUp: function () {
-            this.runner = testRunner.create();
-        },
-
-        "resolves run when tearDown calls passed argument": function (test) {
-            var callback;
-
-            var context = testCase("Test", {
-                tearDown: function (done) {
-                    callback = done;
-                    buster.nextTick(function () {
-                        callback.called = true;
-                        callback();
-                    });
-                },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(!!callback);
-                assert(callback.called);
-            }));
-        },
-
-        "emits test:success when tearDown calls passed argument": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:success", listener);
-
-            var context = testCase("Test", {
-                tearDown: function (done) {
-                    buster.nextTick(function () {
-                        done();
-                    });
-                },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
-
-            buster.nextTick(function () {
-                assert(!listener.called);
-            });
-        },
-
-        "emits test:failure when tearDown done callback throws AssertionError": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:failure", listener);
-
-            var context = testCase("Test", {
-                tearDown: function (done) {
-                    buster.nextTick(done(function () {
-                        var error = new Error("Oops");
-                        error.name = "AssertionError";
-                        throw error;
-                    }));
-                },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.message, "Oops");
-            }));
-        },
-
-        "emits test:error when tearDown done callback throws Error": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:error", listener);
-
-            var context = testCase("Test", {
-                tearDown: function (done) {
-                    buster.nextTick(done(function () {
-                        throw new Error("Oops");
-                    }));
-                },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.message, "Oops");
-            }));
-        },
-
-        "times out async tearDown": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:timeout", listener);
-
-            var context = testCase("Test", {
-                tearDown: function (done) {},
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.source, "tearDown");
-            }));
-        },
-
-        "times out async tearDown after custom timeout": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:timeout", listener);
-
-            var context = testCase("Test", {
-                tearDown: function (done) { this.timeout = 100; },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]);
-
-            setTimeout(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].error.source, "tearDown");
-            }), 150);
-        },
-
-        "should emit test:async when tearDown is async": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:async", listener);
-
-            var context = testCase("Test", {
-                tearDown: function (done) { buster.nextTick(done); },
-                test: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
-        },
-
-        "does not emit test:async more than once": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("test:async", listener);
-
-            var context = testCase("Test", {
-                setUp: function (done) { done(); },
-                tearDown: function (done) { done(); },
-                test: function (done) { done(); }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
-        },
-
-        "does not emit test:async after test failure": function (test) {
-            var listeners = [sinon.spy(), sinon.spy()];
-            this.runner.on("test:async", listeners[0]);
-            this.runner.on("test:failure", listeners[1]);
-            var runner = this.runner;
-
-            var context = testCase("Test", {
-                setUp: function () {},
-                tearDown: function (done) { done(); },
-                test: function (done) {
-                    var e = new Error();
-                    e.name = "AssertionError";
-                    throw e;
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listeners[1].calledOnce);
-                assert(!listeners[0].called);
-            }));
-        },
-
-        "does not emit test:async for deferred test": function (test) {
-            var listeners = [sinon.spy(), sinon.spy()];
-            this.runner.on("test:async", listeners[0]);
-            this.runner.on("test:deferred", listeners[1]);
-            var runner = this.runner;
-            var context = testCase("Test", {
-                tearDown: function (done) { buster.nextTick(done); },
-                "//test": function () {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(!listeners[0].called);
-                assert(listeners[1].calledOnce);
-            }));
-        },
-
-        "does not run setUp for deferred test": function (test) {
-            var setUp = sinon.spy();
-            var runner = this.runner;
-            var context = testCase("Test", {
-                setUp: setUp,
-                "//test": function () {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(!setUp.called);
-            }));
-        },
-
-        "does not run tearDown for deferred test": function (test) {
-            var tearDown = sinon.spy();
-            var runner = this.runner;
-            var context = testCase("Test", {
-                tearDown: tearDown,
-                "//test": function () {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(!tearDown.called);
-            }));
-        }
-    });
-
-    bu.testCase("RunnerRunAwayExceptionsTest", {
-        setUp: function () {
-            // Don't report uncaught exceptions in the util test runner too
-            bu.testCase.silent = true;
-        },
-
-        tearDown: function () {
-            bu.testCase.silent = false;
-        },
-
-        "catches uncaught asynchronous errors": function (test) {
-            var runner = testRunner.create();
-            runner.timeout = 20;
-            var listener = sinon.spy();
-            runner.on("uncaughtException", listener);
-
-            var context = testCase("Test", {
-                "does not fail, ever": function (done) {
-                    setTimeout(function () {
-                        throw new Error("Oops!");
-                    }, 30);
-                }
-            });
-
-            runner.runSuite([context]).then(function () {
-                setTimeout(test.end(function () {
-                    assert(listener.calledOnce);
-                }), 50);
-            });
-        },
-
-        "does not handle asynchronous failure as uncaught exception": function (test) {
-            if (typeof document !== "undefined") {
-                console.log("'does not handle asynchronous failure as uncaught " +
-                            "exception':\nAborting test, as browsers may not have " +
-                            "enough information for uncaught errors to treat them as " +
-                            "assertion failures");
-                return test.end();
-            }
-
-            var runner = testRunner.create();
-            var listeners = [sinon.spy(), sinon.spy()];
-            runner.on("uncaughtException", listeners[0]);
-            runner.on("test:failure", listeners[1]);
-
-            var context = testCase("Test", {
-                "should fail with regular AssertionError": function (done) {
-                    setTimeout(function () {
-                        throw assertionError("[assert] Failed assertion asynchronously");
-                    }, 10);
-                }
-            });
-
-            runner.runSuite([context]).then(test.end(function () {
-                refute(listeners[0].called);
-                assert(listeners[1].calledOnce);
-            }));
-        }
-    });
-
-    bu.testCase("TestRunnerEventedAssertionsTest", {
-        setUp: function () {
-            var runner = this.runner = testRunner.create();
-
-            this.assert = function (val) {
-                if (!val) {
-                    try {
-                        throw assertionError("Assertion failed");
-                    } catch (e) {
-                        runner.assertionFailure(e);
-                    }
-                }
-            };
-        },
-
-        "emits failure event": function (test) {
-            var _assert = this.assert;
-            var listener = sinon.spy();
-            this.runner.on("test:failure", listener);
-
-            var context = testCase("Test", {
-                "test it": function () { _assert(false); }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                var args = listener.args;
-                assert.equals(args[0][0].name, "test it");
-                assert.equals(args[0][0].error.message, "Assertion failed");
-            }));
-        },
-
-        "only emits failure event once per test": function (test) {
-            var assert = this.assert;
-            var listener = sinon.spy();
-            this.runner.on("test:failure", listener);
-
-            var context = testCase("Test", {
-                "test it": function () {
-                    assert(false);
-                    assert(false);
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
-        },
-
-        "does not emit error event after failures": function (test) {
-            var assert = this.assert;
-            var listeners = [sinon.spy(), sinon.spy()];
-            this.runner.on("test:failure", listeners[0]);
-            this.runner.on("test:error", listeners[1]);
-
-            var context = testCase("Test", {
-                "test it": function () {
-                    assert(false);
-                    throw new Error("WTF!");
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listeners[0].calledOnce);
-                assert(!listeners[1].called);
-            }));
-        },
-
-        "does not emit timeout event after failures": function (test) {
-            var assert = this.assert;
-            var listeners = [sinon.spy(), sinon.spy()];
-            this.runner.on("test:failure", listeners[0]);
-            this.runner.on("test:timeout", listeners[1]);
-
-            var context = testCase("Test", {
-                "test it": function (done) {
-                    assert(false);
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listeners[0].calledOnce);
-                assert(!listeners[1].called);
-            }));
-        },
-
-        "does not emit failure after timeout": function (test) {
-            var assert = this.assert;
-            var listeners = [sinon.spy(), sinon.spy()];
-            this.runner.timeout = 20;
-            this.runner.on("test:failure", listeners[0]);
-            this.runner.on("test:timeout", listeners[1]);
-
-            var context = testCase("Test", {
-                "test it": function (done) {
-                    setTimeout(function () {
-                        assert(false);
-                    }, 40);
-                }
-            });
-
-            this.runner.runSuite([context]).then(function () {
-                setTimeout(test.end(function () {
-                    assert(!listeners[0].called);
-                    assert(listeners[1].calledOnce);
-                }), 20);
-            });
-        },
-
-        "does not emit success after failure": function (test) {
-            var assert = this.assert;
-            var listeners = [sinon.spy(), sinon.spy()];
-            this.runner.timeout = 20;
-            this.runner.on("test:failure", listeners[0]);
-            this.runner.on("test:success", listeners[1]);
-
-            var context = testCase("Test", {
-                "test it": function () { assert(false); }
-            });
-
-            this.runner.runSuite([context]).then(function () {
-                setTimeout(test.end(function () {
-                    assert(listeners[0].calledOnce);
-                    assert(!listeners[1].called);
-                }), 20);
-            });
-        }
-    });
-
-    bu.testCase("TestRunnerAssertionCountTest", {
-        setUp: function () {
-            this.context = testCase("Test + Assertions", { test1: function () {} });
-            this.runner = testRunner.create({ failOnNoAssertions: true });
-            this.listener = sinon.spy();
-            this.runner.on("test:failure", this.listener);
-        },
-
-        "fails test if 0 assertions": function (test) {
-            sinon.stub(this.runner, "assertionCount").returns(0);
-
-            this.runner.runSuite([this.context]).then(B.bind(this, test.end(function () {
-                assert(this.listener.calledOnce);
-            })));
-        },
-
-        "does not fail with 0 assertions if timing out": function (test) {
-            sinon.stub(this.runner, "assertionCount").returns(0);
-            var timeoutListener = sinon.spy();
-            this.runner.on("test:timeout", timeoutListener);
-
-            var context = testCase("Test + Assertions", {
-                test1: function (done) {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(timeoutListener.calledOnce);
-                refute(this.listener.called);
-            })));
-        },
-
-        "does not fail test if 1 assertion": function (test) {
-            sinon.stub(this.runner, "assertionCount").returns(1);
-
-            this.runner.runSuite([this.context]).then(test.end(B.bind(this, function () {
-                assert(!this.listener.called);
-            })));
-        },
-
-        "configures to not fail test if 0 assertions": function (test) {
-            sinon.stub(this.runner, "assertionCount").returns(0);
-            this.runner.failOnNoAssertions = false;
-
-            this.runner.runSuite([this.context]).then(test.end(B.bind(this, function () {
-                assert(!this.listener.called);
-            })));
-        },
-
-        "fails for unexpected number of assertions": function (test) {
-            sinon.stub(this.runner, "assertionCount").returns(3);
-
-            var context = testCase("Test Assertions", {
-                test1: function () {
-                    this.expectedAssertions = 2;
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listener.calledOnce);
-                assert.equals(this.listener.args[0][0].error.message,
-                              "Expected 2 assertions, ran 3");
-            })));
-        },
-
-        "only checks expected assertions for tests that explicitly define it": function (test) {
-            sinon.stub(this.runner, "assertionCount").returns(3);
-
-            var context = testCase("Test Assertions", {
-                test1: function () {
-                    this.expectedAssertions = 2;
-                },
-                test2: function () {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listener.calledOnce);
-                assert.equals(this.listener.args[0][0].name, "test1");
-            })));
-        },
-
-        "clears expected assertions when test fails for other reasons": function (test) {
-            sinon.stub(this.runner, "assertionCount").returns(3);
-            this.runner.on("test:error", this.listener);
-
-            var context = testCase("Test Assertions", {
-                test1: function () {
-                    this.expectedAssertions = 2;
-                    throw new Error();
-                },
-                test2: function () {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listener.calledOnce);
-                assert.equals(this.listener.args[0][0].name, "test1");
-            })));
-        },
-
-        "counts assertions when asserting in callback to done": function (test) {
-            var stub = sinon.stub(this.runner, "assertionCount").returns(0);
-            var context = testCase("Test Assertions", {
-                test1: function (done) {
-                    buster.nextTick(done(function () {
-                        stub.returns(3);
-                    }));
-                }
-            });
-            this.runner.runSuite([context]).then(function (result) {
-                assert.equals(result.assertions, 3);
-                test.end();
-            });
-        }
-    });
-
-    bu.testCase("TestRunnerSupportRequirementsTest", {
-        setUp: function () {
-            this.runner = testRunner.create({
-                handleUncaughtExceptions: false
-            });
-
-            this.test = sinon.spy();
-        },
-
-        "executes test normally when support is present": function (test) {
-            var context = testCase("Test", {
-                requiresSupportFor: { A: true },
-                "should run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.test.calledOnce);
-            })));
-        },
-
-        "does not execute test when support is absent": function (test) {
-            var context = testCase("Test", {
-                requiresSupportFor: { A: false },
-                "does not run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!this.test.called);
-            })));
-        },
-
-        "does not execute test when support function returns falsy": function (test) {
-            var context = testCase("Test", {
-                requiresSupportFor: { A: function () { return; } },
-                "does not run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!this.test.called);
-            })));
-        },
-
-        "should execute test when support function returns truthy": function (test) {
-            var context = testCase("Test", {
-                requiresSupportFor: { A: function () { return "Ok"; } },
-                "should run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.test.calledOnce);
-            })));
-        },
-
-        "does not run test when not all support requirements are met": function (test) {
-            var context = testCase("Test", {
-                requiresSupportFor: {
-                    A: function () { return "Ok"; },
-                    B: function () { return false; }
-                },
-                "does not run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!this.test.called);
-            })));
-        },
-
-        "does not run test when no support requirements are met": function (test) {
-            var context = testCase("Test", {
-                requiresSupportForAny: {
-                    A: function () { return; },
-                    B: function () { return false; }
-                },
-                "does not run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!this.test.called);
-            })));
-        },
-
-        "runs test when at least one support requirement is met": function (test) {
-            var context = testCase("Test", {
-                requiresSupportForAny: {
-                    A: function () { return true; },
-                    B: function () { return false; }
-                },
-                "should run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.test.calledOnce);
-            })));
-        },
-
-        "does not emit context:start event for unsupported context": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("context:start", listener);
-
-            var context = testCase("Test", {
-                requiresSupportFor: { B: function () { return false; } },
-                "should run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!listener.called);
-            })));
-        },
-
-        "does not run nested contexts in unsupported context": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("context:start", listener);
-            var context = testCase("Test", {
-                requiresSupportFor: { B: function () { return false; } },
-                something: {
-                    "should run this": this.test
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!listener.called);
-                assert(!this.test.called);
-            })));
-        }
-    });
-
-    function runnerEventsSetUp() {
-        this.runner = testRunner.create();
-        this.runner.failOnNoAssertions = false;
-        this.assertionError = new Error("Oh, crap");
-        this.assertionError.name = "AssertionError";
-
-        this.listeners = {
-            "suite:start": sinon.spy(),
-            "context:start": sinon.spy(),
-            "context:unsupported": sinon.spy(),
-            "test:setUp": sinon.spy(),
-            "test:start": sinon.spy(),
-            "test:tearDown": sinon.spy(),
-            "test:failure": sinon.spy(),
-            "test:error": sinon.spy(),
-            "test:success": sinon.spy(),
-            "context:end": sinon.spy(),
-            "suite:end": sinon.spy(),
-            "test:deferred": sinon.spy(),
-            "uncaughtException": sinon.spy()
-        };
-
-        this.runner.on("suite:start", this.listeners["suite:start"]);
-        this.runner.on("context:start", this.listeners["context:start"]);
-        this.runner.on("test:setUp", this.listeners["test:setUp"]);
-        this.runner.on("test:start", this.listeners["test:start"]);
-        this.runner.on("test:tearDown", this.listeners["test:tearDown"]);
-        this.runner.on("test:success", this.listeners["test:success"]);
-        this.runner.on("test:failure", this.listeners["test:failure"]);
-        this.runner.on("test:error", this.listeners["test:error"]);
-        this.runner.on("test:deferred", this.listeners["test:deferred"]);
-        this.runner.on("context:end", this.listeners["context:end"]);
-        this.runner.on("context:unsupported", this.listeners["context:unsupported"]);
-        this.runner.on("suite:end", this.listeners["suite:end"]);
-        this.runner.on("uncaughtException", this.listeners.uncaughtException);
-
-        this.myCase = testCase("My case", {});
-        this.otherCase = testCase("Other", {});
-        this.simpleCase = testCase("One test", {
-            setUp: sinon.spy(),
-            tearDown: sinon.spy(),
-            testIt: sinon.spy()
-        });
-    }
-
-    bu.testCase("TestRunnerEventsTest", {
-        setUp: runnerEventsSetUp,
-
-        "emits event when starting suite": function (test) {
-            this.runner.runSuite([this.myCase]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["suite:start"].calledOnce);
-            })));
-        },
-
-        "emit event when starting suite only once": function (test) {
-            var suite = [this.myCase, this.otherCase];
-            this.runner.runSuite(suite).then(test.end(B.bind(this, function () {
-                assert(this.listeners["suite:start"].calledOnce);
-            })));
-        },
-
-        "emits end suite event after context end": function (test) {
-            this.runner.runSuite([this.myCase]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["suite:end"].calledOnce);
-                assert(this.listeners["suite:end"].calledAfter(
-                    this.listeners["context:end"]
-                ));
-            })));
-        },
-
-        "emits event when starting context": function (test) {
-            this.runner.runSuite([this.myCase]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["context:start"].calledOnce);
-            })));
-        },
-
-        "emits end context event after start context": function (test) {
-            this.runner.runSuite([this.myCase]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["context:end"].calledOnce);
-                assert(this.listeners["context:end"].calledAfter(
-                    this.listeners["context:start"]
-                ));
-            })));
-        },
-
-        "emits event when starting test": function (test) {
-            this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:start"].calledOnce);
-            })));
-        },
-
-        "emits setUp event before test:start": function (test) {
-            this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:setUp"].calledOnce);
-                assert(this.listeners["test:setUp"].calledBefore(
-                    this.listeners["test:start"]
-                ));
-            })));
-        },
-
-        "emits tearDown event after test:start": function (test) {
-            this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:tearDown"].calledOnce);
-                assert(this.listeners["test:tearDown"].calledAfter(
-                    this.listeners["test:start"]
-                ));
-            })));
-        },
-
-        "emits test:success when test passes": function (test) {
-            this.runner.runSuite([this.simpleCase]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:success"].calledOnce);
-            })));
-        },
-
-        "does not emit test:success when setUp throws": function (test) {
-            var context = testCase("My case", {
-                setUp: sinon.stub().throws(),
-                testIt: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(function () {
-                assert(!this.listeners["test:success"].called);
-                test.end();
-            }.bind(this));
-        },
-
-        "does not emit test:success when test throws": function (test) {
-            var context = testCase("My case", {
-                setUp: sinon.spy(),
-                testIt: sinon.stub().throws()
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!this.listeners["test:success"].called);
-            })));
-        },
-
-        "does not emit test:success if tearDown throws": function (test) {
-            var context = testCase("My case", {
-                tearDown: sinon.stub().throws(),
-                testIt: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!this.listeners["test:success"].called);
-            })));
-        },
-
-        "should emit test:fail when test throws assertion error": function (test) {
-            var fn = sinon.stub().throws(this.assertionError);
-            var context = testCase("My case", { testIt: fn });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:failure"].calledOnce);
-            })));
-        },
-
-        "emits test:fail if setUp throws assertion error": function (test) {
-            var context = testCase("My case", {
-                setUp: sinon.stub().throws(this.assertionError),
-                testIt: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:failure"].calledOnce);
-            })));
-        },
-
-        "does not emit test:fail if test passes": function (test) {
-            var context = testCase("My case", {
-                setUp: sinon.spy(),
-                testIt: sinon.stub()
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!this.listeners["test:failure"].called);
-            })));
-        },
-
-        "emits test:fail if tearDown throws assertion error": function (test) {
-            var context = testCase("My case", {
-                tearDown: sinon.stub().throws(this.assertionError),
-                testIt: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:failure"].calledOnce);
-            })));
-        },
-
-        "emits test:error when test throws": function (test) {
-            var fn = sinon.stub().throws(new Error("Oops"));
-            var context = testCase("My case", { testIt: fn });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:error"].calledOnce);
-            })));
-        },
-
-        "emits test:error if setUp throws": function (test) {
-            var context = testCase("My case", {
-                setUp: sinon.stub().throws(),
-                testIt: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:error"].calledOnce);
-                assert(!this.listeners["test:failure"].called);
-            })));
-        },
-
-        "does not emit test:error if test passes": function (test) {
-            var context = testCase("My case", {
-                setUp: sinon.spy(),
-                testIt: sinon.stub()
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(!this.listeners["test:error"].called);
-            })));
-        },
-
-        "emits test:error if tearDown throws assertion error": function (test) {
-            var context = testCase("My case", {
-                tearDown: sinon.stub().throws(),
-                testIt: sinon.spy()
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["test:error"].calledOnce);
-                assert(!this.listeners["test:failure"].called);
-            })));
-        },
-
-        "emits test:deferred event": function (test) {
-            var context = testCase("Test", {
-                "// should do this": function () {}
-            });
-
-            var listener = this.listeners["test:deferred"];
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].name, "should do this");
-            }));
-        },
-
-        "emits test:deferred event with comment": function (test) {
-            var context = testCase("Test", {
-                "should do this": "Later, seriously"
-            });
-
-            var listener = this.listeners["test:deferred"];
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(listener.calledOnce);
-                assert.equals(listener.args[0][0].comment, "Later, seriously");
-            }));
-        },
-
-        "emits context:unsupported event": function (test) {
-            var context = testCase("Test", {
-                requiresSupportForAny: { A: false },
-                "does not run this": this.test
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                assert(this.listeners["context:unsupported"].calledOnce);
-            })));
-        }
-    });
-
-    bu.testCase("TestRunnerEventDataTest", {
-        setUp: function () {
-            runnerEventsSetUp.call(this);
-            // Don't report uncaught exceptions in the util test runner too
-            bu.testCase.silent = true;
-        },
-
-        tearDown: function () {
-            bu.testCase.silent = false;
-        },
-
-        "context:start event data": function (test) {
-            var context = testCase("My case", {});
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["context:start"].args[0];
-                assert.equals(args, [context]);
-            })));
-        },
-
-        "context:end event data": function (test) {
-            var context = testCase("My case", {});
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["context:end"].args[0];
-                assert.equals(args, [context]);
-            })));
-        },
-
-        "context:unsupported event data": function (test) {
-            var context = testCase("My case", {
-                requiresSupportFor: { "Feature A": false }
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["context:unsupported"].args[0];
-                assert.equals(args, [{
-                    context: context,
-                    unsupported: ["Feature A"]
-                }]);
-            })));
-        },
-
-        "test:setUp event data": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                test1: function () {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["test:setUp"].args;
-                assert.equals(args[0][0].name, "test1");
-                assert(context.testCase.isPrototypeOf(args[0][0].testCase));
-            })));
-        },
-
-        "test:tearDown event data": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                test1: function () {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["test:tearDown"].args;
-                assert.equals("test1", args[0][0].name);
-                assert(context.testCase.isPrototypeOf(args[0][0].testCase));
-            })));
-        },
-
-        "test:start event data": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                test1: function () {}
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["test:start"].args;
-                assert.equals(args[0][0].name, "test1");
-                assert(context.testCase.isPrototypeOf(args[0][0].testCase));
-            })));
-        },
-
-        "test:error event data": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                test1: sinon.stub().throws("TypeError")
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["test:error"].args[0];
-                assert.equals(args[0].name, "test1");
-                assert.equals(args[0].error.name, "TypeError");
-                assert.equals(args[0].error.message, "");
-                assert.match(args[0].error.stack, /\.js/);
-            })));
-        },
-
-        "test:fail event data": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                test1: sinon.stub().throws("AssertionError")
-            });
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["test:failure"].args[0];
-                assert.equals(args[0].name, "test1");
-                assert.equals(args[0].error.name, "AssertionError");
-                assert.equals(args[0].error.message, "");
-                assert.match(args[0].error.stack, /\.js/);
-            })));
-        },
-
-        "test:success event data": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                test1: sinon.spy()
-            });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["test:success"].args[0];
-                assert.equals(args, [{ name: "test1", assertions: 2 }]);
-            })));
-        },
-
-        "suite:end event data": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                test1: function (test) {},
-                test2: sinon.stub().throws(),
-                "test3": sinon.spy(),
-                test4: sinon.stub().throws("AssertionError"),
-                inner: {
-                    test5: sinon.spy()
-                }
-            });
-
-            var context2 = testCase("My other case", {
-                setUp: function () {},
-                test1: function (test) {},
-                test2: sinon.stub().throws(),
-                "test3": sinon.spy(),
-                test4: sinon.stub().throws("AssertionError"),
-                inner: {
-                    test5: sinon.spy()
-                }
-            });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
-            var suite = [context, context2];
-
-            this.runner.runSuite(suite).then(test.end(B.bind(this, function () {
-                var args = this.listeners["suite:end"].args[0];
-                assert.equals(args[0].contexts, 2);
-                assert.equals(args[0].tests, 10);
-                assert.equals(args[0].errors, 2);
-                assert.equals(args[0].failures, 2);
-                assert.equals(args[0].assertions, 20);
-                assert.equals(args[0].timeouts, 2);
-                assert.equals(args[0].deferred, 0);
-                assert(!args[0].ok);
-            })));
-        },
-
-        "suite:end event data passing test case": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                test1: sinon.spy(),
-                test2: sinon.spy(),
-                test3: sinon.spy(),
-                test4: sinon.spy(),
-                inner: {
-                    test5: sinon.spy()
-                }
-            });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
-
-            this.runner.runSuite([context, context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["suite:end"].args[0];
-                assert.equals(args[0].contexts, 2);
-                assert.equals(args[0].tests, 10);
-                assert.equals(args[0].errors, 0);
-                assert.equals(args[0].failures, 0);
-                assert.equals(args[0].assertions, 20);
-                assert.equals(args[0].timeouts, 0);
-                assert.equals(args[0].deferred, 0);
-                assert(args[0].ok);
-            })));
-        },
-
-        "suite:end event data deferred tests": function (test) {
-            var context = testCase("My case", {
-                setUp: function () {},
-                "//test1": sinon.spy(),
-                test2: sinon.spy(),
-                test3: sinon.spy(),
-                "//test4": sinon.spy(),
-                inner: {
-                    test5: sinon.spy()
-                }
-            });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
-
-            this.runner.runSuite([context]).then(test.end(B.bind(this, function () {
-                var args = this.listeners["suite:end"].args[0];
-                assert.equals(args[0].contexts, 1);
-                assert.equals(args[0].tests, 3);
-                assert.equals(args[0].errors, 0);
-                assert.equals(args[0].failures, 0);
-                assert.equals(args[0].assertions, 6);
-                assert.equals(args[0].timeouts, 0);
-                assert.equals(args[0].deferred, 2);
-                assert(args[0].ok);
-            })));
-        },
-
-        "uncaughtException event data": function (test) {
-            if (typeof document !== "undefined") {
-                console.log("'uncaughtException event data':\n Aborting test, as " +
-                            "browsers may not have enough information to extract " +
-                            "useful event data");
-                return test.end();
-            }
-
-            var context = testCase("My case", {
-                "test1": function (done) {
-                    setTimeout(function () {
-                        throw new Error("Damnit");
-                    }, 15);
-                }
-            });
-
-            this.runner.handleUncaughtExceptions = true;
-            this.runner.timeout = 5;
-            var listener = this.listeners.uncaughtException;
-
-            setTimeout(test.end(function () {
-                assert(listener.calledOnce);
-                assert.match(listener.args[0][0].message, /Damnit/);
-            }), 25);
-
-            this.runner.runSuite([context]);
-        }
-    });
-
-    bu.testCase("TestRunnerContextSetUpTest", {
-        setUp: function () {
-            this.runner = testRunner.create();
-        },
-
-        "contextSetUp this is prototype of test function this": function (test) {
-            var prepare = sinon.spy();
-            var testFn = sinon.spy();
-            var context = testCase("Test", { prepare: prepare, test: testFn });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(prepare.calledOnce);
-                assert.hasPrototype(testFn.thisValues[0], prepare.thisValues[0]);
-            }));
-        },
-
-        "contextSetUp is only called once": function (test) {
-            var prepare = sinon.spy();
-            var context = testCase("Test", {
-                prepare: prepare,
-                test1: function () {},
-                test2: function () {},
-                test3: function () {},
-                ctx2: {
-                    test4: function () {},
-                    test5: function () {}
-                }
-            });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(prepare.calledOnce);
-            }));
-        },
-
-        "calls prepare before setUp": function (test) {
-            var prepare = sinon.spy();
-            var setUp = sinon.spy();
-            var context = testCase("Test", {
-                prepare: prepare,
-                setUp: setUp,
-                test: function () {}
-            });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(prepare.calledBefore(setUp));
-            }));
-        },
-
-        "does not call setUp until prepare resolves": function (test) {
-            var doneCb;
-            var setUp = sinon.spy();
-            var prepare = function (done) { doneCb = done; };
-            var context = testCase("Test", {
-                prepare: prepare,
-                setUp: setUp,
-                test: function () {}
-            });
-
-            var testRun = this.runner.runContext(context).then(test.end(function () {
-                assert(setUp.calledOnce);
-            }));
-
-            refute(setUp.calledOnce);
-            buster.nextTick(function () {
-                doneCb();
-            });
-        },
-
-        "does not reject if contextSetUp fails": function (test) {
-            var prepare = sinon.stub().throws();
-            var context = testCase("Test", {
-                prepare: prepare,
-                test: sinon.spy()
-            });
-
-            this.runner.runContext(context).then(function () {
-                test.end();
-            }, function () {
-                assert.fail();
-            });
-        },
-
-        "does not call setUp if prepare throws": function (test) {
-            var setUp = sinon.spy();
-            var prepare = sinon.stub().throws();
-            var context = testCase("Test", {
-                setUp: setUp,
-                prepare: prepare,
-                test: function () {}
-            });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(!setUp.called);
-            }));
-        },
-
-        "does not call setUp if prepare rejects": function (test) {
-            var deferred = when.defer();
-            var setUp = sinon.spy();
-            var prepare = sinon.stub().returns(deferred.promise);
-            var context = testCase("Test", {
-                prepare: prepare,
-                setUp: setUp,
-                test: function () {}
-            });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(!setUp.called);
-            }));
-
-            deferred.resolver.reject();
-        },
-
-        "emits uncaughtException if prepare rejects": function (test) {
-            var deferred = when.defer();
-            var listener = sinon.spy();
-            this.runner.on("uncaughtException", listener);
-            var prepare = sinon.stub().returns(deferred.promise);
-            var context = testCase("Test", { prepare: prepare });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(listener.called);
-            }));
-
-            deferred.resolver.reject();
-        },
-
-        "emits uncaughtException if prepare throws": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("uncaughtException", listener);
-            var prepare = sinon.stub().throws();
-            var context = testCase("Test", { prepare: prepare });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(listener.called);
-            }));
-        },
-
-        "emits uncaughtException if prepare times out": function (test) {
-            var deferred = when.defer();
-            var listener = sinon.spy();
-            this.runner.on("uncaughtException", listener);
-            var prepare = sinon.stub().returns(deferred.promise);
-            var context = testCase("Test", { prepare: prepare });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(listener.called);
-            }));
-        },
-
-        "times out prepare after custom timeout": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("uncaughtException", listener);
-            var context = testCase("Test", {
-                prepare: function (done) { this.timeout = 100; }
-            });
-
-            this.runner.runContext(context);
-
-            setTimeout(test.end(function () {
-                assert(listener.called);
-            }), 150);
-        }
-    });
-
-    bu.testCase("TestRunnerContextTearDownTest", {
-        setUp: function () {
-            this.runner = testRunner.create();
-        },
-
-        "contextTearDown this is prototype of test function this": function (test) {
-            var conclude = sinon.spy();
-            var tfn = sinon.spy();
-            var context = testCase("Test", { conclude: conclude, test: tfn });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(conclude.calledOnce);
-                assert.hasPrototype(tfn.thisValues[0], conclude.thisValues[0]);
-            }));
-        },
-
-        "contextTearDown is only called once": function (test) {
-            var conclude = sinon.spy();
-            var context = testCase("Test", {
-                conclude: conclude,
-                test1: function () {},
-                test2: function () {},
-                test3: function () {},
-                ctx2: {
-                    test4: function () {},
-                    test5: function () {}
-                }
-            });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(conclude.calledOnce);
-            }));
-        },
-
-        "calls conclude after tearDown": function (test) {
-            var conclude = sinon.spy();
-            var tearDown = sinon.spy();
-            var context = testCase("Test", {
-                conclude: conclude,
-                tearDown: tearDown,
-                test: function () {}
-            });
-
-            this.runner.runContext(context).then(test.end(function () {
-                assert(conclude.calledAfter(tearDown));
-            }));
-        },
-
-        "does not finish until conclude resolves": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("context:end", listener);
-            var doneCb;
-            var conclude = function (done) { doneCb = done; };
-            var context = testCase("Test", {
-                conclude: conclude,
-                test: function () {}
-            });
+    //     "done returns actual done if called with a function": function (done) {
+    //         var innerDone;
+
+    //         var context = testCase("Test", {
+    //             test: function (done) {
+    //                 testRunner.nextTick(done(function () {
+    //                     innerDone = true;
+    //                 }));
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(innerDone);
+    //         }));
+
+    //         testRunner.nextTick(function () {
+    //             assert(!innerDone);
+    //         });
+    //     },
+
+    //     "done completes test when called with non-function": function (done) {
+    //         var context = testCase("Test", {
+    //             test: function (done) {
+    //                 testRunner.nextTick(done({ ok: function () {} }));
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(true);
+    //         }));
+    //     },
+
+    //     "done transparently proxies to its callback": function (done) {
+    //         var innerDone = sinon.stub().returns(42);
+    //         var thisp = { id: 42 };
+    //         var returnValue;
+    //         var fn = function (cb) {
+    //             returnValue = cb.apply(thisp, [1, 2, 3]);
+    //         };
+
+    //         var context = testCase("Test", {
+    //             test: function (done) { fn(done(innerDone)); }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(innerDone.calledOnce);
+    //             assert.equals(returnValue, 42);
+    //             assert(innerDone.calledOn(thisp));
+    //             assert(innerDone.calledWithExactly(1, 2, 3));
+    //         }));
+    //     },
+
+    //     "emits test:failure when AssertionError is thrown in callback": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:failure", listener);
+
+    //         var context = testCase("Test", {
+    //             test: function (done) {
+    //                 testRunner.nextTick(done(function () {
+    //                     var error = new Error("Oops");
+    //                     error.name = "AssertionError";
+    //                     throw error;
+    //                 }));
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.message, "Oops");
+    //         }));
+    //     },
+
+    //     "emits test:error when Error is thrown in done callback": function (t) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:error", listener);
+
+    //         var context = testCase("Test", {
+    //             test: function (done) {
+    //                 testRunner.nextTick(done(function () {
+    //                     throw new Error("Oops");
+    //                 }));
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(t.end(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.message, "Oops");
+    //         }));
+    //     },
+
+    //     "includes timeouts in suite:end results": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("suite:end", listener);
+
+    //         var context = testCase("My case", {
+    //             test1: function (done) {}
+    //         });
+
+    //         sinon.stub(this.runner, "assertionCount").returns(2);
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert.equals(listener.args[0][0].timeouts, 1);
+    //         }));
+    //     },
+
+    //     "should disarm callback when test times out": function (done) {
+    //         var callback;
+    //         var context = testCase("My case", {
+    //             test1: function (done) { callback = done; }
+    //         });
+
+    //         sinon.stub(this.runner, "assertionCount").returns(2);
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             refute.exception(function () {
+    //                 callback();
+    //             });
+    //         }));
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerImplicitAsyncTearDownTest", {
+    //     setUp: function () {
+    //         this.runner = testRunner.create();
+    //     },
+
+    //     "resolves run when setUp calls passed argument": function (done) {
+    //         var callback;
+    //         var context = testCase("Test", {
+    //             setUp: function (done) {
+    //                 callback = done;
+    //                 testRunner.nextTick(function () {
+    //                     callback.called = true;
+    //                     callback();
+    //                 });
+    //             },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert.defined(callback);
+    //             assert(callback.called);
+    //         }));
+    //     },
+
+    //     "emits test:start when setUp calls passed argument": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:start", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) {
+    //                 testRunner.nextTick(done);
+    //             },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
+
+    //         testRunner.nextTick(function () {
+    //             assert(!listener.called);
+    //         });
+    //     },
+
+    //     "emits test:failure when setUp done callback throws AssertionError": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:failure", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) {
+    //                 testRunner.nextTick(done(function () {
+    //                     var error = new Error("Oops");
+    //                     error.name = "AssertionError";
+    //                     throw error;
+    //                 }));
+    //             },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.message, "Oops");
+    //         }));
+    //     },
+
+    //     "emits test:error when setUp done callback throws Error": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:error", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) {
+    //                 testRunner.nextTick(done(function () {
+    //                     throw new Error("Oops");
+    //                 }));
+    //             },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.message, "Oops");
+    //         }));
+    //     },
+
+    //     "times out async setUp": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:timeout", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) {},
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.source, "setUp");
+    //         }));
+    //     },
+
+    //     "times out async setUp after custom timeout": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:timeout", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) { this.timeout = 100; },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]);
+    //         setTimeout(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.source, "setUp");
+    //         }), 150);
+    //     },
+
+    //     "emits setUp, async, timeout for async setup": function (done) {
+    //         var listeners = {
+    //             timeout: sinon.spy(),
+    //             async: sinon.spy(),
+    //             setUp: sinon.spy()
+    //         };
+
+    //         this.runner.on("test:setUp", listeners.setUp);
+    //         this.runner.on("test:async", listeners.async);
+    //         this.runner.on("test:timeout", listeners.timeout);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) {},
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listeners.setUp.calledOnce);
+    //             assert(listeners.async.calledOnce);
+    //             assert(listeners.timeout.calledOnce);
+    //             assert(listeners.setUp.calledBefore(listeners.async));
+    //             assert(listeners.async.calledBefore(listeners.timeout));
+    //         }));
+    //     },
+
+    //     "emits test:async when setUp is async": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:async", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) { testRunner.nextTick(done); },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
+    //     },
+
+    //     "calling done synchronously does not make test asynchronous": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:async", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) { done(); },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(!listener.calledOnce);
+    //         }));
+    //     },
+
+    //     "does not emit test:async twice": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:async", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) { done(); },
+    //             test: function (done) { done(); }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
+    //     },
+
+    //     "does not emit test:async more than once in nested async context": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:async", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) { done(); },
+    //             context1: {
+    //                 setUp: function (done) { done(); },
+    //                 test: function (done) { done(); }
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerImplicitAsyncTearDownTest", {
+    //     setUp: function () {
+    //         this.runner = testRunner.create();
+    //     },
+
+    //     "resolves run when tearDown calls passed argument": function (done) {
+    //         var callback;
+
+    //         var context = testCase("Test", {
+    //             tearDown: function (done) {
+    //                 callback = done;
+    //                 testRunner.nextTick(function () {
+    //                     callback.called = true;
+    //                     callback();
+    //                 });
+    //             },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(!!callback);
+    //             assert(callback.called);
+    //         }));
+    //     },
+
+    //     "emits test:success when tearDown calls passed argument": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:success", listener);
+
+    //         var context = testCase("Test", {
+    //             tearDown: function (done) {
+    //                 testRunner.nextTick(function () {
+    //                     done();
+    //                 });
+    //             },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
+
+    //         testRunner.nextTick(function () {
+    //             assert(!listener.called);
+    //         });
+    //     },
+
+    //     "emits test:failure when tearDown done callback throws AssertionError": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:failure", listener);
+
+    //         var context = testCase("Test", {
+    //             tearDown: function (done) {
+    //                 testRunner.nextTick(done(function () {
+    //                     var error = new Error("Oops");
+    //                     error.name = "AssertionError";
+    //                     throw error;
+    //                 }));
+    //             },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.message, "Oops");
+    //         }));
+    //     },
+
+    //     "emits test:error when tearDown done callback throws Error": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:error", listener);
+
+    //         var context = testCase("Test", {
+    //             tearDown: function (done) {
+    //                 testRunner.nextTick(done(function () {
+    //                     throw new Error("Oops");
+    //                 }));
+    //             },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.message, "Oops");
+    //         }));
+    //     },
+
+    //     "times out async tearDown": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:timeout", listener);
+
+    //         var context = testCase("Test", {
+    //             tearDown: function (done) {},
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.source, "tearDown");
+    //         }));
+    //     },
+
+    //     "times out async tearDown after custom timeout": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:timeout", listener);
+
+    //         var context = testCase("Test", {
+    //             tearDown: function (done) { this.timeout = 100; },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]);
+
+    //         setTimeout(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].error.source, "tearDown");
+    //         }), 150);
+    //     },
+
+    //     "should emit test:async when tearDown is async": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:async", listener);
+
+    //         var context = testCase("Test", {
+    //             tearDown: function (done) { testRunner.nextTick(done); },
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
+    //     },
+
+    //     "does not emit test:async more than once": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:async", listener);
+
+    //         var context = testCase("Test", {
+    //             setUp: function (done) { done(); },
+    //             tearDown: function (done) { done(); },
+    //             test: function (done) { done(); }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
+    //     },
+
+    //     "does not emit test:async after test failure": function (done) {
+    //         var listeners = [sinon.spy(), sinon.spy()];
+    //         this.runner.on("test:async", listeners[0]);
+    //         this.runner.on("test:failure", listeners[1]);
+    //         var runner = this.runner;
+
+    //         var context = testCase("Test", {
+    //             setUp: function () {},
+    //             tearDown: function (done) { done(); },
+    //             test: function (done) {
+    //                 var e = new Error();
+    //                 e.name = "AssertionError";
+    //                 throw e;
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listeners[1].calledOnce);
+    //             assert(!listeners[0].called);
+    //         }));
+    //     },
+
+    //     "does not emit test:async for deferred test": function (done) {
+    //         var listeners = [sinon.spy(), sinon.spy()];
+    //         this.runner.on("test:async", listeners[0]);
+    //         this.runner.on("test:deferred", listeners[1]);
+    //         var runner = this.runner;
+    //         var context = testCase("Test", {
+    //             tearDown: function (done) { testRunner.nextTick(done); },
+    //             "//test": function () {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(!listeners[0].called);
+    //             assert(listeners[1].calledOnce);
+    //         }));
+    //     },
+
+    //     "does not run setUp for deferred test": function (done) {
+    //         var setUp = sinon.spy();
+    //         var runner = this.runner;
+    //         var context = testCase("Test", {
+    //             setUp: setUp,
+    //             "//test": function () {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(!setUp.called);
+    //         }));
+    //     },
+
+    //     "does not run tearDown for deferred test": function (done) {
+    //         var tearDown = sinon.spy();
+    //         var runner = this.runner;
+    //         var context = testCase("Test", {
+    //             tearDown: tearDown,
+    //             "//test": function () {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(!tearDown.called);
+    //         }));
+    //     }
+    // });
+
+    // helper.testCase("RunnerRunAwayExceptionsTest", {
+    //     setUp: function () {
+    //         // Don't report uncaught exceptions in the util test runner too
+    //         helper.testCase.silent = true;
+    //     },
+
+    //     tearDown: function () {
+    //         helper.testCase.silent = false;
+    //     },
+
+    //     "catches uncaught asynchronous errors": function (done) {
+    //         var runner = testRunner.create();
+    //         runner.timeout = 20;
+    //         var listener = sinon.spy();
+    //         runner.on("uncaughtException", listener);
+
+    //         var context = testCase("Test", {
+    //             "does not fail, ever": function (done) {
+    //                 setTimeout(function () {
+    //                     throw new Error("Oops!");
+    //                 }, 30);
+    //             }
+    //         });
+
+    //         runner.runSuite([context]).then(function () {
+    //             setTimeout(done(function () {
+    //                 assert(listener.calledOnce);
+    //             }), 50);
+    //         });
+    //     },
+
+    //     "does not handle asynchronous failure as uncaught exception": function (done) {
+    //         if (typeof document !== "undefined") {
+    //             console.log("'does not handle asynchronous failure as uncaught " +
+    //                         "exception':\nAborting test, as browsers may not have " +
+    //                         "enough information for uncaught errors to treat them as " +
+    //                         "assertion failures");
+    //             return done();
+    //         }
+
+    //         var runner = testRunner.create();
+    //         var listeners = [sinon.spy(), sinon.spy()];
+    //         runner.on("uncaughtException", listeners[0]);
+    //         runner.on("test:failure", listeners[1]);
+
+    //         var context = testCase("Test", {
+    //             "should fail with regular AssertionError": function (done) {
+    //                 setTimeout(function () {
+    //                     throw assertionError("[assert] Failed assertion asynchronously");
+    //                 }, 10);
+    //             }
+    //         });
+
+    //         runner.runSuite([context]).then(test.end(function () {
+    //             refute(listeners[0].called);
+    //             assert(listeners[1].calledOnce);
+    //         }));
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerEventedAssertionsTest", {
+    //     setUp: function () {
+    //         var runner = this.runner = testRunner.create();
+
+    //         this.assert = function (val) {
+    //             if (!val) {
+    //                 try {
+    //                     throw assertionError("Assertion failed");
+    //                 } catch (e) {
+    //                     runner.assertionFailure(e);
+    //                 }
+    //             }
+    //         };
+    //     },
+
+    //     "emits failure event": function (done) {
+    //         var _assert = this.assert;
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:failure", listener);
+
+    //         var context = testCase("Test", {
+    //             "test it": function () { _assert(false); }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             var args = listener.args;
+    //             assert.equals(args[0][0].name, "test it");
+    //             assert.equals(args[0][0].error.message, "Assertion failed");
+    //         }));
+    //     },
+
+    //     "only emits failure event once per test": function (done) {
+    //         var assert = this.assert;
+    //         var listener = sinon.spy();
+    //         this.runner.on("test:failure", listener);
+
+    //         var context = testCase("Test", {
+    //             "test it": function () {
+    //                 assert(false);
+    //                 assert(false);
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
+    //     },
+
+    //     "does not emit error event after failures": function (done) {
+    //         var assert = this.assert;
+    //         var listeners = [sinon.spy(), sinon.spy()];
+    //         this.runner.on("test:failure", listeners[0]);
+    //         this.runner.on("test:error", listeners[1]);
+
+    //         var context = testCase("Test", {
+    //             "test it": function () {
+    //                 assert(false);
+    //                 throw new Error("WTF!");
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listeners[0].calledOnce);
+    //             assert(!listeners[1].called);
+    //         }));
+    //     },
+
+    //     "does not emit timeout event after failures": function (done) {
+    //         var assert = this.assert;
+    //         var listeners = [sinon.spy(), sinon.spy()];
+    //         this.runner.on("test:failure", listeners[0]);
+    //         this.runner.on("test:timeout", listeners[1]);
+
+    //         var context = testCase("Test", {
+    //             "test it": function (done) {
+    //                 assert(false);
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listeners[0].calledOnce);
+    //             assert(!listeners[1].called);
+    //         }));
+    //     },
+
+    //     "does not emit failure after timeout": function (done) {
+    //         var assert = this.assert;
+    //         var listeners = [sinon.spy(), sinon.spy()];
+    //         this.runner.timeout = 20;
+    //         this.runner.on("test:failure", listeners[0]);
+    //         this.runner.on("test:timeout", listeners[1]);
+
+    //         var context = testCase("Test", {
+    //             "test it": function (done) {
+    //                 setTimeout(function () {
+    //                     assert(false);
+    //                 }, 40);
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(function () {
+    //             setTimeout(done(function () {
+    //                 assert(!listeners[0].called);
+    //                 assert(listeners[1].calledOnce);
+    //             }), 20);
+    //         });
+    //     },
+
+    //     "does not emit success after failure": function (done) {
+    //         var assert = this.assert;
+    //         var listeners = [sinon.spy(), sinon.spy()];
+    //         this.runner.timeout = 20;
+    //         this.runner.on("test:failure", listeners[0]);
+    //         this.runner.on("test:success", listeners[1]);
+
+    //         var context = testCase("Test", {
+    //             "test it": function () { assert(false); }
+    //         });
+
+    //         this.runner.runSuite([context]).then(function () {
+    //             setTimeout(done(function () {
+    //                 assert(listeners[0].calledOnce);
+    //                 assert(!listeners[1].called);
+    //             }), 20);
+    //         });
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerAssertionCountTest", {
+    //     setUp: function () {
+    //         this.context = testCase("Test + Assertions", { test1: function () {} });
+    //         this.runner = testRunner.create({ failOnNoAssertions: true });
+    //         this.listener = sinon.spy();
+    //         this.runner.on("test:failure", this.listener);
+    //     },
+
+    //     "fails test if 0 assertions": function (done) {
+    //         sinon.stub(this.runner, "assertionCount").returns(0);
+
+    //         this.runner.runSuite([this.context]).then(B.bind(this, done(function () {
+    //             assert(this.listener.calledOnce);
+    //         })));
+    //     },
+
+    //     "does not fail with 0 assertions if timing out": function (done) {
+    //         sinon.stub(this.runner, "assertionCount").returns(0);
+    //         var timeoutListener = sinon.spy();
+    //         this.runner.on("test:timeout", timeoutListener);
+
+    //         var context = testCase("Test + Assertions", {
+    //             test1: function (done) {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(timeoutListener.calledOnce);
+    //             refute(this.listener.called);
+    //         })));
+    //     },
+
+    //     "does not fail test if 1 assertion": function (done) {
+    //         sinon.stub(this.runner, "assertionCount").returns(1);
+
+    //         this.runner.runSuite([this.context]).then(done(B.bind(this, function () {
+    //             assert(!this.listener.called);
+    //         })));
+    //     },
+
+    //     "configures to not fail test if 0 assertions": function (done) {
+    //         sinon.stub(this.runner, "assertionCount").returns(0);
+    //         this.runner.failOnNoAssertions = false;
+
+    //         this.runner.runSuite([this.context]).then(done(B.bind(this, function () {
+    //             assert(!this.listener.called);
+    //         })));
+    //     },
+
+    //     "fails for unexpected number of assertions": function (done) {
+    //         sinon.stub(this.runner, "assertionCount").returns(3);
+
+    //         var context = testCase("Test Assertions", {
+    //             test1: function () {
+    //                 this.expectedAssertions = 2;
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listener.calledOnce);
+    //             assert.equals(this.listener.args[0][0].error.message,
+    //                           "Expected 2 assertions, ran 3");
+    //         })));
+    //     },
+
+    //     "only checks expected assertions for tests that explicitly define it": function (done) {
+    //         sinon.stub(this.runner, "assertionCount").returns(3);
+
+    //         var context = testCase("Test Assertions", {
+    //             test1: function () {
+    //                 this.expectedAssertions = 2;
+    //             },
+    //             test2: function () {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listener.calledOnce);
+    //             assert.equals(this.listener.args[0][0].name, "test1");
+    //         })));
+    //     },
+
+    //     "clears expected assertions when test fails for other reasons": function (done) {
+    //         sinon.stub(this.runner, "assertionCount").returns(3);
+    //         this.runner.on("test:error", this.listener);
+
+    //         var context = testCase("Test Assertions", {
+    //             test1: function () {
+    //                 this.expectedAssertions = 2;
+    //                 throw new Error();
+    //             },
+    //             test2: function () {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listener.calledOnce);
+    //             assert.equals(this.listener.args[0][0].name, "test1");
+    //         })));
+    //     },
+
+    //     "counts assertions when asserting in callback to done": function (done) {
+    //         var stub = sinon.stub(this.runner, "assertionCount").returns(0);
+    //         var context = testCase("Test Assertions", {
+    //             test1: function (done) {
+    //                 testRunner.nextTick(done(function () {
+    //                     stub.returns(3);
+    //                 }));
+    //             }
+    //         });
+    //         this.runner.runSuite([context]).then(function (result) {
+    //             assert.equals(result.assertions, 3);
+    //             done();
+    //         });
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerSupportRequirementsTest", {
+    //     setUp: function () {
+    //         this.runner = testRunner.create({
+    //             handleUncaughtExceptions: false
+    //         });
+
+    //         this.test = sinon.spy();
+    //     },
+
+    //     "executes test normally when support is present": function (done) {
+    //         var context = testCase("Test", {
+    //             requiresSupportFor: { A: true },
+    //             "should run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.test.calledOnce);
+    //         })));
+    //     },
+
+    //     "does not execute test when support is absent": function (done) {
+    //         var context = testCase("Test", {
+    //             requiresSupportFor: { A: false },
+    //             "does not run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!this.test.called);
+    //         })));
+    //     },
+
+    //     "does not execute test when support function returns falsy": function (done) {
+    //         var context = testCase("Test", {
+    //             requiresSupportFor: { A: function () { return; } },
+    //             "does not run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!this.test.called);
+    //         })));
+    //     },
+
+    //     "should execute test when support function returns truthy": function (done) {
+    //         var context = testCase("Test", {
+    //             requiresSupportFor: { A: function () { return "Ok"; } },
+    //             "should run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.test.calledOnce);
+    //         })));
+    //     },
+
+    //     "does not run test when not all support requirements are met": function (done) {
+    //         var context = testCase("Test", {
+    //             requiresSupportFor: {
+    //                 A: function () { return "Ok"; },
+    //                 B: function () { return false; }
+    //             },
+    //             "does not run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!this.test.called);
+    //         })));
+    //     },
+
+    //     "does not run test when no support requirements are met": function (done) {
+    //         var context = testCase("Test", {
+    //             requiresSupportForAny: {
+    //                 A: function () { return; },
+    //                 B: function () { return false; }
+    //             },
+    //             "does not run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!this.test.called);
+    //         })));
+    //     },
+
+    //     "runs test when at least one support requirement is met": function (done) {
+    //         var context = testCase("Test", {
+    //             requiresSupportForAny: {
+    //                 A: function () { return true; },
+    //                 B: function () { return false; }
+    //             },
+    //             "should run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.test.calledOnce);
+    //         })));
+    //     },
+
+    //     "does not emit context:start event for unsupported context": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("context:start", listener);
+
+    //         var context = testCase("Test", {
+    //             requiresSupportFor: { B: function () { return false; } },
+    //             "should run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!listener.called);
+    //         })));
+    //     },
+
+    //     "does not run nested contexts in unsupported context": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("context:start", listener);
+    //         var context = testCase("Test", {
+    //             requiresSupportFor: { B: function () { return false; } },
+    //             something: {
+    //                 "should run this": this.test
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!listener.called);
+    //             assert(!this.test.called);
+    //         })));
+    //     }
+    // });
+
+    // function runnerEventsSetUp() {
+    //     this.runner = testRunner.create();
+    //     this.runner.failOnNoAssertions = false;
+    //     this.assertionError = new Error("Oh, crap");
+    //     this.assertionError.name = "AssertionError";
+
+    //     this.listeners = {
+    //         "suite:start": sinon.spy(),
+    //         "context:start": sinon.spy(),
+    //         "context:unsupported": sinon.spy(),
+    //         "test:setUp": sinon.spy(),
+    //         "test:start": sinon.spy(),
+    //         "test:tearDown": sinon.spy(),
+    //         "test:failure": sinon.spy(),
+    //         "test:error": sinon.spy(),
+    //         "test:success": sinon.spy(),
+    //         "context:end": sinon.spy(),
+    //         "suite:end": sinon.spy(),
+    //         "test:deferred": sinon.spy(),
+    //         "uncaughtException": sinon.spy()
+    //     };
+
+    //     this.runner.on("suite:start", this.listeners["suite:start"]);
+    //     this.runner.on("context:start", this.listeners["context:start"]);
+    //     this.runner.on("test:setUp", this.listeners["test:setUp"]);
+    //     this.runner.on("test:start", this.listeners["test:start"]);
+    //     this.runner.on("test:tearDown", this.listeners["test:tearDown"]);
+    //     this.runner.on("test:success", this.listeners["test:success"]);
+    //     this.runner.on("test:failure", this.listeners["test:failure"]);
+    //     this.runner.on("test:error", this.listeners["test:error"]);
+    //     this.runner.on("test:deferred", this.listeners["test:deferred"]);
+    //     this.runner.on("context:end", this.listeners["context:end"]);
+    //     this.runner.on("context:unsupported", this.listeners["context:unsupported"]);
+    //     this.runner.on("suite:end", this.listeners["suite:end"]);
+    //     this.runner.on("uncaughtException", this.listeners.uncaughtException);
+
+    //     this.myCase = testCase("My case", {});
+    //     this.otherCase = testCase("Other", {});
+    //     this.simpleCase = testCase("One test", {
+    //         setUp: sinon.spy(),
+    //         tearDown: sinon.spy(),
+    //         testIt: sinon.spy()
+    //     });
+    // }
+
+    // helper.testCase("TestRunnerEventsTest", {
+    //     setUp: runnerEventsSetUp,
+
+    //     "emits event when starting suite": function (done) {
+    //         this.runner.runSuite([this.myCase]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["suite:start"].calledOnce);
+    //         })));
+    //     },
+
+    //     "emit event when starting suite only once": function (done) {
+    //         var suite = [this.myCase, this.otherCase];
+    //         this.runner.runSuite(suite).then(done(B.bind(this, function () {
+    //             assert(this.listeners["suite:start"].calledOnce);
+    //         })));
+    //     },
+
+    //     "emits end suite event after context end": function (done) {
+    //         this.runner.runSuite([this.myCase]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["suite:end"].calledOnce);
+    //             assert(this.listeners["suite:end"].calledAfter(
+    //                 this.listeners["context:end"]
+    //             ));
+    //         })));
+    //     },
+
+    //     "emits event when starting context": function (done) {
+    //         this.runner.runSuite([this.myCase]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["context:start"].calledOnce);
+    //         })));
+    //     },
+
+    //     "emits end context event after start context": function (done) {
+    //         this.runner.runSuite([this.myCase]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["context:end"].calledOnce);
+    //             assert(this.listeners["context:end"].calledAfter(
+    //                 this.listeners["context:start"]
+    //             ));
+    //         })));
+    //     },
+
+    //     "emits event when starting test": function (done) {
+    //         this.runner.runSuite([this.simpleCase]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:start"].calledOnce);
+    //         })));
+    //     },
+
+    //     "emits setUp event before test:start": function (done) {
+    //         this.runner.runSuite([this.simpleCase]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:setUp"].calledOnce);
+    //             assert(this.listeners["test:setUp"].calledBefore(
+    //                 this.listeners["test:start"]
+    //             ));
+    //         })));
+    //     },
+
+    //     "emits tearDown event after test:start": function (done) {
+    //         this.runner.runSuite([this.simpleCase]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:tearDown"].calledOnce);
+    //             assert(this.listeners["test:tearDown"].calledAfter(
+    //                 this.listeners["test:start"]
+    //             ));
+    //         })));
+    //     },
+
+    //     "emits test:success when test passes": function (done) {
+    //         this.runner.runSuite([this.simpleCase]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:success"].calledOnce);
+    //         })));
+    //     },
+
+    //     "does not emit test:success when setUp throws": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: sinon.stub().throws(),
+    //             testIt: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(function () {
+    //             assert(!this.listeners["test:success"].called);
+    //             done();
+    //         }.bind(this));
+    //     },
+
+    //     "does not emit test:success when test throws": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: sinon.spy(),
+    //             testIt: sinon.stub().throws()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!this.listeners["test:success"].called);
+    //         })));
+    //     },
+
+    //     "does not emit test:success if tearDown throws": function (done) {
+    //         var context = testCase("My case", {
+    //             tearDown: sinon.stub().throws(),
+    //             testIt: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!this.listeners["test:success"].called);
+    //         })));
+    //     },
+
+    //     "should emit test:fail when test throws assertion error": function (done) {
+    //         var fn = sinon.stub().throws(this.assertionError);
+    //         var context = testCase("My case", { testIt: fn });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:failure"].calledOnce);
+    //         })));
+    //     },
+
+    //     "emits test:fail if setUp throws assertion error": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: sinon.stub().throws(this.assertionError),
+    //             testIt: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:failure"].calledOnce);
+    //         })));
+    //     },
+
+    //     "does not emit test:fail if test passes": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: sinon.spy(),
+    //             testIt: sinon.stub()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!this.listeners["test:failure"].called);
+    //         })));
+    //     },
+
+    //     "emits test:fail if tearDown throws assertion error": function (done) {
+    //         var context = testCase("My case", {
+    //             tearDown: sinon.stub().throws(this.assertionError),
+    //             testIt: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:failure"].calledOnce);
+    //         })));
+    //     },
+
+    //     "emits test:error when test throws": function (done) {
+    //         var fn = sinon.stub().throws(new Error("Oops"));
+    //         var context = testCase("My case", { testIt: fn });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:error"].calledOnce);
+    //         })));
+    //     },
+
+    //     "emits test:error if setUp throws": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: sinon.stub().throws(),
+    //             testIt: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:error"].calledOnce);
+    //             assert(!this.listeners["test:failure"].called);
+    //         })));
+    //     },
+
+    //     "does not emit test:error if test passes": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: sinon.spy(),
+    //             testIt: sinon.stub()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(!this.listeners["test:error"].called);
+    //         })));
+    //     },
+
+    //     "emits test:error if tearDown throws assertion error": function (done) {
+    //         var context = testCase("My case", {
+    //             tearDown: sinon.stub().throws(),
+    //             testIt: sinon.spy()
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["test:error"].calledOnce);
+    //             assert(!this.listeners["test:failure"].called);
+    //         })));
+    //     },
+
+    //     "emits test:deferred event": function (done) {
+    //         var context = testCase("Test", {
+    //             "// should do this": function () {}
+    //         });
+
+    //         var listener = this.listeners["test:deferred"];
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].name, "should do this");
+    //         }));
+    //     },
+
+    //     "emits test:deferred event with comment": function (done) {
+    //         var context = testCase("Test", {
+    //             "should do this": "Later, seriously"
+    //         });
+
+    //         var listener = this.listeners["test:deferred"];
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(listener.calledOnce);
+    //             assert.equals(listener.args[0][0].comment, "Later, seriously");
+    //         }));
+    //     },
+
+    //     "emits context:unsupported event": function (done) {
+    //         var context = testCase("Test", {
+    //             requiresSupportForAny: { A: false },
+    //             "does not run this": this.test
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             assert(this.listeners["context:unsupported"].calledOnce);
+    //         })));
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerEventDataTest", {
+    //     setUp: function () {
+    //         runnerEventsSetUp.call(this);
+    //         // Don't report uncaught exceptions in the util test runner too
+    //         helper.testCase.silent = true;
+    //     },
+
+    //     tearDown: function () {
+    //         helper.testCase.silent = false;
+    //     },
+
+    //     "context:start event data": function (done) {
+    //         var context = testCase("My case", {});
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["context:start"].args[0];
+    //             assert.equals(args, [context]);
+    //         })));
+    //     },
+
+    //     "context:end event data": function (done) {
+    //         var context = testCase("My case", {});
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["context:end"].args[0];
+    //             assert.equals(args, [context]);
+    //         })));
+    //     },
+
+    //     "context:unsupported event data": function (done) {
+    //         var context = testCase("My case", {
+    //             requiresSupportFor: { "Feature A": false }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["context:unsupported"].args[0];
+    //             assert.equals(args, [{
+    //                 context: context,
+    //                 unsupported: ["Feature A"]
+    //             }]);
+    //         })));
+    //     },
+
+    //     "test:setUp event data": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             test1: function () {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["test:setUp"].args;
+    //             assert.equals(args[0][0].name, "test1");
+    //             assert(context.testCase.isPrototypeOf(args[0][0].testCase));
+    //         })));
+    //     },
+
+    //     "test:tearDown event data": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             test1: function () {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["test:tearDown"].args;
+    //             assert.equals("test1", args[0][0].name);
+    //             assert(context.testCase.isPrototypeOf(args[0][0].testCase));
+    //         })));
+    //     },
+
+    //     "test:start event data": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             test1: function () {}
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["test:start"].args;
+    //             assert.equals(args[0][0].name, "test1");
+    //             assert(context.testCase.isPrototypeOf(args[0][0].testCase));
+    //         })));
+    //     },
+
+    //     "test:error event data": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             test1: sinon.stub().throws("TypeError")
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["test:error"].args[0];
+    //             assert.equals(args[0].name, "test1");
+    //             assert.equals(args[0].error.name, "TypeError");
+    //             assert.equals(args[0].error.message, "");
+    //             assert.match(args[0].error.stack, /\.js/);
+    //         })));
+    //     },
+
+    //     "test:fail event data": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             test1: sinon.stub().throws("AssertionError")
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["test:failure"].args[0];
+    //             assert.equals(args[0].name, "test1");
+    //             assert.equals(args[0].error.name, "AssertionError");
+    //             assert.equals(args[0].error.message, "");
+    //             assert.match(args[0].error.stack, /\.js/);
+    //         })));
+    //     },
+
+    //     "test:success event data": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             test1: sinon.spy()
+    //         });
+
+    //         sinon.stub(this.runner, "assertionCount").returns(2);
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["test:success"].args[0];
+    //             assert.equals(args, [{ name: "test1", assertions: 2 }]);
+    //         })));
+    //     },
+
+    //     "suite:end event data": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             test1: function (test) {},
+    //             test2: sinon.stub().throws(),
+    //             "test3": sinon.spy(),
+    //             test4: sinon.stub().throws("AssertionError"),
+    //             inner: {
+    //                 test5: sinon.spy()
+    //             }
+    //         });
+
+    //         var context2 = testCase("My other case", {
+    //             setUp: function () {},
+    //             test1: function (test) {},
+    //             test2: sinon.stub().throws(),
+    //             "test3": sinon.spy(),
+    //             test4: sinon.stub().throws("AssertionError"),
+    //             inner: {
+    //                 test5: sinon.spy()
+    //             }
+    //         });
+
+    //         sinon.stub(this.runner, "assertionCount").returns(2);
+    //         var suite = [context, context2];
+
+    //         this.runner.runSuite(suite).then(done(B.bind(this, function () {
+    //             var args = this.listeners["suite:end"].args[0];
+    //             assert.equals(args[0].contexts, 2);
+    //             assert.equals(args[0].tests, 10);
+    //             assert.equals(args[0].errors, 2);
+    //             assert.equals(args[0].failures, 2);
+    //             assert.equals(args[0].assertions, 20);
+    //             assert.equals(args[0].timeouts, 2);
+    //             assert.equals(args[0].deferred, 0);
+    //             assert(!args[0].ok);
+    //         })));
+    //     },
+
+    //     "suite:end event data passing test case": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             test1: sinon.spy(),
+    //             test2: sinon.spy(),
+    //             test3: sinon.spy(),
+    //             test4: sinon.spy(),
+    //             inner: {
+    //                 test5: sinon.spy()
+    //             }
+    //         });
+
+    //         sinon.stub(this.runner, "assertionCount").returns(2);
+
+    //         this.runner.runSuite([context, context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["suite:end"].args[0];
+    //             assert.equals(args[0].contexts, 2);
+    //             assert.equals(args[0].tests, 10);
+    //             assert.equals(args[0].errors, 0);
+    //             assert.equals(args[0].failures, 0);
+    //             assert.equals(args[0].assertions, 20);
+    //             assert.equals(args[0].timeouts, 0);
+    //             assert.equals(args[0].deferred, 0);
+    //             assert(args[0].ok);
+    //         })));
+    //     },
+
+    //     "suite:end event data deferred tests": function (done) {
+    //         var context = testCase("My case", {
+    //             setUp: function () {},
+    //             "//test1": sinon.spy(),
+    //             test2: sinon.spy(),
+    //             test3: sinon.spy(),
+    //             "//test4": sinon.spy(),
+    //             inner: {
+    //                 test5: sinon.spy()
+    //             }
+    //         });
+
+    //         sinon.stub(this.runner, "assertionCount").returns(2);
+
+    //         this.runner.runSuite([context]).then(done(B.bind(this, function () {
+    //             var args = this.listeners["suite:end"].args[0];
+    //             assert.equals(args[0].contexts, 1);
+    //             assert.equals(args[0].tests, 3);
+    //             assert.equals(args[0].errors, 0);
+    //             assert.equals(args[0].failures, 0);
+    //             assert.equals(args[0].assertions, 6);
+    //             assert.equals(args[0].timeouts, 0);
+    //             assert.equals(args[0].deferred, 2);
+    //             assert(args[0].ok);
+    //         })));
+    //     },
+
+    //     "uncaughtException event data": function (done) {
+    //         if (typeof document !== "undefined") {
+    //             console.log("'uncaughtException event data':\n Aborting test, as " +
+    //                         "browsers may not have enough information to extract " +
+    //                         "useful event data");
+    //             return done();
+    //         }
+
+    //         var context = testCase("My case", {
+    //             "test1": function (done) {
+    //                 setTimeout(function () {
+    //                     throw new Error("Damnit");
+    //                 }, 15);
+    //             }
+    //         });
+
+    //         this.runner.handleUncaughtExceptions = true;
+    //         this.runner.timeout = 5;
+    //         var listener = this.listeners.uncaughtException;
+
+    //         setTimeout(test.end(function () {
+    //             assert(listener.calledOnce);
+    //             assert.match(listener.args[0][0].message, /Damnit/);
+    //         }), 25);
+
+    //         this.runner.runSuite([context]);
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerContextSetUpTest", {
+    //     setUp: function () {
+    //         this.runner = testRunner.create();
+    //     },
+
+    //     "contextSetUp this is prototype of test function this": function (done) {
+    //         var prepare = sinon.spy();
+    //         var testFn = sinon.spy();
+    //         var context = testCase("Test", { prepare: prepare, test: testFn });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(prepare.calledOnce);
+    //             assert.hasPrototype(testFn.thisValues[0], prepare.thisValues[0]);
+    //         }));
+    //     },
+
+    //     "contextSetUp is only called once": function (done) {
+    //         var prepare = sinon.spy();
+    //         var context = testCase("Test", {
+    //             prepare: prepare,
+    //             test1: function () {},
+    //             test2: function () {},
+    //             test3: function () {},
+    //             ctx2: {
+    //                 test4: function () {},
+    //                 test5: function () {}
+    //             }
+    //         });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(prepare.calledOnce);
+    //         }));
+    //     },
+
+    //     "calls prepare before setUp": function (done) {
+    //         var prepare = sinon.spy();
+    //         var setUp = sinon.spy();
+    //         var context = testCase("Test", {
+    //             prepare: prepare,
+    //             setUp: setUp,
+    //             test: function () {}
+    //         });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(prepare.calledBefore(setUp));
+    //         }));
+    //     },
+
+    //     "does not call setUp until prepare resolves": function (done) {
+    //         var doneCb;
+    //         var setUp = sinon.spy();
+    //         var prepare = function (done) { doneCb = done; };
+    //         var context = testCase("Test", {
+    //             prepare: prepare,
+    //             setUp: setUp,
+    //             test: function () {}
+    //         });
+
+    //         var testRun = this.runner.runContext(context).then(done(function () {
+    //             assert(setUp.calledOnce);
+    //         }));
+
+    //         refute(setUp.calledOnce);
+    //         testRunner.nextTick(function () {
+    //             doneCb();
+    //         });
+    //     },
+
+    //     "does not reject if contextSetUp fails": function (done) {
+    //         var prepare = sinon.stub().throws();
+    //         var context = testCase("Test", {
+    //             prepare: prepare,
+    //             test: sinon.spy()
+    //         });
+
+    //         this.runner.runContext(context).then(function () {
+    //             done();
+    //         }, function () {
+    //             assert.fail();
+    //         });
+    //     },
+
+    //     "does not call setUp if prepare throws": function (done) {
+    //         var setUp = sinon.spy();
+    //         var prepare = sinon.stub().throws();
+    //         var context = testCase("Test", {
+    //             setUp: setUp,
+    //             prepare: prepare,
+    //             test: function () {}
+    //         });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(!setUp.called);
+    //         }));
+    //     },
+
+    //     "does not call setUp if prepare rejects": function (done) {
+    //         var deferred = when.defer();
+    //         var setUp = sinon.spy();
+    //         var prepare = sinon.stub().returns(deferred.promise);
+    //         var context = testCase("Test", {
+    //             prepare: prepare,
+    //             setUp: setUp,
+    //             test: function () {}
+    //         });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(!setUp.called);
+    //         }));
+
+    //         deferred.reject();
+    //     },
+
+    //     "emits uncaughtException if prepare rejects": function (done) {
+    //         var deferred = when.defer();
+    //         var listener = sinon.spy();
+    //         this.runner.on("uncaughtException", listener);
+    //         var prepare = sinon.stub().returns(deferred.promise);
+    //         var context = testCase("Test", { prepare: prepare });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(listener.called);
+    //         }));
+
+    //         deferred.reject();
+    //     },
+
+    //     "emits uncaughtException if prepare throws": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("uncaughtException", listener);
+    //         var prepare = sinon.stub().throws();
+    //         var context = testCase("Test", { prepare: prepare });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(listener.called);
+    //         }));
+    //     },
+
+    //     "emits uncaughtException if prepare times out": function (done) {
+    //         var deferred = when.defer();
+    //         var listener = sinon.spy();
+    //         this.runner.on("uncaughtException", listener);
+    //         var prepare = sinon.stub().returns(deferred.promise);
+    //         var context = testCase("Test", { prepare: prepare });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(listener.called);
+    //         }));
+    //     },
+
+    //     "times out prepare after custom timeout": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("uncaughtException", listener);
+    //         var context = testCase("Test", {
+    //             prepare: function (done) { this.timeout = 100; }
+    //         });
+
+    //         this.runner.runContext(context);
+
+    //         setTimeout(done(function () {
+    //             assert(listener.called);
+    //         }), 150);
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerContextTearDownTest", {
+    //     setUp: function () {
+    //         this.runner = testRunner.create();
+    //     },
+
+    //     "contextTearDown this is prototype of test function this": function (done) {
+    //         var conclude = sinon.spy();
+    //         var tfn = sinon.spy();
+    //         var context = testCase("Test", { conclude: conclude, test: tfn });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(conclude.calledOnce);
+    //             assert.hasPrototype(tfn.thisValues[0], conclude.thisValues[0]);
+    //         }));
+    //     },
+
+    //     "contextTearDown is only called once": function (done) {
+    //         var conclude = sinon.spy();
+    //         var context = testCase("Test", {
+    //             conclude: conclude,
+    //             test1: function () {},
+    //             test2: function () {},
+    //             test3: function () {},
+    //             ctx2: {
+    //                 test4: function () {},
+    //                 test5: function () {}
+    //             }
+    //         });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(conclude.calledOnce);
+    //         }));
+    //     },
+
+    //     "calls conclude after tearDown": function (done) {
+    //         var conclude = sinon.spy();
+    //         var tearDown = sinon.spy();
+    //         var context = testCase("Test", {
+    //             conclude: conclude,
+    //             tearDown: tearDown,
+    //             test: function () {}
+    //         });
+
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(conclude.calledAfter(tearDown));
+    //         }));
+    //     },
+
+    //     "does not finish until conclude resolves": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("context:end", listener);
+    //         var doneCb;
+    //         var conclude = function (done) { doneCb = done; };
+    //         var context = testCase("Test", {
+    //             conclude: conclude,
+    //             test: function () {}
+    //         });
             
-            var testRun = this.runner.runContext(context).then(test.end(function () {
-                assert(listener.calledOnce);
-            }));
+    //         var testRun = this.runner.runContext(context).then(done(function () {
+    //             assert(listener.calledOnce);
+    //         }));
 
-            refute(listener.calledOnce);
-            buster.nextTick(function () {
-                doneCb();
-            });
-        },
+    //         refute(listener.calledOnce);
+    //         testRunner.nextTick(function () {
+    //             doneCb();
+    //         });
+    //     },
 
-        "does not reject if contextTearDown fails": function (test) {
-            var conclude = sinon.stub().throws();
-            var context = testCase("Test", {
-                conclude: conclude,
-                test: sinon.spy()
-            });
+    //     "does not reject if contextTearDown fails": function (done) {
+    //         var conclude = sinon.stub().throws();
+    //         var context = testCase("Test", {
+    //             conclude: conclude,
+    //             test: sinon.spy()
+    //         });
 
-            this.runner.runContext(context).then(function () {
-                test.end();
-            }, function () {
-                assert.fail();
-            });
-        },
+    //         this.runner.runContext(context).then(function () {
+    //             done();
+    //         }, function () {
+    //             assert.fail();
+    //         });
+    //     },
 
-        "emits uncaughtException if conclude rejects": function (test) {
-            var deferred = when.defer();
-            var listener = sinon.spy();
-            this.runner.on("uncaughtException", listener);
-            var conclude = sinon.stub().returns(deferred.promise);
-            var context = testCase("Test", { conclude: conclude });
+    //     "emits uncaughtException if conclude rejects": function (done) {
+    //         var deferred = when.defer();
+    //         var listener = sinon.spy();
+    //         this.runner.on("uncaughtException", listener);
+    //         var conclude = sinon.stub().returns(deferred.promise);
+    //         var context = testCase("Test", { conclude: conclude });
 
-            this.runner.runContext(context).then(test.end(function () {
-                assert(listener.called);
-            }));
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(listener.called);
+    //         }));
 
-            deferred.resolver.reject();
-        },
+    //         deferred.reject();
+    //     },
 
-        "emits uncaughtException if conclude throws": function (test) {
-            var listener = sinon.spy();
-            this.runner.on("uncaughtException", listener);
-            var conclude = sinon.stub().throws();
-            var context = testCase("Test", { conclude: conclude });
+    //     "emits uncaughtException if conclude throws": function (done) {
+    //         var listener = sinon.spy();
+    //         this.runner.on("uncaughtException", listener);
+    //         var conclude = sinon.stub().throws();
+    //         var context = testCase("Test", { conclude: conclude });
 
-            this.runner.runContext(context).then(test.end(function () {
-                assert(listener.called);
-            }));
-        },
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(listener.called);
+    //         }));
+    //     },
 
-        "emits uncaughtException if conclude times out": function (test) {
-            var deferred = when.defer();
-            var listener = sinon.spy();
-            this.runner.on("uncaughtException", listener);
-            var conclude = sinon.stub().returns(deferred.promise);
-            var context = testCase("Test", { conclude: conclude });
+    //     "emits uncaughtException if conclude times out": function (done) {
+    //         var deferred = when.defer();
+    //         var listener = sinon.spy();
+    //         this.runner.on("uncaughtException", listener);
+    //         var conclude = sinon.stub().returns(deferred.promise);
+    //         var context = testCase("Test", { conclude: conclude });
 
-            this.runner.runContext(context).then(test.end(function () {
-                assert(listener.called);
-            }));
-        }
+    //         this.runner.runContext(context).then(done(function () {
+    //             assert(listener.called);
+    //         }));
+    //     }
+    // });
+
+    // helper.testCase("TestRunnerFocusTest", {
+    //     setUp: function () {
+    //         this.runner = testRunner.create();
+    //     },
+
+    //     "runs focused test": function (done) {
+    //         var tfn = sinon.spy();
+    //         var context = testCase("Test", { "=> do it": tfn });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(tfn.calledOnce);
+    //         }));
+    //     },
+
+    //     "only runs focused test": function (done) {
+    //         var focused = sinon.spy();
+    //         var unfocused = sinon.spy();
+    //         var context = testCase("Test", {
+    //             "=> do it": focused,
+    //             "don't do it": unfocused
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(focused.calledOnce);
+    //             refute(unfocused.called);
+    //         }));
+    //     },
+
+    //     "runs nested focused test": function (done) {
+    //         var focused = sinon.spy();
+    //         var unfocused = sinon.spy();
+    //         var context = testCase("Test", {
+    //             "don't do it": unfocused,
+    //             "nested": {
+    //                 "=> do it": focused
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(focused.calledOnce);
+    //             refute(unfocused.called);
+    //         }));
+    //     },
+
+    //     "runs all focused tests": function (done) {
+    //         var focused = sinon.spy();
+    //         var context = testCase("Test", {
+    //             "=> nested": {
+    //                 "don't do it": focused,
+    //                 "do it": focused
+    //             }
+    //         });
+
+    //         this.runner.runSuite([context]).then(done(function () {
+    //             assert(focused.calledTwice);
+    //         }));
+    //     },
+
+    //     "emits runner:focus event": function (done) {
+    //         var context = testCase("Test", {
+    //             "=>don't do it": function () {}
+    //         });
+
+    //         this.runner.on("runner:focus", done(function () {}));
+    //         this.runner.runSuite([context]);
+    //     }
     });
-
-    bu.testCase("TestRunnerFocusTest", {
-        setUp: function () {
-            this.runner = testRunner.create();
-        },
-
-        "runs focused test": function (test) {
-            var tfn = sinon.spy();
-            var context = testCase("Test", { "=> do it": tfn });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(tfn.calledOnce);
-            }));
-        },
-
-        "only runs focused test": function (test) {
-            var focused = sinon.spy();
-            var unfocused = sinon.spy();
-            var context = testCase("Test", {
-                "=> do it": focused,
-                "don't do it": unfocused
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(focused.calledOnce);
-                refute(unfocused.called);
-            }));
-        },
-
-        "runs nested focused test": function (test) {
-            var focused = sinon.spy();
-            var unfocused = sinon.spy();
-            var context = testCase("Test", {
-                "don't do it": unfocused,
-                "nested": {
-                    "=> do it": focused
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(focused.calledOnce);
-                refute(unfocused.called);
-            }));
-        },
-
-        "runs all focused tests": function (test) {
-            var focused = sinon.spy();
-            var context = testCase("Test", {
-                "=> nested": {
-                    "don't do it": focused,
-                    "do it": focused
-                }
-            });
-
-            this.runner.runSuite([context]).then(test.end(function () {
-                assert(focused.calledTwice);
-            }));
-        },
-
-        "emits runner:focus event": function (test) {
-            var context = testCase("Test", {
-                "=>don't do it": function () {}
-            });
-
-            this.runner.on("runner:focus", test.end(function () {}));
-            this.runner.runSuite([context]);
-        }
-    });
-}(this.buster, this.sinon, this.when));
+});
