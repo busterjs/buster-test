@@ -5,7 +5,7 @@ require("sinon").config = {
     useFakeServer: false
 };
 
-// require("./test/unit/buster-test/auto-run-test");
+require("./test/unit/buster-test/auto-run-test");
 require("./test/unit/buster-test/browser-env-test");
 require("./test/unit/buster-test/reporters-test");
 require("./test/unit/buster-test/reporters/dots-test");
