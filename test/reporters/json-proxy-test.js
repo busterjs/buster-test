@@ -5,15 +5,15 @@
            module.exports = m.apply(this, deps.map(function (d) {
                return require(d);
            }));
-    })
+       })
 )([
-    "../../../test-helper",
+    "../test-helper",
     "./test-helper",
     "lodash",
     "bane",
     "referee",
     "sinon",
-    "../../../../lib/buster-test/reporters/json-proxy"
+    "../../lib/buster-test/reporters/json-proxy"
 ], function (helper, rhelper, _, bane, referee, sinon, jsonProxyReporter) {
     "use strict";
     var assert = referee.assert;

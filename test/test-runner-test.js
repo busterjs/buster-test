@@ -5,9 +5,9 @@
     "when",
     "sinon",
     "referee",
-    "../../../lib/buster-test/test-case",
-    "../../../lib/buster-test/test-runner",
-    "../../test-helper"
+    "../lib/buster-test/test-case",
+    "../lib/buster-test/test-runner",
+    "./test-helper"
 ], function (when, sinon, referee, testCase, testRunner, helper) {
     var assert = referee.assert;
     var refute = referee.refute;
@@ -2602,7 +2602,7 @@
                 conclude: conclude,
                 test: function () {}
             });
-            
+
             var testRun = this.runner.runContext(context).then(done(function () {
                 assert(listener.calledOnce);
             }));

@@ -1,9 +1,9 @@
-var helper = require("../../../test-helper");
+var helper = require("../test-helper");
 var rhelper = require("./test-helper");
 var bane = require("bane");
 var assert = require("referee").assert;
 var sinon = require("sinon");
-var teamCity = require("../../../../lib/buster-test/reporters/teamcity");
+var teamCity = require("../../lib/buster-test/reporters/teamcity");
 
 helper.testCase("TeamCityReporterTest", {
     setUp: function () {

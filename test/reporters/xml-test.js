@@ -1,11 +1,11 @@
-var helper = require("../../../test-helper");
+var helper = require("../test-helper");
 var rhelper = require("./test-helper");
 var bane = require("bane");
 var referee = require("referee");
 var assert = referee.assert;
 var refute = referee.refute;
 var sinon = require("sinon");
-var xmlReporter = require("../../../../lib/buster-test/reporters/xml");
+var xmlReporter = require("../../lib/buster-test/reporters/xml");
 
 helper.testCase("XMLReporterTest", {
     setUp: function () {

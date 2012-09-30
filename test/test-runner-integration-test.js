@@ -3,10 +3,10 @@
 } || define)([
     "sinon",
     "referee",
-    "../../lib/buster-test/test-case",
-    "../../lib/buster-test/test-runner",
-    "../../lib/buster-test/spec",
-    "../test-helper"
+    "../lib/buster-test/test-case",
+    "../lib/buster-test/test-runner",
+    "../lib/buster-test/spec",
+    "./test-helper"
 ], function (sinon, referee, testCase, testRunner, spec, helper) {
     var assert = referee.assert;
     spec.expose();

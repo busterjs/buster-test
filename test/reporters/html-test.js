@@ -5,15 +5,15 @@
            module.exports = m.apply(this, deps.map(function (d) {
                return require(d);
            }));
-    })
+       })
 )([
-    "../../../test-helper",
+    "../test-helper",
     "./test-helper",
     "lodash",
     "bane",
     "referee",
     "sinon",
-    "../../../../lib/buster-test/reporters/html"
+    "../../lib/buster-test/reporters/html"
 ], function (helper, rhelper, _, bane, referee, sinon, htmlReporter) {
     "use strict";
     var assert = referee.assert;
@@ -274,10 +274,10 @@
             this.runner.emit("test:success", { name: "should do it" });
 
             var testLi = this.list().firstChild // > ul:first > li
-               .nextSibling // current context li
-               .firstChild  // h2(in some other state)
-               .nextSibling // current sub-context ul
-               .firstChild; // test li
+                    .nextSibling // current context li
+                    .firstChild  // h2(in some other state)
+                    .nextSibling // current sub-context ul
+                    .firstChild; // test li
 
             assert.match(testLi, { innerHTML: /should do it/ });
         },

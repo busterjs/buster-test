@@ -5,18 +5,18 @@ require("sinon").config = {
     useFakeServer: false
 };
 
-require("./test/unit/buster-test/auto-run-test");
-require("./test/unit/buster-test/browser-env-test");
-require("./test/unit/buster-test/reporters-test");
-require("./test/unit/buster-test/reporters/dots-test");
-require("./test/unit/buster-test/reporters/html-test");
-require("./test/unit/buster-test/reporters/json-proxy-test");
-require("./test/unit/buster-test/reporters/specification-test");
-require("./test/unit/buster-test/reporters/tap-test");
-require("./test/unit/buster-test/reporters/teamcity-test");
-require("./test/unit/buster-test/reporters/xml-test");
-require("./test/unit/buster-test/spec-test");
-require("./test/unit/buster-test/test-case-test");
-require("./test/unit/buster-test/test-context-test");
-require("./test/unit/buster-test/test-runner-test");
-require("./test/integration/test-runner-test");
+require("./test/auto-run-test");
+require("./test/browser-env-test");
+require("./test/reporters-test");
+require("./test/reporters/dots-test");
+require("./test/reporters/html-test");
+require("./test/reporters/json-proxy-test");
+require("./test/reporters/specification-test");
+require("./test/reporters/tap-test");
+require("./test/reporters/teamcity-test");
+require("./test/reporters/xml-test");
+require("./test/spec-test");
+require("./test/test-case-test");
+require("./test/test-context-test");
+require("./test/test-runner-test");
+require("./test/test-runner-test");

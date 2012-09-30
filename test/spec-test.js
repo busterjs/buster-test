@@ -3,9 +3,9 @@
 } || define)([
     "sinon",
     "referee",
-    "../../../lib/buster-test/spec",
-    "../../../lib/buster-test/test-context",
-    "../../test-helper"
+    "../lib/buster-test/spec",
+    "../lib/buster-test/test-context",
+    "./test-helper"
 ], function (sinon, referee, bspec, testContext, helper) {
     var assert = referee.assert;
     var refute = referee.refute;

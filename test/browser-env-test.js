@@ -3,12 +3,11 @@
 } || define)([
     "bane",
     "referee",
-    "../../../lib/buster-test/browser-env",
-    "../../test-helper"
+    "../lib/buster-test/browser-env",
+    "./test-helper"
 ], function (bane, referee, browserEnv, helper) {
     if (typeof document === "undefined") { return; }
     var assert = referee.assert;
-    var refute = referee.refute;
 
     helper.testCase("BrowserEnvTest", {
         setUp: function () {
