@@ -1,6 +1,6 @@
-(typeof require === "function" && function (reqs, callback) {
+((typeof require === "function" && function (reqs, callback) {
     callback.apply(this, reqs.map(function (req) { return require(req); }));
-} || define)([
+}) || define)([
     "when",
     "sinon",
     "referee",
@@ -12,7 +12,7 @@
     var refute = referee.refute;
 
     helper.testCase("ContextFilterTest", {
-        "should return unfiltered context": function () {
+        "returns unfiltered context": function () {
             var context = testCase("Some tests", {
                 "test": function () {}
             });
@@ -22,7 +22,7 @@
             assert.equals(context.tests, context2.tests);
         },
 
-        "should exclude tests that don't match string filter": function () {
+        "excludes tests that don't match string filter": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -36,7 +36,7 @@
             assert.equals(context2.tests[1].name, "test 2");
         },
 
-        "should exclude nested tests that don't match string filter": function () {
+        "excludes nested tests that don't match string filter": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -55,7 +55,7 @@
             assert.equals(context2.contexts[0].tests[1].name, "test inner 2");
         },
 
-        "should exclude nested tests that don't match either filter": function () {
+        "excludes nested tests that don't match either filter": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -74,7 +74,7 @@
             assert.equals(context2.tests[1].name, "test 2");
         },
 
-        "should match with multiple string and regexp filters": function () {
+        "matchs with multiple string and regexp filters": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -94,7 +94,7 @@
             assert.equals(context2.contexts[0].tests[0].name, "some stuff");
         },
 
-        "should filter nested tests based on full name": function () {
+        "filters nested tests based on full name": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -112,7 +112,7 @@
             assert.equals(context2.contexts[0].tests.length, 2);
         },
 
-        "should filter nested tests based on deeply nested full name": function () {
+        "filters nested tests based on deeply nested full name": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -136,7 +136,7 @@
             assert.equals(context2.contexts[0].contexts[0].tests.length, 2);
         },
 
-        "should exclude tests that don't match regexp filter": function () {
+        "excludes tests that don't match regexp filter": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -150,7 +150,7 @@
             assert.equals(context2.tests[1].name, "test 2");
         },
 
-        "should exclude nested tests that don't match regexp filter": function () {
+        "excludes nested tests that don't match regexp filter": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -169,7 +169,7 @@
             assert.equals(context2.contexts[0].tests[1].name, "test inner 2");
         },
 
-        "should filter nested tests with regexp based on full name": function () {
+        "filters nested tests with regexp based on full name": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -187,7 +187,7 @@
             assert.equals(context2.contexts[0].tests.length, 2);
         },
 
-        "should apply filter case insensitively": function () {
+        "applys filter case insensitively": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {}
             });
@@ -197,7 +197,7 @@
             assert.equals(context2.tests.length, 1);
         },
 
-        "should exclude empty sub-contexts": function () {
+        "excludes empty sub-contexts": function () {
             var context = testCase("Some tests", {
                 "something": {}
             });
@@ -207,7 +207,7 @@
             assert.equals(context2.contexts.length, 0);
         },
 
-        "should not exclude sub-context with tests": function () {
+        "does not exclude sub-context with tests": function () {
             var context = testCase("Some tests", {
                 "something": { "test": function () {} }
             });
@@ -217,7 +217,7 @@
             assert.equals(context2.contexts.length, 1);
         },
 
-        "should treat empty array as pass-all filter": function () {
+        "treats empty array as pass-all filter": function () {
             var context = testCase("Some tests", {
                 "something": { "test": function () {} }
             });
@@ -227,7 +227,7 @@
             assert.equals(context2.contexts.length, 1);
         },
 
-        "should exclude tests from filter when compiling": function () {
+        "excludes tests from filter when compiling": function () {
             var contexts = testContext.compile([testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
@@ -238,7 +238,7 @@
             assert.equals(contexts[0].tests.length, 2);
         },
 
-        "should exclude empty contexts in compile output": function () {
+        "excludes empty contexts in compile output": function () {
             var input = [testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {}
@@ -253,7 +253,7 @@
             assert.equals(contexts[0].tests.length, 2);
         },
 
-        "should return promise for promise input": function () {
+        "returns promise for promise input": function () {
             var context = testCase("Some tests", {
                 "test 1": function () {},
                 "test 2": function () {},
