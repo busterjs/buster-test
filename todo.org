@@ -1,6 +1,5 @@
 #+SEQ_TODO: TODO INPR DONE
 
-* TODO Macros
 * DONE Only run tests where full name matches pattern (string/regexp) (Add module runner)
 ** buster.testFilter(context, filter)
 ** buster.moduleRunner(path)
@@ -18,7 +17,6 @@
 * DONE "Disarm" promises after timeout
 * DONE Sinon integration
 * DONE buster.xUnitConsoleReporter.create({ color: true, bright: true }).listen(runner);
-* TODO Run tests in parallel
 * DONE Formatted logger
 * DONE Catch run-away exceptions
 * DONE Change this.log to buster.log
@@ -61,9 +59,8 @@
         },
 
         "should process requests with buster server": function (done) {
-* TODO Missing assertion count wiring -> NaN assertions
-* TODO Possible to not get red report for 0 assertions
 * TODO Flag duplicate test names
 * TODO Exception in async function is not being caught (causes timeout)
 * TODO Test runner is catching exceptions that it's not handling
 ** If an exception is thrown before the tests start running (failed require)
+* TODO Fix assertion counting plumbing. testRunner.assertionPassed(assertion)
