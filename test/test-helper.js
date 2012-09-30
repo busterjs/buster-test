@@ -23,7 +23,7 @@
             }
             if (typeof cb === "function") {
                 return function () {
-                    cb();
+                    cb.apply(null, arguments);
                     doComplete();
                 };
             }
@@ -66,9 +66,12 @@
             if (names.length === 0) { return done(); }
             total += 1;
             var name = names.shift();
+
             var timer = setTimeout(function () {
-                throw new Error(name + " timed out");
-            }, 500);
+                var message = name + " timed out";
+                console.log("\x1b[31m=>", message + "\x1b[0m");
+                throw new Error(message);
+            }, 600);
 
             runTest(name, testCase.tests[name], setUp, tearDown, function (ok) {
                 clearTimeout(timer);
@@ -85,7 +88,8 @@
     function start() {
         if (!running && testCases.length > 0) {
             running = true;
-            runTestCase(testCases.shift(), function () {
+            var tc = testCases.shift();
+            runTestCase(tc, function () {
                 running = false;
                 start();
             });
