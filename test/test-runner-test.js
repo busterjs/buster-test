@@ -1085,8 +1085,6 @@
                 test1: function (done) {}
             });
 
-            sinon.stub(this.runner, "assertionCount").returns(2);
-
             this.runner.runSuite([context]).then(done(function () {
                 assert.equals(listener.args[0][0].timeouts, 1);
             }));
@@ -1097,8 +1095,6 @@
             var context = testCase("My case", {
                 test1: function (done) { callback = done; }
             });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
 
             this.runner.runSuite([context]).then(done(function () {
                 refute.exception(function () {
@@ -1659,7 +1655,6 @@
         },
 
         "fails test if 0 assertions": function (done) {
-            sinon.stub(this.runner, "assertionCount").returns(0);
             var listener = this.listener;
 
             this.runner.runSuite([this.context]).then(done(function () {
@@ -1668,7 +1663,6 @@
         },
 
         "does not fail with 0 assertions if timing out": function (done) {
-            sinon.stub(this.runner, "assertionCount").returns(0);
             var timeoutListener = sinon.spy();
             this.runner.on("test:timeout", timeoutListener);
 
@@ -1685,7 +1679,10 @@
         },
 
         "does not fail test if 1 assertion": function (done) {
-            sinon.stub(this.runner, "assertionCount").returns(1);
+            var runner = this.runner;
+            this.runner.on("test:start", function () {
+                runner.assertionPass();
+            });
             var listener = this.listener;
 
             this.runner.runSuite([this.context]).then(done(function () {
@@ -1694,7 +1691,6 @@
         },
 
         "configures to not fail test if 0 assertions": function (done) {
-            sinon.stub(this.runner, "assertionCount").returns(0);
             this.runner.failOnNoAssertions = false;
             var listener = this.listener;
 
@@ -1704,11 +1700,14 @@
         },
 
         "fails for unexpected number of assertions": function (done) {
-            sinon.stub(this.runner, "assertionCount").returns(3);
+            var runner = this.runner;
 
             var context = testCase("Test Assertions", {
                 test1: function () {
                     this.expectedAssertions = 2;
+                    runner.assertionPass();
+                    runner.assertionPass();
+                    runner.assertionPass();
                 }
             });
             var listener = this.listener;
@@ -1721,13 +1720,18 @@
         },
 
         "only checks expected assertions for tests that explicitly define it": function (done) {
-            sinon.stub(this.runner, "assertionCount").returns(3);
+            var runner = this.runner;
 
             var context = testCase("Test Assertions", {
                 test1: function () {
                     this.expectedAssertions = 2;
+                    runner.assertionPass();
+                    runner.assertionPass();
+                    runner.assertionPass();
                 },
-                test2: function () {}
+                test2: function () {
+                    runner.assertionPass();
+                }
             });
             var listener = this.listener;
 
@@ -1738,15 +1742,17 @@
         },
 
         "clears expected assertions when test fails for other reasons": function (done) {
-            sinon.stub(this.runner, "assertionCount").returns(3);
             this.runner.on("test:error", this.listener);
+            var runner = this.runner;
 
             var context = testCase("Test Assertions", {
                 test1: function () {
                     this.expectedAssertions = 2;
                     throw new Error();
                 },
-                test2: function () {}
+                test2: function () {
+                    runner.assertionPass();
+                }
             });
             var listener = this.listener;
 
@@ -1757,17 +1763,19 @@
         },
 
         "counts assertions when asserting in callback to done": function (tdone) {
-            var stub = sinon.stub(this.runner, "assertionCount").returns(0);
+            var runner = this.runner;
+
             var context = testCase("Test Assertions", {
                 test1: function (done) {
                     testRunner.nextTick(done(function () {
-                        stub.returns(3);
+                        runner.assertionPass();
+                        runner.assertionPass();
                     }));
                 }
             });
 
             this.runner.runSuite([context]).then(tdone(function (result) {
-                assert.equals(result.assertions, 3);
+                assert.equals(result.assertions, 2);
             }));
         }
     });
@@ -2245,12 +2253,15 @@
         },
 
         "test:success event data": function (done) {
+            var runner = this.runner;
+
             var context = testCase("My case", {
                 setUp: function () {},
-                test1: sinon.spy()
+                test1: function () {
+                    runner.assertionPass();
+                    runner.assertionPass();
+                }
             });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:success"].args[0];
@@ -2259,9 +2270,14 @@
         },
 
         "suite:end event data": function (done) {
+            var runner = this.runner;
+
             var context = testCase("My case", {
                 setUp: function () {},
-                test1: function (done) {},
+                test1: function (done) {
+                    runner.assertionPass();
+                    runner.assertionPass();
+                },
                 test2: sinon.stub().throws(),
                 "test3": sinon.spy(),
                 test4: sinon.stub().throws("AssertionError"),
@@ -2282,7 +2298,6 @@
             });
 
             this.runner.timeout = 10;
-            sinon.stub(this.runner, "assertionCount").returns(2);
 
             this.runSuite([context, context2], done(function (listeners) {
                 var args = listeners["suite:end"].args[0];
@@ -2290,7 +2305,7 @@
                 assert.equals(args[0].tests, 10);
                 assert.equals(args[0].errors, 2);
                 assert.equals(args[0].failures, 2);
-                assert.equals(args[0].assertions, 20);
+                assert.equals(args[0].assertions, 2);
                 assert.equals(args[0].timeouts, 2);
                 assert.equals(args[0].deferred, 0);
                 assert(!args[0].ok);
@@ -2298,18 +2313,19 @@
         },
 
         "suite:end event data passing test case": function (done) {
+            var runner = this.runner;
+            var test = function () { runner.assertionPass(); };
+
             var context = testCase("My case", {
                 setUp: function () {},
-                test1: sinon.spy(),
-                test2: sinon.spy(),
-                test3: sinon.spy(),
-                test4: sinon.spy(),
+                test1: test,
+                test2: test,
+                test3: test,
+                test4: test,
                 inner: {
-                    test5: sinon.spy()
+                    test5: test
                 }
             });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
 
             this.runSuite([context, context], done(function (listeners) {
                 var args = listeners["suite:end"].args[0];
@@ -2317,7 +2333,7 @@
                 assert.equals(args[0].tests, 10);
                 assert.equals(args[0].errors, 0);
                 assert.equals(args[0].failures, 0);
-                assert.equals(args[0].assertions, 20);
+                assert.equals(args[0].assertions, 10);
                 assert.equals(args[0].timeouts, 0);
                 assert.equals(args[0].deferred, 0);
                 assert(args[0].ok);
@@ -2325,18 +2341,19 @@
         },
 
         "suite:end event data deferred tests": function (done) {
+            var runner = this.runner;
+            var test = function () { runner.assertionPass(); };
+
             var context = testCase("My case", {
                 setUp: function () {},
-                "//test1": sinon.spy(),
-                test2: sinon.spy(),
-                test3: sinon.spy(),
-                "//test4": sinon.spy(),
+                "//test1": test,
+                test2: test,
+                test3: test,
+                "//test4": test,
                 inner: {
-                    test5: sinon.spy()
+                    test5: test
                 }
             });
-
-            sinon.stub(this.runner, "assertionCount").returns(2);
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["suite:end"].args[0];
@@ -2344,7 +2361,7 @@
                 assert.equals(args[0].tests, 3);
                 assert.equals(args[0].errors, 0);
                 assert.equals(args[0].failures, 0);
-                assert.equals(args[0].assertions, 6);
+                assert.equals(args[0].assertions, 3);
                 assert.equals(args[0].timeouts, 0);
                 assert.equals(args[0].deferred, 2);
                 assert(args[0].ok);
