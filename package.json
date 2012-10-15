@@ -58,6 +58,6 @@
     "devDependencies": {
         "referee": "*",
         "formatio": "*",
-        "sinon": "~ 1.4"
+        "sinon": "~1.4"
     }
 }
