@@ -50,7 +50,8 @@
         "when": "https://github.com/cujojs/when/tarball/1.3.0",
         "lodash": "~0.4",
         "async": "~0.1",
-        "stack-filter": "~0.1"
+        "stack-filter": "~0.1",
+        "platform": "~1.0"
     },
     "optionalDependencies": {
         "jsdom": "~0.2.14"

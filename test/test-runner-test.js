@@ -2811,4 +2811,46 @@
              */
         }
     });
+
+    helper.testCase("Test configuration", {
+        setUp: function () {
+            this.ua = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:16.0) " +
+                "Gecko/20100101 Firefox/16.0";
+            this.suite = [testCase("Test + Assertions", { test1: function () {} })];
+        },
+
+        "emits suite:configuration with environment": function () {
+            var runner = testRunner.create({ environment: this.ua });
+            var config;
+            var listener = function (c) { config = c; };
+
+            runner.on("suite:configuration", listener);
+            runner.runSuite(this.suite);
+
+            assert.equals(config.environment.name, "Firefox");
+        },
+
+        "does not emit suite:configuration with no environment": function () {
+            var runner = testRunner.create({});
+            var listener = sinon.spy();
+            runner.on("suite:configuration", listener);
+            runner.runSuite(this.suite);
+
+            refute(listener.called);
+        },
+
+        "emits suite:configuration with configuration": function () {
+            var runner = testRunner.create({
+                environment: this.ua,
+                configuration: "Browser tests"
+            });
+            var config;
+            var listener = sinon.spy(function (c) { config = c; });
+
+            runner.on("suite:configuration", listener);
+            runner.runSuite(this.suite);
+
+            assert.equals(config.name, "Browser tests");
+        }
+    });
 });
