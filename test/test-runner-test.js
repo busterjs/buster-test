@@ -42,7 +42,9 @@
     }
 
     function runnerEventsSetUp() {
-        this.runner = testRunner.create();
+        this.runner = testRunner.create({
+            environment: "Node 8.10"
+        });
         this.runner.failOnNoAssertions = false;
         this.assertionError = new Error("Oh, crap");
         this.assertionError.name = "AssertionError";
@@ -784,7 +786,7 @@
 
             this.runner.runSuite([this.context]).then(done(function () {
                 assert(listeners[0].calledOnce);
-                assert.equals(listeners[0].args[0], [{ name: "test" }]);
+                assert.equals(listeners[0].args[0][0].name, "test");
                 assert(listeners[0].calledBefore(listeners[1]));
             }));
 
@@ -2157,8 +2159,10 @@
             var context = testCase("My case", {});
 
             this.runSuite([context], done(function (listeners) {
-                var args = listeners["context:start"].args[0];
-                assert.equals(args, [context]);
+                var ctx = listeners["context:start"].args[0][0];
+                assert.isObject(ctx.environment);
+                delete ctx.environment;
+                assert.equals(ctx, context);
             }));
         },
 
@@ -2166,7 +2170,10 @@
             var context = testCase("My case", {});
 
             this.runSuite([context], done(function (listeners) {
-                assert.equals(listeners["context:end"].args[0], [context]);
+                var ctx = listeners["context:end"].args[0][0];
+                assert.isObject(ctx.environment);
+                delete ctx.environment;
+                assert.equals(ctx, context);
             }));
         },
 
@@ -2176,10 +2183,13 @@
             });
 
             this.runSuite([context], done(function (listeners) {
-                assert.equals(listeners["context:unsupported"].args[0], [{
+                var arg = listeners["context:unsupported"].args[0][0];
+                assert.isObject(arg.environment);
+                delete arg.environment;
+                assert.equals(arg, {
                     context: context,
                     unsupported: ["Feature A"]
-                }]);
+                });
             }));
         },
 
@@ -2191,6 +2201,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:setUp"].args;
+                assert.isObject(args[0][0].environment);
                 assert.equals(args[0][0].name, "test1");
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2204,6 +2215,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:tearDown"].args;
+                assert.isObject(args[0][0].environment);
                 assert.equals("test1", args[0][0].name);
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2217,6 +2229,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:start"].args;
+                assert.isObject(args[0][0].environment);
                 assert.equals(args[0][0].name, "test1");
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2230,6 +2243,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:error"].args[0];
+                assert.isObject(args[0].environment);
                 assert.equals(args[0].name, "test1");
                 assert.equals(args[0].error.name, "TypeError");
                 assert.equals(args[0].error.message, "");
@@ -2245,6 +2259,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:failure"].args[0];
+                assert.isObject(args[0].environment);
                 assert.equals(args[0].name, "test1");
                 assert.equals(args[0].error.name, "AssertionError");
                 assert.equals(args[0].error.message, "");
@@ -2265,6 +2280,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:success"].args[0];
+                assert.isObject(args[0].environment);
+                delete args[0].environment;
                 assert.equals(args, [{ name: "test1", assertions: 2 }]);
             }));
         },
@@ -2301,6 +2318,7 @@
 
             this.runSuite([context, context2], done(function (listeners) {
                 var args = listeners["suite:end"].args[0];
+                assert.isObject(args[0].environment);
                 assert.equals(args[0].contexts, 2);
                 assert.equals(args[0].tests, 10);
                 assert.equals(args[0].errors, 2);
@@ -2390,6 +2408,7 @@
 
             setTimeout(done(function () {
                 assert(listener.calledOnce);
+                assert.isObject(listener.args[0][0].environment);
                 assert.match(listener.args[0][0].message, /Damnit/);
             }), 25);
 
