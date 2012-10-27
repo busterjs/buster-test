@@ -2703,7 +2703,7 @@
 
     helper.testCase("TestRunnerFocusTest", {
         setUp: function () {
-            this.runner = testRunner.create();
+            this.runner = testRunner.create({ environment: "Node 0.8" });
         },
 
         "runs focused test": function (done) {
@@ -2764,7 +2764,9 @@
                 "=>don't do it": function () {}
             });
 
-            this.runner.on("runner:focus", done(function () {}));
+            this.runner.on("runner:focus", done(function (e) {
+                assert.isObject(e.environment);
+            }));
             this.runner.runSuite([context]);
         }
     });
