@@ -27,33 +27,49 @@
         "emits suite:start": function () {
             var listener = sinon.spy();
             this.proxy.on("suite:start", listener);
-            this.runner.emit("suite:start");
+            this.runner.emit("suite:start", { environment: {} });
 
             assert(listener.calledOnce);
+            assert.isObject(listener.args[0][0].environment);
         },
 
         "emits runner:focus": function () {
             var listener = sinon.spy();
             this.proxy.on("runner:focus", listener);
-            this.runner.emit("runner:focus");
+            this.runner.emit("runner:focus", { environment: {} });
 
             assert(listener.calledOnce);
+            assert.isObject(listener.args[0][0].environment);
         },
 
         "emits serializable context object to context:start": function () {
             var listener = sinon.spy();
             this.proxy.on("context:start", listener);
-            this.runner.emit("context:start", { name: "Context", meth: function () {} });
+            this.runner.emit("context:start", {
+                name: "Context",
+                meth: function () {},
+                environment: {}
+            });
 
-            assert.equals(listener.args[0][0], { name: "Context" });
+            assert.equals(listener.args[0][0], {
+                name: "Context",
+                environment: {}
+            });
         },
 
         "emits serializable context object to context:end": function () {
             var listener = sinon.spy();
             this.proxy.on("context:end", listener);
-            this.runner.emit("context:end", { name: "Context", meth: function () {} });
+            this.runner.emit("context:end", {
+                name: "Context",
+                meth: function () {},
+                environment: {}
+            });
 
-            assert.equals(listener.args[0][0], { name: "Context" });
+            assert.equals(listener.args[0][0], {
+                name: "Context",
+                environment: {}
+            });
         },
 
         "emits serializable context object to context:unsupported": function () {
@@ -65,53 +81,90 @@
                     name: "Context",
                     meth: function () {}
                 },
+                environment: {},
                 unsupported: ["A"]
             });
 
             assert.equals(listener.args[0][0], {
                 context: { name: "Context" },
-                unsupported: ["A"]
+                unsupported: ["A"],
+                environment: {}
             });
         },
 
         "emits serializable test object to test:async": function () {
             var listener = sinon.spy();
             this.proxy.on("test:async", listener);
-            this.runner.emit("test:async", { name: "should go", func: function (done) {} });
+            this.runner.emit("test:async", {
+                name: "should go",
+                func: function (done) {},
+                environment: {}
+            });
 
-            assert.equals(listener.args[0][0], { name: "should go" });
+            assert.equals(listener.args[0][0], {
+                name: "should go",
+                environment: {}
+            });
         },
 
         "emits serializable test object to test:setUp": function () {
             var listener = sinon.spy();
             this.proxy.on("test:setUp", listener);
-            this.runner.emit("test:setUp", { name: "should go", func: function () {} });
+            this.runner.emit("test:setUp", {
+                name: "should go",
+                func: function () {},
+                environment: {}
+            });
 
-            assert.equals(listener.args[0][0], { name: "should go" });
+            assert.equals(listener.args[0][0], {
+                name: "should go",
+                environment: {}
+            });
         },
 
         "emits serializable test object to test:tearDown": function () {
             var listener = sinon.spy();
             this.proxy.on("test:tearDown", listener);
-            this.runner.emit("test:tearDown", { name: "should go", func: function () {} });
+            this.runner.emit("test:tearDown", {
+                name: "should go",
+                func: function () {},
+                environment: {}
+            });
 
-            assert.equals(listener.args[0][0], { name: "should go" });
+            assert.equals(listener.args[0][0], {
+                name: "should go",
+                environment: {}
+            });
         },
 
         "emits serializable test object to test:deferred": function () {
             var listener = sinon.spy();
             this.proxy.on("test:deferred", listener);
-            this.runner.emit("test:deferred", { name: "should go", func: function () {} });
+            this.runner.emit("test:deferred", {
+                name: "should go",
+                func: function () {},
+                environment: {}
+            });
 
-            assert.equals(listener.args[0][0], { name: "should go" });
+            assert.equals(listener.args[0][0], {
+                name: "should go",
+                environment: {}
+            });
         },
 
         "emits serializable test object to test:start": function () {
             var listener = sinon.spy();
             this.proxy.on("test:start", listener);
-            this.runner.emit("test:start", { name: "should go", func: function () {} });
+            this.runner.emit("test:start", {
+                name: "should go",
+                func: function () {},
+                environment: {}
+            });
 
-            assert.equals(listener.args[0][0], { name: "should go" });
+            assert.equals(listener.args[0][0], {
+                name: "should go",
+                environment: {}
+            });
         },
 
         "emits serializable test object to test:error": function () {
@@ -125,7 +178,8 @@
                     message: "Something went wrong",
                     stack: "Trouble@here",
                     toString: function () {}
-                }
+                },
+                environment: {}
             });
 
             assert.equals(listener.args[0][0], {
@@ -134,7 +188,8 @@
                     name: "Error",
                     message: "Something went wrong",
                     stack: "Trouble@here"
-                }
+                },
+                environment: {}
             });
         },
 
@@ -144,6 +199,7 @@
             this.runner.emit("test:failure", {
                 name: "should go",
                 func: function () {},
+                environment: {},
                 error: {
                     name: "AssertionError",
                     message: "Expected a to be equal to b",
@@ -154,6 +210,7 @@
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
+                environment: {},
                 error: {
                     name: "AssertionError",
                     message: "Expected a to be equal to b",
@@ -168,6 +225,7 @@
             this.runner.emit("test:timeout", {
                 name: "should go",
                 func: function () {},
+                environment: {},
                 error: {
                     name: "TimeoutError",
                     message: "Yo",
@@ -178,6 +236,7 @@
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
+                environment: {},
                 error: {
                     name: "TimeoutError",
                     message: "Yo",
@@ -192,11 +251,16 @@
             this.proxy.on("test:success", listener);
 
             this.runner.emit("test:success", {
-                name: "should go", func: function () {}, assertions: 13
+                name: "should go",
+                func: function () {},
+                assertions: 13,
+                environment: {}
             });
 
             assert.equals(listener.args[0][0], {
-                name: "should go", assertions: 13
+                name: "should go",
+                assertions: 13,
+                environment: {}
             });
         },
 
@@ -205,13 +269,27 @@
             this.proxy.on("suite:end", listener);
 
             this.runner.emit("suite:end", {
-                contexts: 2, tests: 3, errors: 0, failures: 1, assertions: 12,
-                timeouts: 0, deferred: 0, ok: false
+                environment: {},
+                contexts: 2,
+                tests: 3,
+                errors: 0,
+                failures: 1,
+                assertions: 12,
+                timeouts: 0,
+                deferred: 0,
+                ok: false
             });
 
             assert.equals(listener.args[0][0], {
-                contexts: 2, tests: 3, errors: 0, failures: 1, assertions: 12,
-                timeouts: 0, deferred: 0, ok: false
+                environment: {},
+                contexts: 2,
+                tests: 3,
+                errors: 0,
+                failures: 1,
+                assertions: 12,
+                timeouts: 0,
+                deferred: 0,
+                ok: false
             });
         },
 
@@ -219,7 +297,10 @@
             var listener = sinon.spy();
             this.proxy.on("log", listener);
 
-            this.runner.emit("log", { level: "log", message: "Hey!" });
+            this.runner.emit("log", {
+                level: "log",
+                message: "Hey!"
+            });
 
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0],
@@ -234,7 +315,8 @@
                 name: "Error",
                 message: "Something went wrong",
                 stack: "Trouble@here",
-                toString: function () {}
+                toString: function () {},
+                environment: {}
             });
 
             assert(listener.calledOnce);
@@ -242,7 +324,8 @@
             assert.equals(listener.args[0][0], {
                 name: "Error",
                 message: "Something went wrong",
-                stack: "Trouble@here"
+                stack: "Trouble@here",
+                environment: {}
             });
         }
     });
@@ -258,10 +341,16 @@
             var listener = sinon.spy();
             this.emitter.on("test:start", listener);
 
-            this.runner.emit("test:start", { name: "should do something" });
+            this.runner.emit("test:start", {
+                name: "should do something",
+                environment: {}
+            });
 
             assert(listener.calledOnce);
-            assert.equals(listener.args[0][0], { name: "should do something" });
+            assert.equals(listener.args[0][0], {
+                name: "should do something",
+                environment: {}
+            });
         }
     });
 });
