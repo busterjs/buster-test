@@ -44,7 +44,7 @@ body.buster-test {
 
 .buster-test .success h3:before {
     color: #3c3;
-    content: "✓";
+    content: "\002713";
     padding-right: 6px;
 }
 
