@@ -113,6 +113,13 @@
 
             assert(listeners[0].calledOnce);
             assert(listeners[1].calledOnce);
+        },
+
+        "is not concurrent": function () {
+            var runner = testRunner.create();
+
+            refute(runner.concurrent);
+            assert.equals(runner.clients, 1);
         }
     });
 
