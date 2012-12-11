@@ -24,19 +24,31 @@
             this.proxy = jsonProxyReporter.create().listen(this.runner);
         },
 
-        "emits suite:start": function () {
+        "emits runner:focus": function () {
             var listener = sinon.spy();
-            this.proxy.on("suite:start", listener);
-            this.runner.emit("suite:start", { environment: {} });
+            this.proxy.on("runner:focus", listener);
+            this.runner.emit("runner:focus", { environment: {} });
 
             assert(listener.calledOnce);
             assert.isObject(listener.args[0][0].environment);
         },
 
-        "emits runner:focus": function () {
+        "emits suite:configuration": function () {
             var listener = sinon.spy();
-            this.proxy.on("runner:focus", listener);
-            this.runner.emit("runner:focus", { environment: {} });
+            this.proxy.on("suite:configuration", listener);
+            this.runner.emit("suite:configuration", {
+                environment: {},
+                name: "Config"
+            });
+
+            assert(listener.calledOnce);
+            assert.isObject(listener.args[0][0].environment);
+        },
+
+        "emits suite:start": function () {
+            var listener = sinon.spy();
+            this.proxy.on("suite:start", listener);
+            this.runner.emit("suite:start", { environment: {} });
 
             assert(listener.calledOnce);
             assert.isObject(listener.args[0][0].environment);
