@@ -80,7 +80,7 @@
     });
 
     helper.testCase("TestCaseContextTest", {
-        "haves name property": function () {
+        "has name property": function () {
             var context = bTestCase("Name", {});
 
             assert.equals(context.name, "Name");
@@ -281,7 +281,7 @@
             assert.equals(context.contexts.length, 0);
         },
 
-        "aliass requiresSupportFor as requiresSupportForAll": function () {
+        "aliases requiresSupportFor as requiresSupportForAll": function () {
             var setUp = function () {};
 
             var context = bTestCase("Name", {
