@@ -4,6 +4,7 @@
     }));
 }) || define)(["referee"], function (referee) {
     "use strict";
+    var wait = setTimeout;
 
     function runTest(name, test, setUp, tearDown, next) {
         function handleError(e) {
@@ -41,6 +42,11 @@
                 complete();
             }
         } catch (e) {
+            if (typeof tearDown === "function") {
+                try {
+                    tearDown.call(ctx);
+                } catch (e) {}
+            }
             handleError(e);
         }
     }
@@ -68,7 +74,7 @@
             total += 1;
             var name = names.shift();
 
-            var timer = setTimeout(function () {
+            var timer = wait(function () {
                 var message = name + " timed out";
                 console.log("\x1b[31m=>", message + "\x1b[0m");
                 throw new Error(message);
