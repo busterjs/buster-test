@@ -2162,6 +2162,57 @@
     helper.testCase("TestRunnerEventDataTest", {
         setUp: runnerEventsSetUp,
 
+        "suite:start event data, no tests": function (done) {
+            var context = testCase("My case", {});
+
+            this.runSuite([context], done(function (listeners) {
+                var data = listeners["suite:start"].args[0][0];
+                assert.isObject(data.environment);
+                assert.equals(data.tests, 0);
+            }));
+        },
+
+        "suite:start event data with tests": function (done) {
+            var context = testCase("My case", {
+                "a": function () {},
+                "b": function () {},
+                "c": function () {}
+            });
+
+            this.runSuite([context], done(function (listeners) {
+                assert.equals(listeners["suite:start"].args[0][0].tests, 3);
+            }));
+        },
+
+        "suite:start event data with nested tests": function (done) {
+            var context = testCase("My case", {
+                "a": function () {},
+                "b": function () {},
+                "c": function () {},
+                "d": { "e": function () {} }
+            });
+
+            this.runSuite([context], done(function (listeners) {
+                assert.equals(listeners["suite:start"].args[0][0].tests, 4);
+            }));
+        },
+
+        "suite:start event data with async test groups": function (done) {
+            var context = testCase("My case", function () {
+                return when({
+                    "a": function () {},
+                    "b": function () {},
+                    "c": function () {}
+                });
+            });
+
+            this.runner.on("suite:start", done(function (data) {
+                assert.equals(data.tests, 0);
+            }));
+
+            this.runSuite([context]);
+        },
+
         "context:start event data": function (done) {
             var context = testCase("My case", {});
 
