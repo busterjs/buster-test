@@ -2162,55 +2162,13 @@
     helper.testCase("TestRunnerEventDataTest", {
         setUp: runnerEventsSetUp,
 
-        "suite:start event data, no tests": function (done) {
+        "suite:start event data": function (done) {
             var context = testCase("My case", {});
 
             this.runSuite([context], done(function (listeners) {
-                var data = listeners["suite:start"].args[0][0];
-                assert.isObject(data.environment);
-                assert.equals(data.tests, 0);
+                var ctx = listeners["suite:start"].args[0][0];
+                assert.isObject(ctx.environment);
             }));
-        },
-
-        "suite:start event data with tests": function (done) {
-            var context = testCase("My case", {
-                "a": function () {},
-                "b": function () {},
-                "c": function () {}
-            });
-
-            this.runSuite([context], done(function (listeners) {
-                assert.equals(listeners["suite:start"].args[0][0].tests, 3);
-            }));
-        },
-
-        "suite:start event data with nested tests": function (done) {
-            var context = testCase("My case", {
-                "a": function () {},
-                "b": function () {},
-                "c": function () {},
-                "d": { "e": function () {} }
-            });
-
-            this.runSuite([context], done(function (listeners) {
-                assert.equals(listeners["suite:start"].args[0][0].tests, 4);
-            }));
-        },
-
-        "suite:start event data with async test groups": function (done) {
-            var context = testCase("My case", function () {
-                return when({
-                    "a": function () {},
-                    "b": function () {},
-                    "c": function () {}
-                });
-            });
-
-            this.runner.on("suite:start", done(function (data) {
-                assert.equals(data.tests, 0);
-            }));
-
-            this.runSuite([context]);
         },
 
         "context:start event data": function (done) {
@@ -2930,6 +2888,71 @@
             runner.runSuite(this.suite);
 
             assert.equals(config.name, "Browser tests");
+        }
+    });
+
+    helper.testCase("Test configuration event data", {
+        setUp: function () {
+            this.ua = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:16.0) " +
+                "Gecko/20100101 Firefox/16.0";
+            this.runner = testRunner.create({ environment: this.ua });
+            var listener = sinon.spy();
+            this.runner.on("suite:configuration", listener);
+            this.runSuite = function (suite, callback) {
+                this.runner.runSuite(suite).then(function () {
+                    callback(listener.args[0][0]);
+                });
+            };
+        },
+
+        "no tests": function (done) {
+            var context = testCase("My case", {});
+
+            this.runSuite([context], done(function (data) {
+                assert.isObject(data.environment);
+                assert.equals(data.tests, 0);
+            }));
+        },
+
+        "with tests": function (done) {
+            var context = testCase("My case", {
+                "a": function () {},
+                "b": function () {},
+                "c": function () {}
+            });
+
+            this.runSuite([context], done(function (data) {
+                assert.equals(data.tests, 3);
+            }));
+        },
+
+        "with nested tests": function (done) {
+            var context = testCase("My case", {
+                "a": function () {},
+                "b": function () {},
+                "c": function () {},
+                "d": { "e": function () {} }
+            });
+
+            this.runSuite([context], done(function (data) {
+                assert.equals(data.tests, 4);
+            }));
+        },
+
+        "with async test groups": function (done) {
+            var context = testCase("My case", function () {
+                return when({
+                    "a": function () {},
+                    "b": function () {},
+                    "c": function () {}
+                });
+            });
+
+            this.runner.on("suite:configuration", done(function (data) {
+                assert.equals(data.tests, 0);
+            }));
+
+            this.runSuite([context]);
         }
     });
 });

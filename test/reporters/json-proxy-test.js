@@ -38,21 +38,22 @@
             this.proxy.on("suite:configuration", listener);
             this.runner.emit("suite:configuration", {
                 environment: {},
-                name: "Config"
+                name: "Config",
+                tests: 3
             });
 
             assert(listener.calledOnce);
             assert.isObject(listener.args[0][0].environment);
+            assert.equals(listener.args[0][0].tests, 3);
         },
 
         "emits suite:start": function () {
             var listener = sinon.spy();
             this.proxy.on("suite:start", listener);
-            this.runner.emit("suite:start", { environment: {}, tests: 13 });
+            this.runner.emit("suite:start", { environment: {} });
 
             assert(listener.calledOnce);
             assert.isObject(listener.args[0][0].environment);
-            assert.equals(listener.args[0][0].tests, 13);
         },
 
         "emits serializable context object to context:start": function () {
