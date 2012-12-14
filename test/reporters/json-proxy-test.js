@@ -157,12 +157,14 @@
             this.runner.emit("test:deferred", {
                 name: "should go",
                 func: function () {},
-                environment: {}
+                environment: {},
+                comment: "See, doc"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                environment: {}
+                environment: {},
+                comment: "See, doc"
             });
         },
 
