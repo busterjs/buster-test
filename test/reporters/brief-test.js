@@ -74,6 +74,13 @@ helper.testCase("Brief reporter", {
         this.assertIO("Running tests ...\n\x1b[1A\x1b[KRunning 2 tests in 1 environment ...\n");
     },
 
+    "does not print data when number of tests unknown": function () {
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", {});
+
+        this.assertIO("Running tests in 1 environment ...\n");
+    },
+
     "updates number of tests and environments": function () {
         this.runner.emit("suite:start");
         this.firefox.emit("suite:configuration", { tests: 2 });
@@ -132,17 +139,116 @@ helper.testCase("Brief reporter", {
         this.runner.emit("suite:start");
         this.firefox.emit("suite:configuration", { tests: 1 });
         this.chrome.emit("suite:configuration", { tests: 1 });
-        this.firefox.emit("test:success", {});
-        this.chrome.emit("test:success", {});
         this.runner.emit("suite:end", {
             contexts: 2,
             tests: 2,
             assertions: 2,
             failures: 0,
-            errors: 0
+            errors: 0,
+            ok: true
         });
 
         this.assertIO("2 tests, 2 assertions, 2 environments ... OK\n");
+    },
+
+    "prints final summary for one test": function () {
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", { tests: 1 });
+        this.runner.emit("suite:end", {
+            contexts: 1,
+            tests: 1,
+            assertions: 1,
+            failures: 0,
+            errors: 0,
+            ok: true
+        });
+
+        this.assertIO("1 test, 1 assertion, 1 environment ... OK\n");
+    },
+
+    "prints summary with 1 failure": function () {
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", { tests: 1 });
+        this.runner.emit("suite:end", {
+            contexts: 2,
+            tests: 2,
+            assertions: 2,
+            failures: 1,
+            errors: 0,
+            ok: false
+        });
+
+        this.assertIO("2 tests, 2 assertions, 1 environment ... 1 failure\n");
+    },
+
+    "prints summary with failure, errors timeouts": function () {
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", { tests: 1 });
+        this.runner.emit("suite:end", {
+            contexts: 2,
+            tests: 2,
+            assertions: 2,
+            failures: 1,
+            errors: 1,
+            timeouts: 1,
+            ok: false
+        });
+
+        this.assertIO("2 tests, 2 assertions, 1 environment ... " +
+                      "1 failure, 1 error, 1 timeout\n");
+    },
+
+    "prints summary with errors and timeouts": function () {
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", { tests: 1 });
+        this.runner.emit("suite:end", {
+            contexts: 2,
+            tests: 2,
+            assertions: 2,
+            failures: 0,
+            errors: 2,
+            timeouts: 2,
+            ok: false
+        });
+
+        this.assertIO("2 tests, 2 assertions, 1 environment ... " +
+                      "2 errors, 2 timeouts\n");
+    },
+
+    "prints deferred count": function () {
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", { tests: 1 });
+        this.runner.emit("suite:end", {
+            contexts: 2,
+            tests: 2,
+            assertions: 2,
+            failures: 0,
+            errors: 0,
+            timeouts: 0,
+            deferred: 1,
+            ok: true
+        });
+
+        this.assertIO("2 tests, 2 assertions, 1 environment ... OK\n" +
+                      "1 deferred test");
+    },
+
+    "prints deferred count > 1": function () {
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", { tests: 1 });
+        this.runner.emit("suite:end", {
+            contexts: 2,
+            tests: 2,
+            assertions: 2,
+            failures: 0,
+            errors: 0,
+            timeouts: 0,
+            deferred: 3,
+            ok: true
+        });
+
+        this.assertIO("2 tests, 2 assertions, 1 environment ... OK\n" +
+                      "3 deferred tests");
     },
 
     "does not update status after tests complete": function () {
@@ -251,20 +357,45 @@ helper.testCase("Brief reporter failures", {
             error: { message: "Expected a to be equal to b" }
         });
 
-        this.assertIO("    Expected a to be equal to b");
+        this.assertIO("  Expected a to be equal to b");
+    },
+
+    "does not print name when AssertionError": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("test:failure", {
+            name: "does stuff",
+            error: {
+                name: "AssertionError",
+                message: "Expected a to be equal to b"
+            }
+        });
+
+        this.assertIO("  Expected a to be equal to b");
     },
 
     "prints log messages": function () {
         this.firefox.emit("context:start", { name: "Stuff" });
-        this.firefox.emit("test:setUp", { name: "dos stuff" });
+        this.firefox.emit("test:setUp", { name: "does stuff" });
         this.firefox.emit("log", { level: "log", message: "Hey" });
 
         this.firefox.emit("test:failure", {
-            name: "dos stuff",
+            name: "does stuff",
             error: { message: "Expected a to be equal to b" }
         });
 
         this.assertIO("[LOG] Hey");
+    },
+
+    "prints error source if present": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("test:failure", {
+            name: "does stuff",
+            error: { message: "Expected a", source: "setUp" }
+        });
+
+        this.assertIO("  -> setUp");
     },
 
     "prints stack trace": function () {
@@ -300,53 +431,330 @@ helper.testCase("Brief reporter failures", {
             }
         });
 
-        this.firefox.emit("context:end", { name: "Stuff" });
-
         refute.match(this.outputStream.toString(), __dirname);
     }
 });
 
 helper.testCase("Brief reporter errors", {
-    setUp: reporterSetUp,
+    setUp: function () {
+        reporterSetUp.call(this);
+        this.firefox.emit("suite:configuration");
+        this.chrome.emit("suite:configuration");
+    },
 
-    "//???": function () {}
+    "prints full nested test name for correct environment": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+        this.chrome.emit("context:start", { name: "Other" });
+        this.chrome.emit("context:start", { name: "inner" });
+        this.firefox.emit("test:error", { name: "does stuff" });
+        this.chrome.emit("test:error", { name: "sumptn" });
+
+        this.assertIO("Error: Stuff does stuff (Firefox 16.0 on Ubuntu 64-bit)");
+        this.assertIO("Error: Other inner sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
+    },
+
+    "prints error name": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("test:error", {
+            name: "does stuff",
+            error: {
+                name: "TypeError",
+                message: "Expected a to be equal to b"
+            }
+        });
+
+        this.assertIO("  TypeError: Expected a to be equal to b");
+    },
+
+    "prints error message": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("test:error", {
+            name: "does stuff",
+            error: { message: "Expected a to be equal to b" }
+        });
+
+        this.assertIO("  Expected a to be equal to b");
+    },
+
+    "prints log messages": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+        this.firefox.emit("test:setUp", { name: "does stuff" });
+        this.firefox.emit("log", { level: "log", message: "Hey" });
+
+        this.firefox.emit("test:error", {
+            name: "does stuff",
+            error: { message: "Expected a to be equal to b" }
+        });
+
+        this.assertIO("[LOG] Hey");
+    },
+
+    "filters stack trace": function () {
+        var error = new Error("Expected a to be equal to b");
+        error.name = "AssertionError";
+        try { throw error; } catch (e) { error = e; }
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("test:error", {
+            name: "should do stuff",
+            error: {
+                message: "Expected a to be equal to b",
+                stack: error.stack
+            }
+        });
+
+        refute.match(this.outputStream.toString(), __dirname);
+    }
 });
 
 helper.testCase("Brief reporter timeouts", {
-    setUp: reporterSetUp,
+    setUp: function () {
+        reporterSetUp.call(this);
+        this.firefox.emit("suite:configuration");
+        this.chrome.emit("suite:configuration");
+    },
 
-    "//???": function () {}
+    "prints full nested test name for correct environment": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+        this.chrome.emit("context:start", { name: "Other" });
+        this.chrome.emit("context:start", { name: "inner" });
+        this.firefox.emit("test:timeout", { name: "does stuff" });
+        this.chrome.emit("test:timeout", { name: "sumptn" });
+
+        this.assertIO("Timeout: Stuff does stuff (Firefox 16.0 on Ubuntu 64-bit)");
+        this.assertIO("Timeout: Other inner sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
+    },
+
+    "prints error message": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("test:error", {
+            name: "does stuff",
+            error: { message: "Expected a to be equal to b" }
+        });
+
+        this.assertIO("  Expected a to be equal to b");
+    },
+
+    "prints log messages": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+        this.firefox.emit("test:setUp", { name: "does stuff" });
+        this.firefox.emit("log", { level: "log", message: "Hey" });
+
+        this.firefox.emit("test:timeout", {
+            name: "does stuff",
+            error: { message: "Expected a to be equal to b" }
+        });
+
+        this.assertIO("[LOG] Hey");
+    }
 });
 
 helper.testCase("Brief reporter similar errors", {
-    setUp: reporterSetUp,
+    setUp: function () {
+        this.exceptions = [{
+            name: "TypeError",
+            message: "Cannot call method 'hasOwnProperty' of undefined",
+            stack: "TypeError: Cannot call method 'hasOwnProperty' of undefined\n" +
+                "at Object.forEachWatcher (./lib/fs-watcher.js:17:26)\n" +
+                "at STACK #1 (./lib/fs-watcher.js:17:26)\n" +
+                "at Object.module.exports.end (./lib/fs-watcher.js:75:24)\n" +
+                "at EventEmitter.end (./lib/tree-watcher.js:131:17)\n" +
+                "at Object.buster.testCase.end closes all the watches (./test/tree-watcher-test.js:54:26)\n" +
+                "at Object.p.then (./node_modules/when/when.js:71:31)\n" +
+                "at _then (./node_modules/when/when.js:154:13)"
+        }, {
+            name: "TypeError",
+            message: "Cannot call method 'hasOwnProperty' of undefined",
+            stack: "TypeError: Cannot call method 'hasOwnProperty' of undefined\n" +
+                "at Object.forEachWatcher (./lib/fs-watcher.js:17:26)\n" +
+                "at STACK #2 (./lib/fs-watcher.js:17:26)\n" +
+                "at Object.module.exports.unwatchDir (./lib/fs-watcher.js:68:24)\n" +
+                "at EventEmitter.unwatch (./lib/tree-watcher.js:112:21)\n" +
+                "at EventEmitter.emit (events.js:126:20)\n" +
+                "at EventEmitter.<anonymous> (./lib/change-tracker.js:54:17)\n" +
+                "at ./lib/fs-filtered.js:75:13\n" +
+                "at ./lib/async.js:15:21\n" +
+                "at ./lib/fs-filtered.js:24:9\n" +
+                "at Object.oncomplete (fs.js:297:15)"
+        }, {
+            name: "TypeError",
+            message: "Cannot call method 'hasOwnProperty' of undefined",
+            stack: "TypeError: Cannot call method 'hasOwnProperty' of undefined\n" +
+                "at Object.forEachWatcher (./lib/fs-watcher.js:17:26)\n" +
+                "at STACK #3 (./lib/fs-watcher.js:17:26)\n" +
+                "at Object.module.exports.end (./lib/fs-watcher.js:75:24)\n" +
+                "at EventEmitter.end (./lib/tree-watcher.js:131:17)\n" +
+                "at Object.buster.testCase.end closes all the watches (./test/tree-watcher-test.js:54:26)\n" +
+                "at Object.p.then (./node_modules/when/when.js:71:31)\n" +
+                "at _then (./node_modules/when/when.js:154:13)"
+        }, {
+            name: "TypeError",
+            message: "Cannot call method 'hasOwnProperty' of undefined",
+            stack: "TypeError: Cannot call method 'hasOwnProperty' of undefined\n" +
+                "at Object.forEachWatcher (./lib/fs-watcher.js:17:26)\n" +
+                "at STACK #4 (./lib/fs-watcher.js:17:26)\n" +
+                "at Object.module.exports.unwatchDir (./lib/fs-watcher.js:68:24)\n" +
+                "at EventEmitter.unwatch (./lib/tree-watcher.js:112:21)\n" +
+                "at EventEmitter.emit (events.js:126:20)\n" +
+                "at EventEmitter.<anonymous> (./lib/change-tracker.js:54:17)\n" +
+                "at ./lib/fs-filtered.js:75:13\n" +
+                "at ./lib/async.js:15:21\n" +
+                "at ./lib/fs-filtered.js:24:9\n" +
+                "at Object.oncomplete (fs.js:297:15)"
+        }];
 
-    "//groups similar errors with 'xx more like this'": function () {}
+        reporterSetUp.call(this);
+        this.firefox.emit("suite:configuration", {});
+        this.firefox.emit("context:start", { name: "Stuff" });
+        this.firefox.emit("test:setUp", { name: "does stuff" });
+    },
+
+    "prints full stack at first occurrence": function () {
+        this.firefox.emit("test:error", {
+            name: "test #1",
+            error: this.exceptions[0]
+        });
+
+        this.assertIO("STACK #1");
+    },
+
+    "does not print stack for second occurrence": function () {
+        this.firefox.emit("test:error", {
+            name: "test #1",
+            error: this.exceptions[0]
+        });
+
+        this.firefox.emit("test:error", {
+            name: "test #2",
+            error: this.exceptions[1]
+        });
+
+        refute.match(this.outputStream.toString(), "STACK #2");
+    },
+
+    "prints all similar errors when suite ends": function () {
+        this.firefox.emit("test:error", {
+            name: "test #1",
+            error: this.exceptions[0]
+        });
+
+        this.firefox.emit("test:error", {
+            name: "test #2",
+            error: this.exceptions[1]
+        });
+
+        this.firefox.emit("test:error", {
+            name: "test #3",
+            error: this.exceptions[2]
+        });
+
+        this.firefox.emit("test:error", {
+            name: "test #4",
+            error: this.exceptions[3]
+        });
+
+        this.runner.emit("suite:end", {});
+
+        this.assertIO("Repeated exceptions:");
+        this.assertIO("  test #1\n" +
+                      "  test #2\n" +
+                      "  test #3\n" +
+                      "  test #4\n\n" +
+                      "  TypeError: Cannot call method 'hasOwnProperty' of undefined\n" +
+                      "    at Object.forEachWatcher (./lib/fs-watcher.js:17:26)\n");
+    },
+
+    "prints all log messages": function () {
+        this.firefox.emit("test:setUp", { name: "test #1" });
+        this.firefox.emit("log", { level: "log", message: "MSG1" });
+ 
+        this.firefox.emit("test:error", {
+            name: "test #1",
+            error: this.exceptions[0]
+        });
+
+        this.firefox.emit("test:setUp", { name: "test #2" });
+        this.firefox.emit("log", { level: "log", message: "MSG2" });
+        this.firefox.emit("log", { level: "warn", message: "MSG3" });
+
+        this.firefox.emit("test:error", {
+            name: "test #2",
+            error: this.exceptions[1]
+        });
+
+        this.runner.emit("suite:end", {});
+
+        this.assertIO("Repeated exceptions:");
+        this.assertIO("  test #1\n" +
+                      "    [LOG] MSG1\n" +
+                      "  test #2\n" +
+                      "    [LOG] MSG2\n" +
+                      "    [WARN] MSG3\n\n" +
+                      "  TypeError: Cannot call method 'hasOwnProperty' of undefined\n" +
+                      "    at Object.forEachWatcher (./lib/fs-watcher.js:17:26)\n");
+    }
 });
 
 helper.testCase("Brief reporter uncaught exceptions", {
-    setUp: reporterSetUp,
+    setUp: function () {
+        reporterSetUp.call(this);
+        this.firefox.emit("suite:configuration", { tests: 2 });
+    },
 
-    "//???": function () {}
+    "prints uncaught errors continuously": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("uncaughtException", {
+            name: "TypeError",
+            message: "Expected a to be equal to b"
+        });
+
+        this.assertIO("Uncaught exception in Firefox 16.0 on Ubuntu 64-bit:");
+        this.assertIO("TypeError: Expected a to be equal to b");
+    }
 });
 
 helper.testCase("Brief reporter messages", {
-    setUp: reporterSetUp,
+    setUp: function () {
+        reporterSetUp.call(this);
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", { tests: 2 });
+    },
 
-    "//prints global messages": function () {}
+    "prints global messages continuously": function () {
+        this.firefox.emit("log", { level: "log", message: "Check it out" });
+        this.runner.emit("suite:end", {});
+
+        this.assertIO("[LOG] Check it out (Firefox 16.0 on Ubuntu 64-bit)\n" +
+                      "Running 2 tests in 1 environment");
+    },
+
+    "does not print message for passing test": function () {
+        this.firefox.emit("context:start", {});
+        this.firefox.emit("test:setUp", {});
+        this.firefox.emit("log", { level: "log", message: "Check it out" });
+        this.firefox.emit("test:success", {});
+        this.firefox.emit("context:end", {});
+        this.runner.emit("suite:end", {});
+
+        refute.match(this.outputStream.toString(), "[LOG]");
+    }
 });
 
-helper.testCase("Brief reporter verbose", {
-    setUp: reporterSetUp,
+// helper.testCase("Brief reporter verbose", {
+//     setUp: reporterSetUp,
 
-    "//prints configuration names and environments": function () {},
-    "//prints deferred tests": function () {},
-    "//prints deferred tests with comments": function () {},
-    "//prints skipped tests": function () {}
-});
+//     "//prints configuration names and environments": function () {},
+//     "//prints deferred tests": function () {},
+//     "//prints deferred tests with comments": function () {},
+//     "//prints skipped tests": function () {}
+// });
 
-helper.testCase("Brief reporter double verbose", {
-    setUp: reporterSetUp,
+// helper.testCase("Brief reporter double verbose", {
+//     setUp: reporterSetUp,
 
-    "//prints all messages": function () {}
-});
+//     "//prints all messages": function () {}
+// });
