@@ -22,15 +22,15 @@ function client(runner, ua, uuid) {
     };
 }
 
-function reporterSetUp() {
+function reporterSetUp(options) {
     this.outputStream = rhelper.writableStream();
     this.assertIO = rhelper.assertIO;
     this.runner = bane.createEventEmitter();
 
-    this.reporter = briefReporter.create({
-        outputStream: this.outputStream,
-        stackFilter: stackFilter.configure({ filters: [__dirname] })
-    }).listen(this.runner);
+    options = options || {};
+    options.outputStream = this.outputStream;
+    options.stackFilter = stackFilter.configure({ filters: [__dirname] });
+    this.reporter = briefReporter.create(options).listen(this.runner);
 
     this.firefox = client(
         this.runner,
@@ -71,14 +71,14 @@ helper.testCase("Brief reporter", {
         this.runner.emit("suite:start");
         this.firefox.emit("suite:configuration", { tests: 2 });
 
-        this.assertIO("Running tests ...\n\x1b[1A\x1b[KRunning 2 tests in 1 environment ...\n");
+        this.assertIO("Running tests ...\n\x1b[1A\x1b[KRunning 2 tests in 1 environment ...");
     },
 
     "does not print data when number of tests unknown": function () {
         this.runner.emit("suite:start");
         this.firefox.emit("suite:configuration", {});
 
-        this.assertIO("Running tests in 1 environment ...\n");
+        this.assertIO("Running tests in 1 environment ...");
     },
 
     "updates number of tests and environments": function () {
@@ -86,7 +86,7 @@ helper.testCase("Brief reporter", {
         this.firefox.emit("suite:configuration", { tests: 2 });
         this.chrome.emit("suite:configuration", { tests: 3 });
 
-        this.assertIO("Running 5 tests across 2 environments ...\n");
+        this.assertIO("Running 5 tests across 2 environments ...");
     },
 
     "updates summary with progress after 250ms": function () {
@@ -133,6 +133,17 @@ helper.testCase("Brief reporter", {
         this.clock.tick(100);
 
         this.assertIO("Running 7 tests across 2 environments ... 29% done\n");
+    },
+
+    "does not print deferred tests": function () {
+        this.runner.emit("suite:start");
+        this.firefox.emit("suite:configuration", { tests: 2 });
+        this.firefox.emit("test:success", {});
+        this.clock.tick(250);
+
+        this.chrome.emit("test:deferred", { name: "test #2" });
+
+        refute.match(this.outputStream.toString(), "test #2");
     },
 
     "prints final summary": function () {
@@ -744,17 +755,83 @@ helper.testCase("Brief reporter messages", {
     }
 });
 
-// helper.testCase("Brief reporter verbose", {
-//     setUp: reporterSetUp,
+helper.testCase("Brief reporter verbose", {
+    setUp: function () {
+        reporterSetUp.call(this, { verbosity: "info" });
+    },
 
-//     "//prints configuration names and environments": function () {},
-//     "//prints deferred tests": function () {},
-//     "//prints deferred tests with comments": function () {},
-//     "//prints skipped tests": function () {}
-// });
+    "prints configuration names and environments": function () {
+        this.firefox.emit("suite:configuration", { tests: 2 });
 
-// helper.testCase("Brief reporter double verbose", {
-//     setUp: reporterSetUp,
+        this.assertIO("-> Firefox 16.0 on Ubuntu 64-bit\nRunning");
+    },
 
-//     "//prints all messages": function () {}
-// });
+    "prints deferred tests": function () {
+        this.firefox.emit("suite:configuration", { tests: 2 });
+        this.firefox.emit("context:start", { name: "stuff" });
+        this.firefox.emit("test:deferred", { name: "test #2" });
+
+        this.assertIO("Deferred: stuff test #2 (Firefox 16.0 on Ubuntu 64-bit)\nRunning");
+    },
+
+    "prints deferred tests with comments": function () {
+        this.firefox.emit("suite:configuration", { tests: 2 });
+        this.firefox.emit("context:start", { name: "stuff" });
+        this.firefox.emit("test:deferred", {
+            name: "test #2",
+            comment: "TODO"
+        });
+
+        this.assertIO("Deferred: stuff test #2 " +
+            "(Firefox 16.0 on Ubuntu 64-bit)\n          TODO\nRunning");
+     },
+
+    "prints skipped tests": function () {
+        this.firefox.emit("suite:configuration", { tests: 2 });
+        this.firefox.emit("context:unsupported", {
+            context: { name: "thingie" },
+            unsupported: ["Some stuff"]
+        });
+
+        this.assertIO("Skipping unsupported context thingie (Firefox 16.0 " +
+                      "on Ubuntu 64-bit)\n    Some stuff\nRunning");
+    },
+
+    "prints all failed requirements for skipped tests": function () {
+        this.firefox.emit("suite:configuration", { tests: 2 });
+        this.firefox.emit("context:unsupported", {
+            context: { name: "thingie" },
+            unsupported: ["Some stuff", "Other things"]
+        });
+
+        this.assertIO("Skipping unsupported context thingie (Firefox 16.0 " +
+                      "on Ubuntu 64-bit)\n    Some stuff\n    Other things\nRunning");
+    }
+});
+
+helper.testCase("Brief reporter double verbose", {
+    setUp: function () {
+        reporterSetUp.call(this, { verbosity: "debug" });
+        this.firefox.emit("suite:configuration", {});
+    },
+
+    "prints messages for passed tests": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+        this.firefox.emit("test:setUp", { name: "test #1" });
+        this.firefox.emit("log", { level: "log", message: "Woah" });
+
+        this.firefox.emit("test:success", { name: "test #1" });
+
+        this.assertIO("Stuff test #1");
+        this.assertIO("[LOG] Woah\nRunning");
+    },
+
+    "does not print test name for passed tests without messages": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+        this.firefox.emit("test:setUp", { name: "test #1" });
+
+        this.firefox.emit("test:success", { name: "test #1" });
+
+        refute.match(this.outputStream.toString(), "test #1");
+    }
+});
