@@ -457,8 +457,8 @@ helper.testCase("Brief reporter errors", {
         this.firefox.emit("context:start", { name: "Stuff" });
         this.chrome.emit("context:start", { name: "Other" });
         this.chrome.emit("context:start", { name: "inner" });
-        this.firefox.emit("test:error", { name: "does stuff" });
-        this.chrome.emit("test:error", { name: "sumptn" });
+        this.firefox.emit("test:error", { name: "does stuff", error: {} });
+        this.chrome.emit("test:error", { name: "sumptn", error: {} });
 
         this.assertIO("Error: Stuff does stuff (Firefox 16.0 on Ubuntu 64-bit)");
         this.assertIO("Error: Other inner sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
