@@ -820,6 +820,21 @@ helper.testCase("Brief reporter verbose", {
 
         this.assertIO("Skipping unsupported context thingie (Firefox 16.0 " +
                       "on Ubuntu 64-bit)\n    Some stuff\n    Other things\nRunning");
+    },
+
+    "warns about no assertions": function () {
+        this.firefox.emit("suite:configuration", { tests: 1 });
+
+        this.firefox.emit("test:success", {});
+        this.runner.emit("suite:end", {
+            contexts: 1,
+            tests: 1,
+            assertions: 0,
+            failures: 0,
+            errors: 0
+        });
+
+        this.assertIO("WARNING: No assertions!");
     }
 });
 
