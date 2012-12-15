@@ -64,29 +64,29 @@ helper.testCase("Brief reporter", {
     "prints number of tests to run": function () {
         this.firefox.emit("suite:configuration", { tests: 2 });
 
-        this.assertIO("Running 2 tests in 1 environment ...");
+        this.assertIO("Running 2 tests in 1 runtime ...");
     },
 
     "overwrites existing status with new data": function () {
         this.runner.emit("suite:start");
         this.firefox.emit("suite:configuration", { tests: 2 });
 
-        this.assertIO("Running tests ...\n\x1b[1A\x1b[KRunning 2 tests in 1 environment ...");
+        this.assertIO("Running tests ...\n\x1b[1A\x1b[KRunning 2 tests in 1 runtime ...");
     },
 
     "does not print data when number of tests unknown": function () {
         this.runner.emit("suite:start");
         this.firefox.emit("suite:configuration", {});
 
-        this.assertIO("Running tests in 1 environment ...");
+        this.assertIO("Running tests in 1 runtime ...");
     },
 
-    "updates number of tests and environments": function () {
+    "updates number of tests and runtimes": function () {
         this.runner.emit("suite:start");
         this.firefox.emit("suite:configuration", { tests: 2 });
         this.chrome.emit("suite:configuration", { tests: 3 });
 
-        this.assertIO("Running 5 tests across 2 environments ...");
+        this.assertIO("Running 5 tests across 2 runtimes ...");
     },
 
     "updates summary with progress after 250ms": function () {
@@ -97,7 +97,7 @@ helper.testCase("Brief reporter", {
         refute.match(this.outputStream.toString(), "%");
 
         this.clock.tick(1);
-        this.assertIO("Running 2 tests in 1 environment ... 0% done\n");
+        this.assertIO("Running 2 tests in 1 runtime ... 0% done\n");
     },
 
     "displays actual progress after 250ms": function () {
@@ -107,7 +107,7 @@ helper.testCase("Brief reporter", {
         this.firefox.emit("test:success", {});
 
         this.clock.tick(250);
-        this.assertIO("Running 2 tests in 1 environment ... 50% done\n");
+        this.assertIO("Running 2 tests in 1 runtime ... 50% done\n");
     },
 
     "displays actual progress with multiple clients": function () {
@@ -119,7 +119,7 @@ helper.testCase("Brief reporter", {
         this.chrome.emit("test:success", {});
 
         this.clock.tick(250);
-        this.assertIO("Running 7 tests across 2 environments ... 43% done\n");
+        this.assertIO("Running 7 tests across 2 runtimes ... 43% done\n");
     },
 
     "updates progress every 100ms": function () {
@@ -132,7 +132,7 @@ helper.testCase("Brief reporter", {
         this.chrome.emit("test:success", {});
         this.clock.tick(100);
 
-        this.assertIO("Running 7 tests across 2 environments ... 29% done\n");
+        this.assertIO("Running 7 tests across 2 runtimes ... 29% done\n");
     },
 
     "does not print deferred tests": function () {
@@ -159,7 +159,7 @@ helper.testCase("Brief reporter", {
             ok: true
         });
 
-        this.assertIO("2 tests, 2 assertions, 2 environments ... OK\n");
+        this.assertIO("2 tests, 2 assertions, 2 runtimes ... OK\n");
     },
 
     "prints final summary for one test": function () {
@@ -174,7 +174,7 @@ helper.testCase("Brief reporter", {
             ok: true
         });
 
-        this.assertIO("1 test, 1 assertion, 1 environment ... OK\n");
+        this.assertIO("1 test, 1 assertion, 1 runtime ... OK\n");
     },
 
     "prints summary with 1 failure": function () {
@@ -189,7 +189,7 @@ helper.testCase("Brief reporter", {
             ok: false
         });
 
-        this.assertIO("2 tests, 2 assertions, 1 environment ... 1 failure\n");
+        this.assertIO("2 tests, 2 assertions, 1 runtime ... 1 failure\n");
     },
 
     "prints summary with failure, errors timeouts": function () {
@@ -205,7 +205,7 @@ helper.testCase("Brief reporter", {
             ok: false
         });
 
-        this.assertIO("2 tests, 2 assertions, 1 environment ... " +
+        this.assertIO("2 tests, 2 assertions, 1 runtime ... " +
                       "1 failure, 1 error, 1 timeout\n");
     },
 
@@ -222,7 +222,7 @@ helper.testCase("Brief reporter", {
             ok: false
         });
 
-        this.assertIO("2 tests, 2 assertions, 1 environment ... " +
+        this.assertIO("2 tests, 2 assertions, 1 runtime ... " +
                       "2 errors, 2 timeouts\n");
     },
 
@@ -240,8 +240,7 @@ helper.testCase("Brief reporter", {
             ok: true
         });
 
-        this.assertIO("2 tests, 2 assertions, 1 environment ... OK\n" +
-                      "1 deferred test");
+        this.assertIO("1 deferred test\n2 tests, 2 assertions, 1 runtime ... OK");
     },
 
     "prints deferred count > 1": function () {
@@ -258,8 +257,7 @@ helper.testCase("Brief reporter", {
             ok: true
         });
 
-        this.assertIO("2 tests, 2 assertions, 1 environment ... OK\n" +
-                      "3 deferred tests");
+        this.assertIO("3 deferred tests\n2 tests, 2 assertions, 1 runtime ... OK");
     },
 
     "does not update status after tests complete": function () {
@@ -322,14 +320,21 @@ helper.testCase("Brief reporter failures", {
     setUp: function () {
         reporterSetUp.call(this);
         this.firefox.emit("suite:configuration");
-        this.chrome.emit("suite:configuration");
     },
 
     "prints full test name": function () {
         this.firefox.emit("context:start", { name: "Stuff" });
         this.firefox.emit("test:failure", { name: "should do stuff" });
 
-        this.assertIO("Failure: Stuff should do stuff (Firefox 16.0 on Ubuntu 64-bit)");
+        this.assertIO("Failure: Stuff should do stuff");
+    },
+
+    "does not print runtime when only one": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+        this.firefox.emit("test:failure", { name: "should do stuff" });
+
+        var unwanted = "Failure: Stuff should do stuff (Firefox 16.0 on Ubuntu 64-bit)";
+        refute.match(this.outputStream.toString(), unwanted);
     },
 
     "prints full nested test name": function () {
@@ -337,7 +342,7 @@ helper.testCase("Brief reporter failures", {
         this.firefox.emit("context:start", { name: "inner" });
         this.firefox.emit("test:failure", { name: "does stuff" });
 
-        this.assertIO("Failure: Stuff inner does stuff (Firefox 16.0 on Ubuntu 64-bit)");
+        this.assertIO("Failure: Stuff inner does stuff");
     },
 
     "ignores completed contexts in test name": function () {
@@ -346,10 +351,11 @@ helper.testCase("Brief reporter failures", {
         this.firefox.emit("context:end", { name: "inner" });
         this.firefox.emit("test:failure", { name: "does stuff" });
 
-        this.assertIO("Failure: Stuff does stuff (Firefox 16.0 on Ubuntu 64-bit)");
+        this.assertIO("Failure: Stuff does stuff");
     },
 
-    "prints full nested test name for correct environment": function () {
+    "prints full nested test name with runtime when concurrent": function () {
+        this.chrome.emit("suite:configuration");
         this.firefox.emit("context:start", { name: "Stuff" });
         this.chrome.emit("context:start", { name: "Other" });
         this.chrome.emit("context:start", { name: "inner" });
@@ -453,7 +459,7 @@ helper.testCase("Brief reporter errors", {
         this.chrome.emit("suite:configuration");
     },
 
-    "prints full nested test name for correct environment": function () {
+    "prints full nested test name for correct runtime": function () {
         this.firefox.emit("context:start", { name: "Stuff" });
         this.chrome.emit("context:start", { name: "Other" });
         this.chrome.emit("context:start", { name: "inner" });
@@ -476,6 +482,20 @@ helper.testCase("Brief reporter errors", {
         });
 
         this.assertIO("  TypeError: Expected a to be equal to b");
+    },
+
+    "does not print timeout error name": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("test:error", {
+            name: "does stuff",
+            error: {
+                name: "TimeoutError",
+                message: "Expected a to be equal to b"
+            }
+        });
+
+        refute.match(this.outputStream.toString(), "TimeoutError");
     },
 
     "prints error message": function () {
@@ -527,7 +547,7 @@ helper.testCase("Brief reporter timeouts", {
         this.chrome.emit("suite:configuration");
     },
 
-    "prints full nested test name for correct environment": function () {
+    "prints full nested test name for correct runtime": function () {
         this.firefox.emit("context:start", { name: "Stuff" });
         this.chrome.emit("context:start", { name: "Other" });
         this.chrome.emit("context:start", { name: "inner" });
@@ -706,6 +726,17 @@ helper.testCase("Brief reporter similar errors", {
                       "    [WARN] MSG3\n\n" +
                       "  TypeError: Cannot call method 'hasOwnProperty' of undefined\n" +
                       "    at Object.forEachWatcher (./lib/fs-watcher.js:17:26)\n");
+    },
+
+    "does not print single occurrence errors as repeated": function () {
+        this.firefox.emit("test:error", {
+            name: "test #1",
+            error: this.exceptions[0]
+        });
+
+        this.runner.emit("suite:end", {});
+
+        refute.match(this.outputStream.toString(), "Repeated exceptions:");
     }
 });
 
@@ -740,7 +771,7 @@ helper.testCase("Brief reporter messages", {
         this.runner.emit("suite:end", {});
 
         this.assertIO("[LOG] Check it out (Firefox 16.0 on Ubuntu 64-bit)\n" +
-                      "Running 2 tests in 1 environment");
+                      "Running 2 tests in 1 runtime");
     },
 
     "treats message between tests as global": function () {
@@ -754,7 +785,7 @@ helper.testCase("Brief reporter messages", {
         this.runner.emit("suite:end", {});
 
         this.assertIO("[LOG] Check it out (Firefox 16.0 on Ubuntu 64-bit)\n" +
-                      "Running 2 tests in 1 environment");
+                      "Running 2 tests in 1 runtime");
     },
 
     "does not print message for passing test": function () {
@@ -774,7 +805,7 @@ helper.testCase("Brief reporter verbose", {
         reporterSetUp.call(this, { verbosity: "info" });
     },
 
-    "prints configuration names and environments": function () {
+    "prints configuration names and runtimes": function () {
         this.firefox.emit("suite:configuration", { tests: 2 });
 
         this.assertIO("-> Firefox 16.0 on Ubuntu 64-bit\nRunning");
@@ -835,6 +866,14 @@ helper.testCase("Brief reporter verbose", {
         });
 
         this.assertIO("WARNING: No assertions!");
+    },
+
+    "prints focus mode notification": function () {
+        this.firefox.emit("suite:configuration", { tests: 1 });
+
+        this.firefox.emit("runner:focus", {});
+
+        this.assertIO("Focus rocket engaged");
     }
 });
 
