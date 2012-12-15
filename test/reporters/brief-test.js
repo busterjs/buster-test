@@ -743,11 +743,25 @@ helper.testCase("Brief reporter messages", {
                       "Running 2 tests in 1 environment");
     },
 
+    "treats message between tests as global": function () {
+        this.firefox.emit("test:setUp", { name: "test #1" });
+        this.firefox.emit("test:success", { name: "test #1" });
+        this.firefox.emit("test:tearDown", { name: "test #1" });
+        this.firefox.emit("log", { level: "log", message: "Check it out" });
+        this.firefox.emit("test:setUp", { name: "test #2" });
+        this.firefox.emit("test:success", { name: "test #2" });
+        this.firefox.emit("test:tearDown", { name: "test #2" });
+        this.runner.emit("suite:end", {});
+
+        this.assertIO("[LOG] Check it out (Firefox 16.0 on Ubuntu 64-bit)\n" +
+                      "Running 2 tests in 1 environment");
+    },
+
     "does not print message for passing test": function () {
         this.firefox.emit("context:start", {});
-        this.firefox.emit("test:setUp", {});
+        this.firefox.emit("test:setUp", { name: "test #1" });
         this.firefox.emit("log", { level: "log", message: "Check it out" });
-        this.firefox.emit("test:success", {});
+        this.firefox.emit("test:success", { name: "test #1" });
         this.firefox.emit("context:end", {});
         this.runner.emit("suite:end", {});
 
