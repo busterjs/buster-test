@@ -121,6 +121,7 @@
         "does not immediately proxy context:start": function () {
             this.throttler.on("context:start", this.listener);
             this.firefox.emit("suite:start");
+            this.chrome.emit("suite:start");
             this.firefox.emit("context:start", { name: "Stuff" });
 
             refute(this.listener.called);
@@ -138,6 +139,7 @@
             this.throttler.on("test:async", this.listener);
             this.throttler.on("test:deferred", this.listener);
             this.throttler.on("test:tearDown", this.listener);
+            this.chrome.emit("suite:start");
             this.firefox.emit("suite:start");
             this.firefox.emit("context:start", { name: "Stuff" });
             this.firefox.emit("context:unsupported", { unsupported: [] });
@@ -167,6 +169,7 @@
             this.throttler.on("test:deferred", this.listener);
             this.throttler.on("test:tearDown", this.listener);
             this.throttler.on("context:end", this.listener);
+            this.chrome.emit("suite:start");
             this.firefox.emit("suite:start");
             this.firefox.emit("context:start", { name: "Stuff" });
             this.firefox.emit("context:unsupported", { unsupported: [] });
@@ -180,6 +183,77 @@
             this.firefox.emit("test:success", { name: "test #4" });
             this.firefox.emit("test:deferred", { name: "test #5" });
             this.firefox.emit("context:end", { name: "Stuff" });
+
+            assert.equals(this.listener.callCount, 12);
+        },
+
+        "proxies events continuously with one client": function () {
+            this.throttler.on("context:start", this.listener);
+            this.throttler.on("context:unsupported", this.listener);
+            this.throttler.on("test:setUp", this.listener);
+            this.throttler.on("test:start", this.listener);
+            this.throttler.on("test:error", this.listener);
+            this.throttler.on("test:failure", this.listener);
+            this.throttler.on("test:timeout", this.listener);
+            this.throttler.on("test:success", this.listener);
+            this.throttler.on("test:async", this.listener);
+            this.throttler.on("test:deferred", this.listener);
+            this.throttler.on("test:tearDown", this.listener);
+            this.throttler.on("context:end", this.listener);
+            this.firefox.emit("suite:start");
+            this.firefox.emit("context:start", { name: "Stuff" });
+            this.firefox.emit("context:unsupported", { unsupported: [] });
+            this.firefox.emit("test:setUp", { name: "test #1" });
+            this.firefox.emit("test:start", { name: "test #1" });
+            this.firefox.emit("test:error", { name: "test #1" });
+            this.firefox.emit("test:tearDown", { name: "test #1" });
+            this.firefox.emit("test:error", { name: "test #2" });
+            this.firefox.emit("test:async", { name: "test #3" });
+            this.firefox.emit("test:timeout", { name: "test #3" });
+            this.firefox.emit("test:success", { name: "test #4" });
+            this.firefox.emit("test:deferred", { name: "test #5" });
+
+            assert.equals(this.listener.callCount, 11);
+        },
+
+        "switches from continuously to proxied when new client joins in": function () {
+            this.throttler.on("context:start", this.listener);
+            this.throttler.on("context:unsupported", this.listener);
+            this.throttler.on("test:setUp", this.listener);
+            this.throttler.on("test:start", this.listener);
+            this.throttler.on("test:error", this.listener);
+            this.throttler.on("test:failure", this.listener);
+            this.throttler.on("test:timeout", this.listener);
+            this.throttler.on("test:success", this.listener);
+            this.throttler.on("test:async", this.listener);
+            this.throttler.on("test:deferred", this.listener);
+            this.throttler.on("test:tearDown", this.listener);
+            this.throttler.on("context:end", this.listener);
+            this.firefox.emit("suite:start");
+            this.firefox.emit("context:start", { name: "Stuff" });
+            this.firefox.emit("context:unsupported", { unsupported: [] });
+            this.firefox.emit("test:setUp", { name: "test #1" });
+            this.chrome.emit("suite:start"); // <=
+            this.firefox.emit("test:start", { name: "test #1" });
+            this.firefox.emit("test:error", { name: "test #1" });
+            this.firefox.emit("test:tearDown", { name: "test #1" });
+            this.firefox.emit("test:error", { name: "test #2" });
+            this.firefox.emit("test:async", { name: "test #3" });
+            this.firefox.emit("test:timeout", { name: "test #3" });
+            this.firefox.emit("test:success", { name: "test #4" });
+            this.firefox.emit("test:deferred", { name: "test #5" });
+            this.firefox.emit("context:end", { name: "Stuff" });
+            this.firefox.emit("context:start", { name: "Stuff" });
+            this.firefox.emit("context:unsupported", { unsupported: [] });
+            this.firefox.emit("test:setUp", { name: "test #1" });
+            this.firefox.emit("test:start", { name: "test #1" });
+            this.firefox.emit("test:error", { name: "test #1" });
+            this.firefox.emit("test:tearDown", { name: "test #1" });
+            this.firefox.emit("test:error", { name: "test #2" });
+            this.firefox.emit("test:async", { name: "test #3" });
+            this.firefox.emit("test:timeout", { name: "test #3" });
+            this.firefox.emit("test:success", { name: "test #4" });
+            this.firefox.emit("test:deferred", { name: "test #5" });
 
             assert.equals(this.listener.callCount, 12);
         },
