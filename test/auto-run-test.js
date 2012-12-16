@@ -204,6 +204,15 @@
             });
         },
 
+        "creates runner with environment": function () {
+            var reporter = typeof document === "undefined" ? reporters.brief : reporters.html;
+
+            this.sandbox.spy(reporter, "create");
+            autoRun.run([this.context], { color: true, bright: false });
+
+            assert.isString(testRunner.create.args[0][0].environment);
+        },
+
         "uses specified reporter": function () {
             var reporter = typeof document === "undefined" ? reporters.xml : reporters.html;
             this.sandbox.spy(reporter, "create");
@@ -222,17 +231,19 @@
         },
 
         "initializes reporter with options": function () {
-            var reporter = typeof document === "undefined" ? reporters.dots : reporters.html;
+            var reporter = typeof document === "undefined" ? reporters.brief : reporters.html;
 
             this.sandbox.spy(reporter, "create");
             autoRun.run([this.context], {
-                color: false,
-                bright: false
+                timeout: 1000,
+                failOnNoAssertions: true,
+                color: true
             });
 
             assert.match(reporter.create.args[0][0], {
-                color: false,
-                bright: false
+                timeout: 1000,
+                failOnNoAssertions: true,
+                color: true
             });
         },
 
