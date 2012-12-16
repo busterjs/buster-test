@@ -3,24 +3,10 @@ var rhelper = require("./test-helper");
 var bane = require("bane");
 var referee = require("referee");
 var sinon = require("sinon");
-var platform = require("platform");
 var briefReporter = require("../../lib/reporters/brief");
 var assert = referee.assert;
 var refute = referee.refute;
 var stackFilter = require("stack-filter");
-
-function client(runner, ua, uuid) {
-    var client = platform.parse(ua);
-    client.uuid = uuid;
-
-    return {
-        emit: function (event, data) {
-            data = data || {};
-            data.environment = client;
-            runner.emit(event, data);
-        }
-    };
-}
 
 function reporterSetUp(options) {
     this.outputStream = rhelper.writableStream();
@@ -32,13 +18,13 @@ function reporterSetUp(options) {
     options.stackFilter = stackFilter.configure({ filters: [__dirname] });
     this.reporter = briefReporter.create(options).listen(this.runner);
 
-    this.firefox = client(
+    this.firefox = rhelper.makeClient(
         this.runner,
         "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:16.0) Gecko/20100101 Firefox/16.0",
         "3122ebf2-1b5b-44b5-97dd-2ebd2898b95c"
     );
 
-    this.chrome = client(
+    this.chrome = rhelper.makeClient(
         this.runner,
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.4 (KHTML, like Gecko) Chrome/22.0.1229.94 Safari/537.4",
         "3023ddac-670d-4e32-a99d-25ae32398c11"

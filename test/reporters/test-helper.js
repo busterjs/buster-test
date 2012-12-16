@@ -1,4 +1,5 @@
 var assert = require("referee").assert;
+var platform = require("platform");
 
 module.exports = {
     assertIO: function (string) {
@@ -19,6 +20,19 @@ module.exports = {
             content: "",
             write: function (str) { this.content += str; },
             toString: function () { return this.content; }
+        };
+    },
+
+    makeClient: function (runner, ua, uuid) {
+        var client = platform.parse(ua);
+        client.uuid = uuid;
+
+        return {
+            emit: function (event, data) {
+                data = data || {};
+                data.environment = client;
+                runner.emit(event, data);
+            }
         };
     }
 };

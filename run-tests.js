@@ -15,6 +15,7 @@ require("./test/reporters/tap-test");
 require("./test/reporters/teamcity-test");
 require("./test/reporters/xml-test");
 require("./test/reporters/brief-test");
+require("./test/reporters/runtime-throttler-test");
 require("./test/spec-test");
 require("./test/test-case-test");
 require("./test/test-context-test");
