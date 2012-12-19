@@ -43,7 +43,7 @@
 
     function runnerEventsSetUp() {
         this.runner = testRunner.create({
-            environment: "Node 8.10"
+            runtime: "Node 8.10"
         });
         this.runner.failOnNoAssertions = false;
         this.assertionError = new Error("Oh, crap");
@@ -2167,7 +2167,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var ctx = listeners["suite:start"].args[0][0];
-                assert.isObject(ctx.environment);
+                assert.isObject(ctx.runtime);
             }));
         },
 
@@ -2176,8 +2176,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var ctx = listeners["context:start"].args[0][0];
-                assert.isObject(ctx.environment);
-                delete ctx.environment;
+                assert.isObject(ctx.runtime);
+                delete ctx.runtime;
                 assert.equals(ctx, context);
             }));
         },
@@ -2187,8 +2187,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var ctx = listeners["context:end"].args[0][0];
-                assert.isObject(ctx.environment);
-                delete ctx.environment;
+                assert.isObject(ctx.runtime);
+                delete ctx.runtime;
                 assert.equals(ctx, context);
             }));
         },
@@ -2200,8 +2200,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var arg = listeners["context:unsupported"].args[0][0];
-                assert.isObject(arg.environment);
-                delete arg.environment;
+                assert.isObject(arg.runtime);
+                delete arg.runtime;
                 assert.equals(arg, {
                     context: context,
                     unsupported: ["Feature A"]
@@ -2217,7 +2217,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:setUp"].args;
-                assert.isObject(args[0][0].environment);
+                assert.isObject(args[0][0].runtime);
                 assert.equals(args[0][0].name, "test1");
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2231,7 +2231,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:tearDown"].args;
-                assert.isObject(args[0][0].environment);
+                assert.isObject(args[0][0].runtime);
                 assert.equals("test1", args[0][0].name);
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2245,7 +2245,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:start"].args;
-                assert.isObject(args[0][0].environment);
+                assert.isObject(args[0][0].runtime);
                 assert.equals(args[0][0].name, "test1");
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2259,7 +2259,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:error"].args[0];
-                assert.isObject(args[0].environment);
+                assert.isObject(args[0].runtime);
                 assert.equals(args[0].name, "test1");
                 assert.equals(args[0].error.name, "TypeError");
                 assert.equals(args[0].error.message, "");
@@ -2275,7 +2275,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:failure"].args[0];
-                assert.isObject(args[0].environment);
+                assert.isObject(args[0].runtime);
                 assert.equals(args[0].name, "test1");
                 assert.equals(args[0].error.name, "AssertionError");
                 assert.equals(args[0].error.message, "");
@@ -2296,8 +2296,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:success"].args[0];
-                assert.isObject(args[0].environment);
-                delete args[0].environment;
+                assert.isObject(args[0].runtime);
+                delete args[0].runtime;
                 assert.equals(args, [{ name: "test1", assertions: 2 }]);
             }));
         },
@@ -2334,7 +2334,7 @@
 
             this.runSuite([context, context2], done(function (listeners) {
                 var args = listeners["suite:end"].args[0];
-                assert.isObject(args[0].environment);
+                assert.isObject(args[0].runtime);
                 assert.equals(args[0].contexts, 2);
                 assert.equals(args[0].tests, 10);
                 assert.equals(args[0].errors, 2);
@@ -2424,7 +2424,7 @@
 
             setTimeout(done(function () {
                 assert(listener.calledOnce);
-                assert.isObject(listener.args[0][0].environment);
+                assert.isObject(listener.args[0][0].runtime);
                 assert.match(listener.args[0][0].message, /Damnit/);
             }), 25);
 
@@ -2719,7 +2719,7 @@
 
     helper.testCase("TestRunnerFocusTest", {
         setUp: function () {
-            this.runner = testRunner.create({ environment: "Node 0.8" });
+            this.runner = testRunner.create({ runtime: "Node 0.8" });
         },
 
         "runs focused test": function (done) {
@@ -2781,7 +2781,7 @@
             });
 
             this.runner.on("runner:focus", done(function (e) {
-                assert.isObject(e.environment);
+                assert.isObject(e.runtime);
             }));
             this.runner.runSuite([context]);
         }
@@ -2856,18 +2856,18 @@
             this.suite = [testCase("Test + Assertions", { test1: function () {} })];
         },
 
-        "emits suite:configuration with environment": function () {
-            var runner = testRunner.create({ environment: this.ua });
+        "emits suite:configuration with runtime": function () {
+            var runner = testRunner.create({ runtime: this.ua });
             var config;
             var listener = function (c) { config = c; };
 
             runner.on("suite:configuration", listener);
             runner.runSuite(this.suite);
 
-            assert.equals(config.environment.name, "Firefox");
+            assert.equals(config.runtime.name, "Firefox");
         },
 
-        "does not emit suite:configuration with no environment": function () {
+        "does not emit suite:configuration with no runtime": function () {
             var runner = testRunner.create({});
             var listener = sinon.spy();
             runner.on("suite:configuration", listener);
@@ -2878,7 +2878,7 @@
 
         "emits suite:configuration with configuration": function () {
             var runner = testRunner.create({
-                environment: this.ua,
+                runtime: this.ua,
                 configuration: "Browser tests"
             });
             var config;
@@ -2895,7 +2895,7 @@
         setUp: function () {
             this.ua = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:16.0) " +
                 "Gecko/20100101 Firefox/16.0";
-            this.runner = testRunner.create({ environment: this.ua });
+            this.runner = testRunner.create({ runtime: this.ua });
             var listener = sinon.spy();
             this.runner.on("suite:configuration", listener);
             this.runSuite = function (suite, callback) {
@@ -2909,7 +2909,7 @@
             var context = testCase("My case", {});
 
             this.runSuite([context], done(function (data) {
-                assert.isObject(data.environment);
+                assert.isObject(data.runtime);
                 assert.equals(data.tests, 0);
             }));
         },

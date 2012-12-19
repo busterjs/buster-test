@@ -27,33 +27,33 @@
         "emits runner:focus": function () {
             var listener = sinon.spy();
             this.proxy.on("runner:focus", listener);
-            this.runner.emit("runner:focus", { environment: {} });
+            this.runner.emit("runner:focus", { runtime: {} });
 
             assert(listener.calledOnce);
-            assert.isObject(listener.args[0][0].environment);
+            assert.isObject(listener.args[0][0].runtime);
         },
 
         "emits suite:configuration": function () {
             var listener = sinon.spy();
             this.proxy.on("suite:configuration", listener);
             this.runner.emit("suite:configuration", {
-                environment: {},
+                runtime: {},
                 name: "Config",
                 tests: 3
             });
 
             assert(listener.calledOnce);
-            assert.isObject(listener.args[0][0].environment);
+            assert.isObject(listener.args[0][0].runtime);
             assert.equals(listener.args[0][0].tests, 3);
         },
 
         "emits suite:start": function () {
             var listener = sinon.spy();
             this.proxy.on("suite:start", listener);
-            this.runner.emit("suite:start", { environment: {} });
+            this.runner.emit("suite:start", { runtime: {} });
 
             assert(listener.calledOnce);
-            assert.isObject(listener.args[0][0].environment);
+            assert.isObject(listener.args[0][0].runtime);
         },
 
         "emits serializable context object to context:start": function () {
@@ -62,12 +62,12 @@
             this.runner.emit("context:start", {
                 name: "Context",
                 meth: function () {},
-                environment: {}
+                runtime: {}
             });
 
             assert.equals(listener.args[0][0], {
                 name: "Context",
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -77,12 +77,12 @@
             this.runner.emit("context:end", {
                 name: "Context",
                 meth: function () {},
-                environment: {}
+                runtime: {}
             });
 
             assert.equals(listener.args[0][0], {
                 name: "Context",
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -95,14 +95,14 @@
                     name: "Context",
                     meth: function () {}
                 },
-                environment: {},
+                runtime: {},
                 unsupported: ["A"]
             });
 
             assert.equals(listener.args[0][0], {
                 context: { name: "Context" },
                 unsupported: ["A"],
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -112,12 +112,12 @@
             this.runner.emit("test:async", {
                 name: "should go",
                 func: function (done) {},
-                environment: {}
+                runtime: {}
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -127,12 +127,12 @@
             this.runner.emit("test:setUp", {
                 name: "should go",
                 func: function () {},
-                environment: {}
+                runtime: {}
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -142,12 +142,12 @@
             this.runner.emit("test:tearDown", {
                 name: "should go",
                 func: function () {},
-                environment: {}
+                runtime: {}
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -157,13 +157,13 @@
             this.runner.emit("test:deferred", {
                 name: "should go",
                 func: function () {},
-                environment: {},
+                runtime: {},
                 comment: "See, doc"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                environment: {},
+                runtime: {},
                 comment: "See, doc"
             });
         },
@@ -174,12 +174,12 @@
             this.runner.emit("test:start", {
                 name: "should go",
                 func: function () {},
-                environment: {}
+                runtime: {}
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -195,7 +195,7 @@
                     stack: "Trouble@here",
                     toString: function () {}
                 },
-                environment: {}
+                runtime: {}
             });
 
             assert.equals(listener.args[0][0], {
@@ -205,7 +205,7 @@
                     message: "Something went wrong",
                     stack: "Trouble@here"
                 },
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -215,7 +215,7 @@
             this.runner.emit("test:failure", {
                 name: "should go",
                 func: function () {},
-                environment: {},
+                runtime: {},
                 error: {
                     name: "AssertionError",
                     message: "Expected a to be equal to b",
@@ -226,7 +226,7 @@
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                environment: {},
+                runtime: {},
                 error: {
                     name: "AssertionError",
                     message: "Expected a to be equal to b",
@@ -241,7 +241,7 @@
             this.runner.emit("test:timeout", {
                 name: "should go",
                 func: function () {},
-                environment: {},
+                runtime: {},
                 error: {
                     name: "TimeoutError",
                     message: "Yo",
@@ -252,7 +252,7 @@
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                environment: {},
+                runtime: {},
                 error: {
                     name: "TimeoutError",
                     message: "Yo",
@@ -270,13 +270,13 @@
                 name: "should go",
                 func: function () {},
                 assertions: 13,
-                environment: {}
+                runtime: {}
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
                 assertions: 13,
-                environment: {}
+                runtime: {}
             });
         },
 
@@ -285,7 +285,7 @@
             this.proxy.on("suite:end", listener);
 
             this.runner.emit("suite:end", {
-                environment: {},
+                runtime: {},
                 contexts: 2,
                 tests: 3,
                 errors: 0,
@@ -297,7 +297,7 @@
             });
 
             assert.equals(listener.args[0][0], {
-                environment: {},
+                runtime: {},
                 contexts: 2,
                 tests: 3,
                 errors: 0,
@@ -332,7 +332,7 @@
                 message: "Something went wrong",
                 stack: "Trouble@here",
                 toString: function () {},
-                environment: {}
+                runtime: {}
             });
 
             assert(listener.calledOnce);
@@ -341,7 +341,7 @@
                 name: "Error",
                 message: "Something went wrong",
                 stack: "Trouble@here",
-                environment: {}
+                runtime: {}
             });
         }
     });
@@ -359,13 +359,13 @@
 
             this.runner.emit("test:start", {
                 name: "should do something",
-                environment: {}
+                runtime: {}
             });
 
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0], {
                 name: "should do something",
-                environment: {}
+                runtime: {}
             });
         }
     });

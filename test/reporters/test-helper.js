@@ -30,7 +30,7 @@ module.exports = {
         return {
             emit: function (event, data) {
                 data = data || {};
-                data.environment = client;
+                data.runtime = client;
                 runner.emit(event, data);
             }
         };

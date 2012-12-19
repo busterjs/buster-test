@@ -180,7 +180,7 @@ helper.testCase("SpecificationReporterTestsRunning", {
     },
 
     "prints warning when skipping unsupported context": function () {
-        this.reporter.contextUnsupported({
+        this.reporter["context:unsupported"]({
             context: { name: "Stuff" },
             unsupported: ["localStorage"]
         });
@@ -191,7 +191,7 @@ helper.testCase("SpecificationReporterTestsRunning", {
     "prints warning when skipping nested unsupported context": function () {
         this.runner.emit("context:start", { name: "Test" });
 
-        this.reporter.contextUnsupported({
+        this.reporter["context:unsupported"]({
             context: { name: "Stuff" },
             unsupported: ["localStorage"]
         });
@@ -200,7 +200,7 @@ helper.testCase("SpecificationReporterTestsRunning", {
     },
 
     "prints all unsupported features": function () {
-        this.reporter.contextUnsupported({
+        this.reporter["context:unsupported"]({
             context: { name: "Stuff" },
             unsupported: ["localStorage", "document"]
         });

@@ -204,13 +204,13 @@
             });
         },
 
-        "creates runner with environment": function () {
+        "creates runner with runtime": function () {
             var reporter = typeof document === "undefined" ? reporters.brief : reporters.html;
 
             this.sandbox.spy(reporter, "create");
             autoRun.run([this.context], { color: true, bright: false });
 
-            assert.isString(testRunner.create.args[0][0].environment);
+            assert.isString(testRunner.create.args[0][0].runtime);
         },
 
         "uses specified reporter": function () {

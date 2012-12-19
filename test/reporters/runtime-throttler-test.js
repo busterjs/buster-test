@@ -64,11 +64,11 @@
             assert(this.listener.calledTwice);
             assert.match(this.listener.args[0][0], {
                 tests: 2,
-                environment: { description: "Firefox" }
+                runtime: { description: "Firefox" }
             });
             assert.match(this.listener.args[1][0], {
                 tests: 3,
-                environment: { description: "Chrome" }
+                runtime: { description: "Chrome" }
             });
         },
 
