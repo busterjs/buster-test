@@ -42,7 +42,7 @@
         "url": "https://github.com/busterjs/buster-test.git"
     },
     "scripts": {
-        "test": "./run-tests"
+        "test": "node run-tests.js"
     },
     "dependencies": {
         "bane": "~0.1",
