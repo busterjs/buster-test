@@ -404,20 +404,16 @@
             var testCase = bTestCase("Some test", function () {});
 
             assert.equals(typeof testCase.then, "function");
-            refute.defined(testCase.name);
+            assert.defined(testCase.name);
             refute.defined(testCase.tests);
             refute.defined(testCase.setUp);
             refute.defined(testCase.tearDown);
         },
 
-        "//should give context promise name": function () {
-            console.log("Promises are apparently closed for modification." +
-                        "FIXME test-case-test.js#414");
-            // Had problems making this pass - promise wouldn't "take" name.
-            // TODO: Fix
-            // var testCase = bTestCase("Some test", function () {});
+        "gives context promise name": function () {
+            var testCase = bTestCase("Some test", function () {});
 
-            // assert.equals(testCase.name, "Some test");
+            assert.equals(testCase.name, "Some test");
         },
 
         "calls async context with run argument": function () {
