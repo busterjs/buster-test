@@ -125,13 +125,9 @@
 
     helper.testCase("TestRunnerRunContextTest", {
         setUp: function () {
-            this.runner = testRunner.create();
-            this.mathRandom = Math.random;
-            Math.random = function () { return 1; };
-        },
-
-        tearDown: function () {
-            Math.random = this.mathRandom;
+            this.runner = testRunner.create({
+                random: false
+            });
         },
 
         "returns promise": function () {
@@ -414,11 +410,6 @@
         },
 
         "runs tests in random order": function (done) {
-            // A tad bit too clever. Non-determinism is hard to test.
-            var calls = 0;
-            var numbers = [0.9, 0, 0.5];
-            Math.random = function () { return numbers[calls++ % 3]; };
-
             var order = [];
             var tests = [function () { order.unshift(1); },
                          function () { order.unshift(2); },
@@ -434,9 +425,37 @@
                 test5: tests[4]
             });
 
-            this.runner.runContext(context).then(done(function () {
+            testRunner.create().runContext(context).then(done(function () {
                 refute.equals(order, [1, 2, 3, 4, 5]);
             }));
+        },
+
+        "runs tests in seeded random order": function (done) {
+            var order = [];
+            var tests = [function () { order.unshift(1); },
+                         function () { order.unshift(2); },
+                         function () { order.unshift(3); },
+                         function () { order.unshift(4); },
+                         function () { order.unshift(5); }];
+
+            var context = testCase("Test", {
+                test1: tests[0],
+                test2: tests[1],
+                test3: tests[2],
+                test4: tests[3],
+                test5: tests[4]
+            });
+
+            var runner = testRunner.create({ randomSeed: 1 });
+            runner.runContext(context).then(function () {
+                var order1 = order.slice();
+                order = [];
+                runner.runContext(context).then(done(function () {
+                    assert.equals(order1, order);
+                    refute.equals(order, [1, 2, 3, 4, 5]);
+                    assert(runner.seed);
+                }));
+            });
         },
 
         "runs all tests even if one fails": function (done) {
