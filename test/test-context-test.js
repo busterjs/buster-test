@@ -264,6 +264,18 @@
 
             assert.equals(contexts.length, 1);
             assert.isFunction(contexts[0].then);
+        },
+
+        "returned promise has context name": function () {
+            var context = testCase("Some tests", {
+                "test 1": function () {}
+            });
+            var promise = when(context);
+            promise.name = context.name;
+
+            var contexts = testContext.compile([promise], "test ");
+
+            assert.equals(contexts[0].name, "Some tests");
         }
     });
 });
