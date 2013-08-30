@@ -480,10 +480,15 @@
             var spec = bspec.describe("Some spec", function (run) {});
 
             assert.equals(typeof spec.then, "function");
-            refute.defined(spec.name);
             refute.defined(spec.tests);
             refute.defined(spec.setUp);
             refute.defined(spec.tearDown);
+        },
+
+        "gives context promise name": function () {
+            var spec = bspec.describe("Some spec", function () {});
+
+            assert.equals(spec.name, "Some spec");
         },
 
         "calls async context with run argument": function () {
