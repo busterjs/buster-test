@@ -51,6 +51,20 @@
             assert(!spec.setUp);
         },
 
+        "mark context as deferred if name is prefixed with //": function () {
+            var spec = bspec.describe("//Some tests", function () {});
+
+            assert.isTrue(spec.deferred);
+        },
+
+        "mark context as deferred if parent context is deferred": function () {
+            var spec = bspec.describe("//Some tests", function () {
+                bspec.describe("Some nested tests", function () {});
+            });
+
+            assert.isTrue(spec.contexts[0].deferred);
+        },
+
         "calls create callback when a spec is created": function () {
             var listener = sinon.spy();
             testContext.on("create", listener);
@@ -179,6 +193,15 @@
             assert(spec.tests[0].deferred);
             assert.equals("Because it should", spec.tests[0].comment);
             assert.isFunction(spec.tests[0].func);
+        },
+
+        "mark tests as deferred if context is deferred": function () {
+
+            var spec = bspec.describe("//Some tests", function () {
+                bspec.it("first it", function () {});
+            });
+
+            assert.isTrue(spec.tests[0].deferred);
         },
 
         "adds setUp function by calling bspec.before": function () {
