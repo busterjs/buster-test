@@ -2467,6 +2467,20 @@
             }));
         },
 
+        "contextSetUp this is prototype of nested test this": function (done) {
+            var prepare = sinon.spy();
+            var testFn = sinon.spy();
+            var context = testCase("Test", {
+                prepare: prepare,
+                context: { test: testFn }
+            });
+
+            this.runner.runContext(context).then(done(function () {
+                assert(prepare.calledOnce);
+                assert.hasPrototype(testFn.thisValues[0], prepare.thisValues[0]);
+            }));
+        },
+
         "contextSetUp is only called once": function (done) {
             var prepare = sinon.spy();
             var context = testCase("Test", {
