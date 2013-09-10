@@ -2175,7 +2175,20 @@
             this.runSuite([context], done(function (listeners) {
                 assert(listeners["context:unsupported"].calledOnce);
             }));
-        }
+        },
+
+        "does not emit context:unsupported due to extended Object.prototype":
+             function (done) {
+                Object.prototype.mixin = function () {};
+
+                var context = testCase("Test", {
+                    "test": this.test
+                });
+
+                this.runSuite([context], done(function (listeners) {
+                    assert(listeners["context:unsupported"].notCalled);
+                }));
+            }
     });
 
     helper.testCase("TestRunnerEventDataTest", {
