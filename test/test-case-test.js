@@ -396,7 +396,24 @@
             assert(ctx.tests[0].deferred);
             assert(ctx.tests[1].deferred);
             assert(ctx.tests[2].deferred);
+        },
+
+        "defers nested context": function () {
+            var context = bTestCase("//Name", {
+                "up next": {
+                    "cool feature A": function () {},
+                    "cool feature B": function () {},
+                    "cool feature C": function () {}
+                }
+            });
+
+            var ctx = context.contexts[0];
+            assert(ctx.deferred);
+            assert(ctx.tests[0].deferred);
+            assert(ctx.tests[1].deferred);
+            assert(ctx.tests[2].deferred);
         }
+
     });
 
     helper.testCase("AsyncTestContextTest", {
