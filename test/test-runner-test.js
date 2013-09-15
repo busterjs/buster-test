@@ -369,9 +369,9 @@
             });
 
             this.runner.runContext(context).then(done(function () {
-                assert.equals(events, ["setUp", "test3", "tearDown",
+                assert.equals(events, ["setUp", "test1", "tearDown",
                                        "setUp", "test2", "tearDown",
-                                       "setUp", "test1", "tearDown"]);
+                                       "setUp", "test3", "tearDown"]);
             }));
         },
 
@@ -403,9 +403,9 @@
             });
 
             this.runner.runContext(context).then(done(function () {
-                assert.equals(events, ["su", "su 3", "test3", "td 3", "td",
+                assert.equals(events, ["su", "su 1", "test1", "td 1", "td",
                                        "su", "su 2", "test2", "td 2", "td",
-                                       "su", "su 1", "test1", "td 1", "td"]);
+                                       "su", "su 3", "test3", "td 3", "td"]);
             }));
         },
 
@@ -893,12 +893,11 @@
             }, 10);
         },
 
-        "errors if test rejects it's returned promise": function (done) {
+        "errors if test rejects its returned promise": function (done) {
             var listener = sinon.spy();
             this.runner.on("test:error", listener);
 
-            this.runner.runSuite([this.context]).then(done(function () {
-                assert(listener.calledOnce);
+            this.runner.runSuite([this.context]).then(done(function (stats) {
                 assert.equals(listener.args[0][0].error.message, "Oh no");
             }));
 
