@@ -16,18 +16,26 @@
         var ctx = {};
 
         function complete(cb) {
-            function doComplete() {
+            function doComplete(err) {
                 try {
                     tearDown.call(ctx);
                 } catch (e) {
-                    return handleError(e);
+                    err = err || e;
+                }
+                if (err) {
+                    return handleError(err);
                 }
                 next(true);
             }
             if (typeof cb === "function") {
                 return function () {
-                    cb.apply(null, arguments);
-                    doComplete();
+                    var err;
+                    try {
+                        cb.apply(null, arguments);
+                    } catch (e) {
+                        err = e;
+                    }
+                    doComplete(err);
                 };
             }
             doComplete();
