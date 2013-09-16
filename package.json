@@ -49,8 +49,8 @@
         "test": "node run-tests.js"
     },
     "dependencies": {
-        "bane": "~0.1",
-        "ansi-colorizer": ">=0.5.0",
+        "bane": "~1.0",
+        "ansi-colorizer": "~1.0",
         "when": "http://github.com/cujojs/when/tarball/1.8.1",
         "lodash": "~1.0",
         "async": "~0.1",
