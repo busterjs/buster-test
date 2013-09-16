@@ -60,6 +60,14 @@ helper.testCase("Brief reporter", {
         this.assertIO("Running tests ...\n\x1b[1A\x1b[KRunning 2 tests in 1 runtime ...");
     },
 
+    "does not overwrite user's logs": function () {
+        this.runner.emit("suite:start");
+        this.outputStream.write("YO!\n");
+        this.firefox.emit("suite:configuration", { tests: 2 });
+
+        this.assertIO("Running tests ...\nYO!\nRunning 2 tests in 1 runtime ...");
+    },
+
     "does not print data when number of tests unknown": function () {
         this.runner.emit("suite:start");
         this.firefox.emit("suite:configuration", {});
@@ -687,7 +695,7 @@ helper.testCase("Brief reporter similar errors", {
     "prints all log messages": function () {
         this.firefox.emit("test:setUp", { name: "test #1" });
         this.firefox.emit("log", { level: "log", message: "MSG1" });
- 
+
         this.firefox.emit("test:error", {
             name: "test #1",
             error: this.exceptions[0]
