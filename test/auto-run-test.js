@@ -170,6 +170,11 @@
             options: { random: false }
         }),
 
+        "calls run with random from BUSTER_RANDOM with 'false'": testAutoRunOptions({
+            env: { BUSTER_RANDOM: "false" },
+            options: { random: false }
+        }),
+
         "calls run with random from options": testAutoRunOptions({
             autoRunOptions: { random: false },
             options: { random: false }
