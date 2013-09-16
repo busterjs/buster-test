@@ -2933,6 +2933,7 @@
             runner.runSuite(this.suite);
 
             assert.equals(config.name, "Browser tests");
+            assert.defined(config.seed);
         }
     });
 

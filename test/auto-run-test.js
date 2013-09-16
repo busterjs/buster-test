@@ -163,6 +163,21 @@
         "calls run with failOnNoAssertions from BUSTER_FAIL_ON_NO_ASSERTIONS": testAutoRunOptions({
             env: { BUSTER_FAIL_ON_NO_ASSERTIONS: "false" },
             options: { failOnNoAssertions: false }
+        }),
+
+        "calls run with random from BUSTER_RANDOM": testAutoRunOptions({
+            env: { BUSTER_RANDOM: "0" },
+            options: { random: false }
+        }),
+
+        "calls run with random from options": testAutoRunOptions({
+            autoRunOptions: { random: false },
+            options: { random: false }
+        }),
+
+        "calls run with randomSeed from options": testAutoRunOptions({
+            autoRunOptions: { randomSeed: "hmm" },
+            options: { randomSeed: "hmm" }
         })
     });
 
