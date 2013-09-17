@@ -873,7 +873,7 @@ helper.testCase("Brief reporter verbose", {
 
 helper.testCase("Brief reporter double verbose", {
     setUp: function () {
-        reporterSetUp.call(this, { verbosity: "debug" });
+        reporterSetUp.call(this, { logPassedMessages: true });
         this.firefox.emit("suite:configuration", {});
     },
 
