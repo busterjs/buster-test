@@ -356,7 +356,7 @@ helper.testCase("XMLReporterTest", {
         this.runner.emit("suite:end");
 
         this.assertIO("<testsuite errors=\"1\" tests=\"1\" failures=\"0\" name=\"Uncaught exceptions\">");
-        this.assertIO("<testcase classname=\"Uncaught exception\" name=\"#1\">");
+        this.assertIO("<testcase classname=\"Uncaught exception\" time=\"0\" name=\"#1\">");
         this.assertIO('<failure type="TypeError" ' +
                       'message="Thingamagiggy">' +
                       "\n                STACK\n                STACK" +
@@ -370,7 +370,7 @@ helper.testCase("XMLReporterTest", {
         this.runner.emit("suite:end");
 
         this.assertIO("<testsuite errors=\"1\" tests=\"1\" failures=\"0\" name=\"Uncaught exceptions\">");
-        this.assertIO("<testcase classname=\"Uncaught exception\" name=\"#1\">");
+        this.assertIO("<testcase classname=\"Uncaught exception\" time=\"0\" name=\"#1\">");
         this.assertIO('<failure type="Error" message="Thingamagiggy"></failure>');
     },
 
