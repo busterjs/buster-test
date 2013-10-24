@@ -377,5 +377,14 @@ helper.testCase("XMLReporterTest", {
     "does not include element for uncaught exceptions when there are none": function () {
         this.runner.emit("suite:end");
         refute.match(this.outputStream.toString(), "Uncaught exceptions");
+    },
+
+    "does not produce invalid xml for uncaught exceptions": function () {
+        this.runner.emit("uncaughtException", {
+            message: "Thingamagiggy"
+        });
+        this.runner.emit("suite:end");
+
+        refute.match(this.outputStream.toString(), "time=\"0\"name=\"#1\"");
     }
 });
