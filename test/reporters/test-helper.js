@@ -30,7 +30,10 @@ module.exports = {
         return {
             emit: function (event, data) {
                 data = data || {};
-                data.runtime = client;
+                if (event === "suite:configuration") {
+                    data.runtime = client;
+                }
+                data.uuid = uuid;
                 runner.emit(event, data);
             }
         };

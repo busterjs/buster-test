@@ -27,10 +27,10 @@
         "emits runner:focus": function () {
             var listener = sinon.spy();
             this.proxy.on("runner:focus", listener);
-            this.runner.emit("runner:focus", { runtime: {} });
+            this.runner.emit("runner:focus", { uuid: "1" });
 
             assert(listener.calledOnce);
-            assert.isObject(listener.args[0][0].runtime);
+            assert.isString(listener.args[0][0].uuid);
         },
 
         "emits suite:configuration": function () {
@@ -38,22 +38,24 @@
             this.proxy.on("suite:configuration", listener);
             this.runner.emit("suite:configuration", {
                 runtime: {},
+                uuid: "1",
                 name: "Config",
                 tests: 3
             });
 
             assert(listener.calledOnce);
             assert.isObject(listener.args[0][0].runtime);
+            assert.isString(listener.args[0][0].uuid);
             assert.equals(listener.args[0][0].tests, 3);
         },
 
         "emits suite:start": function () {
             var listener = sinon.spy();
             this.proxy.on("suite:start", listener);
-            this.runner.emit("suite:start", { runtime: {} });
+            this.runner.emit("suite:start", { uuid: "1" });
 
             assert(listener.calledOnce);
-            assert.isObject(listener.args[0][0].runtime);
+            assert.isString(listener.args[0][0].uuid);
         },
 
         "emits serializable context object to context:start": function () {
@@ -62,12 +64,12 @@
             this.runner.emit("context:start", {
                 name: "Context",
                 meth: function () {},
-                runtime: {}
+                uuid: "1"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "Context",
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -77,12 +79,12 @@
             this.runner.emit("context:end", {
                 name: "Context",
                 meth: function () {},
-                runtime: {}
+                uuid: "1"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "Context",
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -95,14 +97,14 @@
                     name: "Context",
                     meth: function () {}
                 },
-                runtime: {},
+                uuid: "1",
                 unsupported: ["A"]
             });
 
             assert.equals(listener.args[0][0], {
                 context: { name: "Context" },
                 unsupported: ["A"],
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -112,12 +114,12 @@
             this.runner.emit("test:async", {
                 name: "should go",
                 func: function (done) {},
-                runtime: {}
+                uuid: "1"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -127,12 +129,12 @@
             this.runner.emit("test:setUp", {
                 name: "should go",
                 func: function () {},
-                runtime: {}
+                uuid: "1"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -142,12 +144,12 @@
             this.runner.emit("test:tearDown", {
                 name: "should go",
                 func: function () {},
-                runtime: {}
+                uuid: "1"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -157,13 +159,13 @@
             this.runner.emit("test:deferred", {
                 name: "should go",
                 func: function () {},
-                runtime: {},
+                uuid: "1",
                 comment: "See, doc"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                runtime: {},
+                uuid: "1",
                 comment: "See, doc"
             });
         },
@@ -174,12 +176,12 @@
             this.runner.emit("test:start", {
                 name: "should go",
                 func: function () {},
-                runtime: {}
+                uuid: "1"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -195,7 +197,7 @@
                     stack: "Trouble@here",
                     toString: function () {}
                 },
-                runtime: {}
+                uuid: "1"
             });
 
             assert.equals(listener.args[0][0], {
@@ -205,7 +207,7 @@
                     message: "Something went wrong",
                     stack: "Trouble@here"
                 },
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -215,7 +217,7 @@
             this.runner.emit("test:failure", {
                 name: "should go",
                 func: function () {},
-                runtime: {},
+                uuid: "1",
                 error: {
                     name: "AssertionError",
                     message: "Expected a to be equal to b",
@@ -226,7 +228,7 @@
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                runtime: {},
+                uuid: "1",
                 error: {
                     name: "AssertionError",
                     message: "Expected a to be equal to b",
@@ -241,7 +243,7 @@
             this.runner.emit("test:timeout", {
                 name: "should go",
                 func: function () {},
-                runtime: {},
+                uuid: "1",
                 error: {
                     name: "TimeoutError",
                     message: "Yo",
@@ -252,7 +254,7 @@
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
-                runtime: {},
+                uuid: "1",
                 error: {
                     name: "TimeoutError",
                     message: "Yo",
@@ -270,13 +272,13 @@
                 name: "should go",
                 func: function () {},
                 assertions: 13,
-                runtime: {}
+                uuid: "1"
             });
 
             assert.equals(listener.args[0][0], {
                 name: "should go",
                 assertions: 13,
-                runtime: {}
+                uuid: "1"
             });
         },
 
@@ -285,7 +287,7 @@
             this.proxy.on("suite:end", listener);
 
             this.runner.emit("suite:end", {
-                runtime: {},
+                uuid: "1",
                 contexts: 2,
                 tests: 3,
                 errors: 0,
@@ -297,7 +299,7 @@
             });
 
             assert.equals(listener.args[0][0], {
-                runtime: {},
+                uuid: "1",
                 contexts: 2,
                 tests: 3,
                 errors: 0,
@@ -332,7 +334,7 @@
                 message: "Something went wrong",
                 stack: "Trouble@here",
                 toString: function () {},
-                runtime: {}
+                uuid: "1"
             });
 
             assert(listener.calledOnce);
@@ -341,7 +343,7 @@
                 name: "Error",
                 message: "Something went wrong",
                 stack: "Trouble@here",
-                runtime: {}
+                uuid: "1"
             });
         }
     });
@@ -359,13 +361,13 @@
 
             this.runner.emit("test:start", {
                 name: "should do something",
-                runtime: {}
+                uuid: "1"
             });
 
             assert(listener.calledOnce);
             assert.equals(listener.args[0][0], {
                 name: "should do something",
-                runtime: {}
+                uuid: "1"
             });
         }
     });
