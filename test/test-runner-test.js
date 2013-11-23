@@ -2198,7 +2198,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var ctx = listeners["suite:start"].args[0][0];
-                assert.isObject(ctx.runtime);
+                assert.isString(ctx.uuid);
             }));
         },
 
@@ -2207,8 +2207,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var ctx = listeners["context:start"].args[0][0];
-                assert.isObject(ctx.runtime);
-                delete ctx.runtime;
+                assert.isString(ctx.uuid);
+                delete ctx.uuid;
                 assert.equals(ctx, context);
             }));
         },
@@ -2218,8 +2218,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var ctx = listeners["context:end"].args[0][0];
-                assert.isObject(ctx.runtime);
-                delete ctx.runtime;
+                assert.isString(ctx.uuid);
+                delete ctx.uuid;
                 assert.equals(ctx, context);
             }));
         },
@@ -2231,8 +2231,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var arg = listeners["context:unsupported"].args[0][0];
-                assert.isObject(arg.runtime);
-                delete arg.runtime;
+                assert.isString(arg.uuid);
+                delete arg.uuid;
                 assert.equals(arg, {
                     context: context,
                     unsupported: ["Feature A"]
@@ -2248,7 +2248,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:setUp"].args;
-                assert.isObject(args[0][0].runtime);
+                assert.isString(args[0][0].uuid);
                 assert.equals(args[0][0].name, "test1");
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2262,7 +2262,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:tearDown"].args;
-                assert.isObject(args[0][0].runtime);
+                assert.isString(args[0][0].uuid);
                 assert.equals("test1", args[0][0].name);
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2276,7 +2276,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:start"].args;
-                assert.isObject(args[0][0].runtime);
+                assert.isString(args[0][0].uuid);
                 assert.equals(args[0][0].name, "test1");
                 assert(context.testCase.isPrototypeOf(args[0][0].testCase));
             }));
@@ -2290,7 +2290,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:error"].args[0];
-                assert.isObject(args[0].runtime);
+                assert.isString(args[0].uuid);
                 assert.equals(args[0].name, "test1");
                 assert.equals(args[0].error.name, "TypeError");
                 assert.equals(args[0].error.message, "");
@@ -2306,7 +2306,7 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:failure"].args[0];
-                assert.isObject(args[0].runtime);
+                assert.isString(args[0].uuid);
                 assert.equals(args[0].name, "test1");
                 assert.equals(args[0].error.name, "AssertionError");
                 assert.equals(args[0].error.message, "");
@@ -2327,8 +2327,8 @@
 
             this.runSuite([context], done(function (listeners) {
                 var args = listeners["test:success"].args[0];
-                assert.isObject(args[0].runtime);
-                delete args[0].runtime;
+                assert.isString(args[0].uuid);
+                delete args[0].uuid;
                 assert.equals(args, [{ name: "test1", assertions: 2 }]);
             }));
         },
@@ -2365,7 +2365,7 @@
 
             this.runSuite([context, context2], done(function (listeners) {
                 var args = listeners["suite:end"].args[0];
-                assert.isObject(args[0].runtime);
+                assert.isString(args[0].uuid);
                 assert.equals(args[0].contexts, 2);
                 assert.equals(args[0].tests, 10);
                 assert.equals(args[0].errors, 2);
@@ -2455,7 +2455,7 @@
 
             setTimeout(done(function () {
                 assert(listener.calledOnce);
-                assert.isObject(listener.args[0][0].runtime);
+                assert.isString(listener.args[0][0].uuid);
                 assert.match(listener.args[0][0].message, /Damnit/);
             }), 25);
 
@@ -2826,7 +2826,7 @@
             });
 
             this.runner.on("runner:focus", done(function (e) {
-                assert.isObject(e.runtime);
+                assert.isString(e.uuid);
             }));
             this.runner.runSuite([context]);
         }
