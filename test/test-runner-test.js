@@ -2910,6 +2910,7 @@
             runner.runSuite(this.suite);
 
             assert.equals(config.runtime.name, "Firefox");
+            assert.isString(config.uuid);
         },
 
         "does not emit suite:configuration with no runtime": function () {
