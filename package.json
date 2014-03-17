@@ -46,12 +46,13 @@
         "url": "https://github.com/busterjs/buster-test.git"
     },
     "scripts": {
-        "test": "node run-tests.js"
+        "test": "node run-tests.js",
+        "test-debug": "node --debug-brk run-tests.js"
     },
     "dependencies": {
         "bane": "~1.0",
         "ansi-colorizer": "~1.0",
-        "when": "http://github.com/cujojs/when/tarball/1.8.1",
+        "when": "https://github.com/cujojs/when/tarball/1.8.1",
         "lodash": "~1.0",
         "async": "~0.1",
         "platform": "~1.0"
