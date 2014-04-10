@@ -61,7 +61,7 @@
         "jsdom": "~0.5.3"
     },
     "devDependencies": {
-        "stack-filter": "~0.1",
+        "stack-filter": "~1.0",
         "referee": "*",
         "formatio": "*",
         "sinon": "~1.4"
