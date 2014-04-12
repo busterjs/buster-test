@@ -5,6 +5,8 @@ require("sinon").config = {
     useFakeServer: false
 };
 
+var testRunner = require("./test/test-helper");
+
 require("./test/auto-run-test");
 require("./test/browser-env-test");
 require("./test/reporters-test");
@@ -19,3 +21,9 @@ require("./test/spec-test");
 require("./test/test-case-test");
 require("./test/test-context-test");
 require("./test/test-runner-test");
+
+testRunner.result(function (result) {
+    console.log("Exit code: " + result);
+    process.exit(result);
+});
+

@@ -5,6 +5,7 @@
 }) || define)(["referee"], function (referee) {
     "use strict";
     var wait = setTimeout;
+    var result = 0, resultListener;
 
     function runTest(name, test, setUp, tearDown, next) {
         function handleError(e) {
@@ -53,7 +54,7 @@
             if (typeof tearDown === "function") {
                 try {
                     tearDown.call(ctx);
-                } catch (e) {}
+                } catch (ignore) {}
             }
             handleError(e);
         }
@@ -74,6 +75,9 @@
             var color = passed === total ? "\x1b[32m" : "\x1b[31m";
             console.log(color + testCase.name + ": " +
                         passed + "/" + total + "\x1b[0m");
+            if (passed !== total) {
+                result = 1;
+            }
             cb();
         }
 
@@ -101,6 +105,11 @@
     var testCases = [], running = false;
 
     function start() {
+        if (testCases.length === 0) {
+            if (resultListener) {
+                resultListener(result);
+            }
+        }
         if (!running && testCases.length > 0) {
             running = true;
             var tc = testCases.shift();
@@ -116,5 +125,10 @@
         start();
     }
 
-    return { testCase: testCase };
+    return {
+        testCase: testCase,
+        result: function (cb) {
+            resultListener = cb;
+        }
+    };
 });
