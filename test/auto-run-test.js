@@ -274,8 +274,8 @@
             autoRun.run(contexts);
 
             var actual = testRunner.runSuite.args[0][0];
-            assert.match(tests[0], actual[0]);
-            assert.match(tests[1], actual[1]);
+            assert.match(actual[0], tests[0]);
+            assert.match(actual[1], tests[1]);
         },
 
         "filters contexts": function () {
