@@ -7,6 +7,10 @@ Test contexts, BDD specs, test runner and reporters for Buster.JS.
 
 ## Changelog
 
+**0.7.7** (06.06.2014)
+
+* JsDom updated to version ~0.10 for issue [#410 - Buster is modifying the global `Error` object (via old JSDOM)](https://github.com/busterjs/buster/issues/410)
+
 **0.7.6** (05.05.2014)
 
 * [Runtime throttler and pre-event runtime removed](https://github.com/busterjs/buster-test/commit/e7cf870e1868f410b9130591d70fdade2c586b93)
