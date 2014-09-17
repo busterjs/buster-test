@@ -782,6 +782,15 @@
                 assert(tests[0].calledOnce);
                 assert(tests[1].calledOnce);
             }));
+        },
+
+        "rejects when no contexts provided": function (done) {
+            var onSuiteEnd = sinon.spy();
+            this.runner.on('suite:end', onSuiteEnd);
+            this.runner.runSuite([]).then(null, done(function () {
+                assert(onSuiteEnd.calledOnce, "Should still emit `suite:end`");
+                refute(onSuiteEnd.getCall(0).args[0].ok, "`suite:end` should emit with result.ok == false");
+            }));
         }
     });
 
