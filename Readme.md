@@ -7,6 +7,10 @@ Test contexts, BDD specs, test runner and reporters for Buster.JS.
 
 ## Changelog
 
+**0.7.8** (17.09.2014)
+
+* Fix for issue [#416 - buster-server crash with IE 11 on W7 only if there is two browsers captured](https://github.com/busterjs/buster/issues/416)
+
 **0.7.7** (06.06.2014)
 
 * JsDom updated to version ~0.10 for issue [#410 - Buster is modifying the global `Error` object (via old JSDOM)](https://github.com/busterjs/buster/issues/410)
