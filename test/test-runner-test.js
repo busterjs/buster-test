@@ -120,6 +120,16 @@
 
             refute(runner.concurrent);
             assert.equals(runner.clients, 1);
+        },
+
+        "allows focus mode by default": function () {
+            var runner = testRunner.create();
+            assert(runner.allowFocusMode);
+        },
+
+        "disallows focus mode via options": function () {
+            var runner = testRunner.create({ allowFocusMode: false });
+            refute(runner.allowFocusMode);
         }
     });
 
@@ -2838,6 +2848,35 @@
                 assert.isString(e.uuid);
             }));
             this.runner.runSuite([context]);
+        },
+
+        "fails when focus mode disabled": function (done) {
+            var runner = testRunner.create({ allowFocusMode: false });
+            var context = testCase("Test", {
+                "=>don't do it": function () {}
+            });
+
+            runner.runSuite([ context ]).then(function () {
+                assert.fail("runSuite promise should have been rejected");
+            }, function (err) {
+                assert.equals(err.message, "Focus mode is disabled");
+                done();
+            })
+        },
+
+        "runs when focus mode disabled, but no focus rocket used": function (done) {
+            var runner = testRunner.create({ allowFocusMode: false });
+            var unfocused = sinon.spy();
+            var context = testCase("Test", {
+                "do it": unfocused
+            });
+
+            runner.runSuite([ context ]).then(function () {
+                assert(unfocused.calledOnce);
+                done();
+            }, function () {
+                assert.fail("runSuite promise should have been rejected");
+            })
         }
     });
 
