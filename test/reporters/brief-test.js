@@ -750,6 +750,12 @@ helper.testCase("Brief reporter uncaught exceptions", {
 
         this.assertIO("Uncaught exception in Firefox 16.0 on Ubuntu 64-bit:");
         this.assertIO("TypeError: Expected a to be equal to b");
+    },
+
+    "does not barf when uncaughtException happens before tests start to run": function () {
+        this.runner.emit("uncaughtException", {});
+
+        this.assertIO("Uncaught exception in Unknown context:");
     }
 });
 
