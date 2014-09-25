@@ -795,11 +795,19 @@
         },
 
         "rejects when no contexts provided": function (done) {
-            var onSuiteEnd = sinon.spy();
+            var onSuiteEnd = sinon.spy(),
+                onSuiteError = sinon.spy();
+
             this.runner.on('suite:end', onSuiteEnd);
-            this.runner.runSuite([]).then(null, done(function () {
+            this.runner.on('suite:error', onSuiteError);
+            this.runner.runSuite([]).then(null, done(function (err) {
                 assert(onSuiteEnd.calledOnce, "Should still emit `suite:end`");
                 refute(onSuiteEnd.getCall(0).args[0].ok, "`suite:end` should emit with result.ok == false");
+
+                assert(onSuiteError.calledOnce, "Should have emitted `suite:error`");
+                assert.same(onSuiteError.getCall(0).args[0], err, "Should have emitted with the same error as rejection");
+                assert(err instanceof Error);
+                assert.equals(err.message, "No contexts");
             }));
         }
     });
@@ -2851,7 +2859,10 @@
         },
 
         "fails when focus mode disabled": function (done) {
+            var onError = sinon.spy();
+
             var runner = testRunner.create({ allowFocusMode: false });
+            runner.on("suite:error", onError);
             var context = testCase("Test", {
                 "=>don't do it": function () {}
             });
@@ -2859,19 +2870,27 @@
             runner.runSuite([ context ]).then(function () {
                 assert.fail("runSuite promise should have been rejected");
             }, function (err) {
+                assert(err instanceof Error);
                 assert.equals(err.message, "Focus mode is disabled");
+                assert(onError.calledOnce, "Should have emitted `suite:error`");
+                assert.same(onError.getCall(0).args[0], err, "`suite:error` should emit the same error as promise rejection");
                 done();
             })
         },
 
         "runs when focus mode disabled, but no focus rocket used": function (done) {
+            var onError = sinon.spy();
+
             var runner = testRunner.create({ allowFocusMode: false });
+            runner.on("suite:error", onError);
+
             var unfocused = sinon.spy();
             var context = testCase("Test", {
                 "do it": unfocused
             });
 
             runner.runSuite([ context ]).then(function () {
+                refute(onError.callCount, "Don't emit `suite:error` unnecessarily");
                 assert(unfocused.calledOnce);
                 done();
             }, function () {
