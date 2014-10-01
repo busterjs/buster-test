@@ -386,5 +386,14 @@ helper.testCase("XMLReporterTest", {
         this.runner.emit("suite:end");
 
         refute.match(this.outputStream.toString(), "time=\"0\"name=\"#1\"");
+    },
+
+    "includes failure element for suite:error": function () {
+        this.runner.emit("suite:error", new Error("Borked test suite"));
+        this.runner.emit("suite:end");
+
+        this.assertIO("<testsuite errors=\"1\" tests=\"1\" failures=\"0\" name=\"Uncaught exceptions\">");
+        this.assertIO("<testcase classname=\"Uncaught exception\" time=\"0\" name=\"#1\">");
+        this.assertIO('<failure type="Error" message="Borked test suite">');
     }
 });

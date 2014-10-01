@@ -759,6 +759,22 @@ helper.testCase("Brief reporter uncaught exceptions", {
     }
 });
 
+helper.testCase("Brief reporter prints suite:error", {
+    setUp: function () {
+        reporterSetUp.call(this);
+        this.firefox.emit("suite:configuration", { tests: 2 });
+    },
+
+    "prints uncaught errors continuously": function () {
+        this.firefox.emit("context:start", { name: "Stuff" });
+
+        this.firefox.emit("suite:error", new Error("Test error"));
+
+        this.assertIO("Uncaught exception in Firefox 16.0 on Ubuntu 64-bit:");
+        this.assertIO("Error: Test error");
+    }
+});
+
 helper.testCase("Brief reporter messages", {
     setUp: function () {
         reporterSetUp.call(this);
