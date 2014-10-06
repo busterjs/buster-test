@@ -345,6 +345,25 @@
                 stack: "Trouble@here",
                 uuid: "1"
             });
+        },
+
+        "emits serializable error to suite:error": function () {
+            var listener = sinon.spy();
+            this.proxy.on("suite:error", listener);
+
+            var error = new Error("Oops");
+            error.uuid = "1";
+            this.runner.emit("suite:error", error);
+
+            assert(listener.calledOnce);
+
+            var actualSerializedError = listener.args[0][0];
+            assert.match(actualSerializedError, {
+                name: "Error",
+                message: "Oops",
+                uuid: "1"
+            });
+            assert.match(actualSerializedError.stack, "Error: Oops");
         }
     });
 

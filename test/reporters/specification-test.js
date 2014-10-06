@@ -206,6 +206,33 @@ helper.testCase("SpecificationReporterTestsRunning", {
         });
 
         assert.match(this.out.toString(), "Skipping Stuff, unsupported requirements:\n    localStorage\n    document\n");
+    },
+
+    "prints summary at the end": function () {
+        this.runner.emit("suite:end", {
+            contexts: 2,
+            tests: 2,
+            assertions: 2,
+            failures: 0,
+            errors: 0,
+            ok: true
+        });
+
+        assert.match(this.out.toString(), "2 test cases, 2 tests, 2 assertions, 0 failures, 0 errors, 0 timeouts");
+    },
+
+    "prints uncaught exceptions at the end": function () {
+        this.runner.emit("uncaughtException", new Error("Don't catch me now"));
+        this.runner.emit("suite:end");
+        assert.match(this.out.toString(), "Uncaught exception!");
+        assert.match(this.out.toString(), "Error: Don't catch me now");
+    },
+
+    "prints suite:error as uncaught exception": function () {
+        this.runner.emit("suite:error", new Error("No exclamations for exceptions - it's bad enough - don't shout"));
+        this.runner.emit("suite:end");
+        assert.match(this.out.toString(), "Uncaught exception!");
+        assert.match(this.out.toString(), "No exclamations for exceptions - it's bad enough - don't shout");
     }
 });
 
