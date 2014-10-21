@@ -7,6 +7,10 @@ Test contexts, BDD specs, test runner and reporters for Buster.JS.
 
 ## Changelog
 
+**0.7.9** (21.10.2014)
+
+* New option `allowFocusMode`to disable focus rocket [#327 - Command line switch to fail on focus rocket](https://github.com/busterjs/buster/issues/327)
+
 **0.7.8** (17.09.2014)
 
 * Fix for issue [#416 - buster-server crash with IE 11 on W7 only if there is two browsers captured](https://github.com/busterjs/buster/issues/416)
