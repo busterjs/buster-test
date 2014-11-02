@@ -320,14 +320,14 @@ helper.testCase("Brief reporter failures", {
         this.firefox.emit("context:start", { name: "Stuff" });
         this.firefox.emit("test:failure", { name: "should do stuff" });
 
-        this.assertIO("Failure: Stuff should do stuff");
+        this.assertIO("Failure: Stuff | should do stuff");
     },
 
     "does not print runtime when only one": function () {
         this.firefox.emit("context:start", { name: "Stuff" });
         this.firefox.emit("test:failure", { name: "should do stuff" });
 
-        var unwanted = "Failure: Stuff should do stuff (Firefox 16.0 on Ubuntu 64-bit)";
+        var unwanted = "Failure: Stuff | should do stuff (Firefox 16.0 on Ubuntu 64-bit)";
         refute.match(this.outputStream.toString(), unwanted);
     },
 
@@ -336,7 +336,7 @@ helper.testCase("Brief reporter failures", {
         this.firefox.emit("context:start", { name: "inner" });
         this.firefox.emit("test:failure", { name: "does stuff" });
 
-        this.assertIO("Failure: Stuff inner does stuff");
+        this.assertIO("Failure: Stuff | inner | does stuff");
     },
 
     "ignores completed contexts in test name": function () {
@@ -345,7 +345,7 @@ helper.testCase("Brief reporter failures", {
         this.firefox.emit("context:end", { name: "inner" });
         this.firefox.emit("test:failure", { name: "does stuff" });
 
-        this.assertIO("Failure: Stuff does stuff");
+        this.assertIO("Failure: Stuff | does stuff");
     },
 
     "prints full nested test name with runtime when concurrent": function () {
@@ -356,8 +356,8 @@ helper.testCase("Brief reporter failures", {
         this.firefox.emit("test:failure", { name: "does stuff" });
         this.chrome.emit("test:failure", { name: "sumptn" });
 
-        this.assertIO("Failure: Stuff does stuff (Firefox 16.0 on Ubuntu 64-bit)");
-        this.assertIO("Failure: Other inner sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
+        this.assertIO("Failure: Stuff | does stuff (Firefox 16.0 on Ubuntu 64-bit)");
+        this.assertIO("Failure: Other | inner | sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
     },
 
     "prints error message": function () {
@@ -460,8 +460,8 @@ helper.testCase("Brief reporter errors", {
         this.firefox.emit("test:error", { name: "does stuff", error: {} });
         this.chrome.emit("test:error", { name: "sumptn", error: {} });
 
-        this.assertIO("Error: Stuff does stuff (Firefox 16.0 on Ubuntu 64-bit)");
-        this.assertIO("Error: Other inner sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
+        this.assertIO("Error: Stuff | does stuff (Firefox 16.0 on Ubuntu 64-bit)");
+        this.assertIO("Error: Other | inner | sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
     },
 
     "prints error name": function () {
@@ -548,8 +548,8 @@ helper.testCase("Brief reporter timeouts", {
         this.firefox.emit("test:timeout", { name: "does stuff" });
         this.chrome.emit("test:timeout", { name: "sumptn" });
 
-        this.assertIO("Timeout: Stuff does stuff (Firefox 16.0 on Ubuntu 64-bit)");
-        this.assertIO("Timeout: Other inner sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
+        this.assertIO("Timeout: Stuff | does stuff (Firefox 16.0 on Ubuntu 64-bit)");
+        this.assertIO("Timeout: Other | inner | sumptn (Chrome 22.0.1229.94 on Linux 64-bit)");
     },
 
     "prints error message": function () {
@@ -832,7 +832,7 @@ helper.testCase("Brief reporter verbose", {
         this.firefox.emit("context:start", { name: "stuff" });
         this.firefox.emit("test:deferred", { name: "test #2" });
 
-        this.assertIO("Deferred: stuff test #2 (Firefox 16.0 on Ubuntu 64-bit)\nRunning");
+        this.assertIO("Deferred: stuff | test #2 (Firefox 16.0 on Ubuntu 64-bit)\nRunning");
     },
 
     "prints deferred tests with comments": function () {
@@ -843,7 +843,7 @@ helper.testCase("Brief reporter verbose", {
             comment: "TODO"
         });
 
-        this.assertIO("Deferred: stuff test #2 " +
+        this.assertIO("Deferred: stuff | test #2 " +
             "(Firefox 16.0 on Ubuntu 64-bit)\n          TODO\nRunning");
      },
 
@@ -906,7 +906,7 @@ helper.testCase("Brief reporter double verbose", {
 
         this.firefox.emit("test:success", { name: "test #1" });
 
-        this.assertIO("Stuff test #1");
+        this.assertIO("Stuff | test #1");
         this.assertIO("[LOG] Woah\nRunning");
     },
 
