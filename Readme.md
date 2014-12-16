@@ -7,6 +7,14 @@ Test contexts, BDD specs, test runner and reporters for Buster.JS.
 
 ## Changelog
 
+**0.7.12** (16.12.2014)
+
+* [mark deferred tests as skipped in xml report](https://github.com/busterjs/buster-test/commit/28b7a61)
+
+**0.7.11** (15.11.2014)
+
+* [Fix export global for buster.testRunner](https://github.com/busterjs/buster-test/commit/7a10e17)
+
 **0.7.10** (02.11.2014)
 
 * Separate contexts via | in brief reporter [#254 - default mode separate test name from test case name](https://github.com/busterjs/buster/issues/254)
