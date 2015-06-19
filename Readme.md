@@ -7,6 +7,10 @@ Test contexts, BDD specs, test runner and reporters for Buster.JS.
 
 ## Changelog
 
+**0.7.13** (19.06.2015)
+
+* Fix for issue [util.print deprecation warnings appearing in reporter output](https://github.com/busterjs/buster/issues/452)
+
 **0.7.12** (16.12.2014)
 
 * [mark deferred tests as skipped in xml report](https://github.com/busterjs/buster-test/commit/28b7a61)
