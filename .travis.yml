@@ -1,1 +1,11 @@
 language: node_js
+node_js:
+  - "0.8"
+  - "0.10"
+  - "0.12"
+
+sudo: false
+
+before_install:
+  # use a more modern npm than ships with 0.8
+  - 'if [ "x$TRAVIS_NODE_VERSION" = "x0.8" ]; then npm install -g npm@1.4; fi'
