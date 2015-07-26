@@ -1,70 +1,81 @@
 {
-    "name": "buster-test",
-    "version": "0.7.13",
-    "description": "Promised based evented xUnit and BDD style test runner for JavaScript",
-    "homepage": "http://docs.busterjs.org/en/latest/modules/buster-test/",
-    "author": "Christian Johansen",
-    "contributors": [{
-        "name": "Christian Johansen",
-        "email": "christian@cjohansen.no",
-        "url": "http://cjohansen.no"
-    }, {
-        "name": "August Lilleaas",
-        "email": "august.lilleaas@gmail.com",
-        "url": "http://augustl.com"
-    }, {
-        "name": "Calle Arnesten",
-        "email": "calle.arnesten@codekick.com"
-    }, {
-        "name": "Christoph Neuroth",
-        "email": "cnr@lusini.com"
-    }, {
-        "name": "Daniel Wittner",
-        "email": "d.wittner@gmx.de",
-        "url": "https://github.com/dwittner"
-    }, {
-        "name": "Fábio M. Costa",
-        "email": "fabiomcosta@gmail.com"
-    }, {
-        "name": "Malcolm Locke",
-        "email": "malc@wholemeal.co.nz"
-    }, {
-        "name": "Rodrigo Rosenfeld Rosas",
-        "email": "rr.rosas@gmail.com"
-    }, {
-        "name": "Rod Vagg",
-        "email": "rod@vagg.org",
-        "url": "http://vagg.org"
-    }, {
-        "name": "Stein Magnus Jodal",
-        "email": "stein.magnus@jodal.no",
-        "url": "http://jodal.no"
-    }],
-    "license": "BSD-3-Clause",
-    "main": "./lib/buster-test",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/busterjs/buster-test.git"
+  "name": "buster-test",
+  "version": "0.7.13",
+  "description": "Promised based evented xUnit and BDD style test runner for JavaScript",
+  "homepage": "http://docs.busterjs.org/en/latest/modules/buster-test/",
+  "author": "Christian Johansen",
+  "contributors": [
+    {
+      "name": "Christian Johansen",
+      "email": "christian@cjohansen.no",
+      "url": "http://cjohansen.no"
     },
-    "scripts": {
-        "test": "node run-tests.js",
-        "test-debug": "node --debug-brk run-tests.js"
+    {
+      "name": "August Lilleaas",
+      "email": "august.lilleaas@gmail.com",
+      "url": "http://augustl.com"
     },
-    "dependencies": {
-        "bane": "~1.0",
-        "ansi-colorizer": "~1.0",
-        "when": "https://github.com/cujojs/when/tarball/1.8.1",
-        "lodash": "~1.0",
-        "async": "~0.1",
-        "platform": "~1.2"
+    {
+      "name": "Calle Arnesten",
+      "email": "calle.arnesten@codekick.com"
     },
-    "optionalDependencies": {
-        "jsdom": "~0.10"
+    {
+      "name": "Christoph Neuroth",
+      "email": "cnr@lusini.com"
     },
-    "devDependencies": {
-        "stack-filter": "~1.0",
-        "referee": "*",
-        "formatio": "*",
-        "sinon": "~1.4"
+    {
+      "name": "Daniel Wittner",
+      "email": "d.wittner@gmx.de",
+      "url": "https://github.com/dwittner"
+    },
+    {
+      "name": "Fábio M. Costa",
+      "email": "fabiomcosta@gmail.com"
+    },
+    {
+      "name": "Malcolm Locke",
+      "email": "malc@wholemeal.co.nz"
+    },
+    {
+      "name": "Rodrigo Rosenfeld Rosas",
+      "email": "rr.rosas@gmail.com"
+    },
+    {
+      "name": "Rod Vagg",
+      "email": "rod@vagg.org",
+      "url": "http://vagg.org"
+    },
+    {
+      "name": "Stein Magnus Jodal",
+      "email": "stein.magnus@jodal.no",
+      "url": "http://jodal.no"
     }
+  ],
+  "license": "BSD-3-Clause",
+  "main": "./lib/buster-test",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/busterjs/buster-test.git"
+  },
+  "scripts": {
+    "test": "node run-tests.js",
+    "test-debug": "node --debug-brk run-tests.js"
+  },
+  "dependencies": {
+    "ansi-colorizer": "~1.0",
+    "async": "^1.4.0",
+    "bane": "^1.1.0",
+    "lodash": "^3.1.0",
+    "platform": "^1.3.0",
+    "when": "https://github.com/cujojs/when/tarball/1.8.1"
+  },
+  "optionalDependencies": {
+    "jsdom": "~0.10"
+  },
+  "devDependencies": {
+    "formatio": "*",
+    "referee": "*",
+    "sinon": "^1.15.4",
+    "stack-filter": "~1.0"
+  }
 }
