@@ -28,19 +28,6 @@
         return a === b ? 0 : (a < b ? -1 : 1);
     }
 
-    function tick(times, fn) {
-        function next() {
-            if (times === 0) {
-                fn();
-            } else {
-                times -= 1;
-                testRunner.nextTick(next);
-            }
-        }
-
-        next();
-    }
-
     function runnerEventsSetUp() {
         this.runner = testRunner.create({
             runtime: "Node 8.10"
@@ -140,15 +127,7 @@
             });
         },
 
-        "returns promise": function () {
-            var promise = this.runner.runContext();
-
-            assert.isObject(promise);
-            assert(promise.then);
-        },
-
         "rejects without context": function (done) {
-            var rejection = sinon.spy();
             this.runner.runContext().then(function () {}, function () {
                 done();
             });
@@ -217,7 +196,7 @@
             }));
 
             refute(testFn.calledOnce);
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 doneCb();
             });
         },
@@ -237,7 +216,7 @@
                 assert(testFn.calledOnce);
             }));
 
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 resolved = true;
                 deferred.resolve();
             });
@@ -302,11 +281,11 @@
             var deferred = when.defer();
             var tearDown = sinon.stub().returns(deferred.promise);
             var context = testCase("Test", { tearDown: tearDown, test: sinon.spy() });
-            var complete = sinon.spy(function () { testRunner.nextTick(done); });
+            var complete = sinon.spy(function () { testRunner.setImmediate(done); });
 
             this.runner.runContext(context).then(complete);
 
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 assert(!complete.called);
                 deferred.resolve();
             });
@@ -614,14 +593,15 @@
                 assert(fn.called);
             }));
 
-            // One testRunner.nextTick per context
-            tick(2, function () {
+            testRunner.setImmediate(function () {
                 assert(outerSetUp.calledOnce);
                 assert(!innerSetUp.called);
                 deferreds[0].resolver.resolve();
-                assert(innerSetUp.calledOnce);
-                assert(!fn.called);
-                deferreds[1].resolver.resolve();
+                deferreds[0].promise.then(function () {
+                    assert(innerSetUp.calledOnce);
+                    assert(!fn.called);
+                    deferreds[1].resolver.resolve();
+                });
             });
         },
 
@@ -737,14 +717,15 @@
 
             this.runner.runContext(context).then(done);
 
-            // One testRunner.nextTick per context
-            tick(2, function () {
+            testRunner.setImmediate(function () {
                 assert(fn.called);
                 assert(innerTearDown.calledOnce);
                 assert(!outerTearDown.called);
                 deferreds[0].resolver.resolve();
-                assert(outerTearDown.calledOnce);
-                deferreds[1].resolver.resolve();
+                deferreds[0].promise.then(function () {
+                    assert(outerTearDown.calledOnce);
+                    deferreds[1].resolver.resolve();
+                });
             });
         },
 
@@ -768,12 +749,15 @@
 
             this.runner.runContext(context).then(completed);
 
-            testRunner.nextTick(done(function () {
+            testRunner.setImmediate(function () {
                 assert.isFunction(runIt);
                 refute(completed.called);
                 runIt({});
-                assert(completed.calledOnce);
-            }));
+                testRunner.setImmediate(function () {
+                    assert(completed.calledOnce);
+                    done();
+                });
+            });
         }
     });
 
@@ -825,11 +809,14 @@
             this.runner.runSuite([this.context]).then(completed);
             var deferred = this.deferred;
 
-            testRunner.nextTick(done(function () {
+            testRunner.setImmediate(function () {
                 refute(completed.called);
                 deferred.resolve();
-                assert(completed.calledOnce);
-            }));
+                testRunner.setImmediate(function () {
+                    assert(completed.calledOnce);
+                    done();
+                })
+            });
         },
 
         "emits test:async event": function (done) {
@@ -951,12 +938,12 @@
             this.runner.on("test:async", listener);
 
             var context = testCase("Test", {
-                tearDown: function (done) { done(); },
-                test: function (done) { done(); }
+                tearDown: function (done) { testRunner.setImmediate(done); },
+                test: function (done) { testRunner.setImmediate(done); }
             });
 
             this.runner.runSuite([context]).then(done(function () {
-                assert(listener.calledOnce);
+                assert.equals(listener.callCount, 1);
             }));
         },
 
@@ -1008,7 +995,7 @@
             var context = testCase("Test", {
                 test: function (done) {
                     callback = done;
-                    testRunner.nextTick(function () {
+                    testRunner.setImmediate(function () {
                         callback.called = true;
                         callback();
                     });
@@ -1027,14 +1014,14 @@
             this.runner.on("test:success", listener);
 
             var context = testCase("Test", {
-                test: function (done) { testRunner.nextTick(done); }
+                test: function (done) { testRunner.setImmediate(done); }
             });
 
             this.runner.runSuite([context]).then(done(function () {
                 assert(listener.calledOnce);
             }));
 
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 assert(!listener.called);
             });
         },
@@ -1044,7 +1031,7 @@
 
             var context = testCase("Test", {
                 test: function (done) {
-                    testRunner.nextTick(done(function () {
+                    testRunner.setImmediate(done(function () {
                         innerDone = true;
                     }));
                 }
@@ -1054,7 +1041,7 @@
                 assert(innerDone);
             }));
 
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 assert(!innerDone);
             });
         },
@@ -1062,7 +1049,7 @@
         "done completes test when called with non-function": function (tdone) {
             var context = testCase("Test", {
                 test: function (done) {
-                    testRunner.nextTick(function () {
+                    testRunner.setImmediate(function () {
                         done({ ok: function () {} });
                     });
                 }
@@ -1099,7 +1086,7 @@
 
             var context = testCase("Test", {
                 test: function (done) {
-                    testRunner.nextTick(done(function () {
+                    testRunner.setImmediate(done(function () {
                         var error = new Error("Oops");
                         error.name = "AssertionError";
                         throw error;
@@ -1119,7 +1106,7 @@
 
             var context = testCase("Test", {
                 test: function (done) {
-                    testRunner.nextTick(done(function () {
+                    testRunner.setImmediate(done(function () {
                         throw new Error("Oops");
                     }));
                 }
@@ -1155,6 +1142,26 @@
                     callback();
                 });
             }));
+        },
+
+        "throws when done called twice": function (done) {
+            var caught;
+            var context = testCase("My case", {
+                test1: function (tDone) {
+                    tDone();
+                    try {
+                        tDone()
+                    } catch (e) {
+                        caught = e;
+                    }
+                }
+            });
+
+            this.runner.runSuite([context]).then(function () {
+                assert(caught instanceof Error);
+                assert.equals(caught.message, "done() was already called");
+                done();
+            });
         }
     });
 
@@ -1168,7 +1175,7 @@
             var context = testCase("Test", {
                 setUp: function (done) {
                     callback = done;
-                    testRunner.nextTick(function () {
+                    testRunner.setImmediate(function () {
                         callback.called = true;
                         callback();
                     });
@@ -1188,7 +1195,7 @@
 
             var context = testCase("Test", {
                 setUp: function (done) {
-                    testRunner.nextTick(done);
+                    testRunner.setImmediate(done);
                 },
                 test: sinon.spy()
             });
@@ -1197,7 +1204,7 @@
                 assert(listener.calledOnce);
             }));
 
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 assert(!listener.called);
             });
         },
@@ -1208,7 +1215,7 @@
 
             var context = testCase("Test", {
                 setUp: function (done) {
-                    testRunner.nextTick(done(function () {
+                    testRunner.setImmediate(done(function () {
                         var error = new Error("Oops");
                         error.name = "AssertionError";
                         throw error;
@@ -1229,7 +1236,7 @@
 
             var context = testCase("Test", {
                 setUp: function (done) {
-                    testRunner.nextTick(done(function () {
+                    testRunner.setImmediate(done(function () {
                         throw new Error("Oops");
                     }));
                 },
@@ -1303,7 +1310,7 @@
             this.runner.on("test:async", listener);
 
             var context = testCase("Test", {
-                setUp: function (done) { testRunner.nextTick(done); },
+                setUp: function (done) { testRunner.setImmediate(done); },
                 test: sinon.spy()
             });
 
@@ -1322,7 +1329,7 @@
             });
 
             this.runner.runSuite([context]).then(done(function () {
-                assert(!listener.calledOnce);
+                refute(listener.calledOnce);
             }));
         },
 
@@ -1331,12 +1338,12 @@
             this.runner.on("test:async", listener);
 
             var context = testCase("Test", {
-                setUp: function (done) { done(); },
-                test: function (done) { done(); }
+                setUp: function (done) { testRunner.setImmediate(done); },
+                test: function (done) { testRunner.setImmediate(done); }
             });
 
             this.runner.runSuite([context]).then(done(function () {
-                assert(listener.calledOnce);
+                assert.equals(listener.callCount, 1);
             }));
         },
 
@@ -1345,15 +1352,15 @@
             this.runner.on("test:async", listener);
 
             var context = testCase("Test", {
-                setUp: function (done) { done(); },
+                setUp: function (done) { testRunner.setImmediate(done); },
                 context1: {
-                    setUp: function (done) { done(); },
-                    test: function (done) { done(); }
+                    setUp: function (done) { testRunner.setImmediate(done); },
+                    test: function (done) { testRunner.setImmediate(done); }
                 }
             });
 
             this.runner.runSuite([context]).then(done(function () {
-                assert(listener.calledOnce);
+                assert.equals(listener.callCount, 1);
             }));
         }
     });
@@ -1369,7 +1376,7 @@
             var context = testCase("Test", {
                 tearDown: function (done) {
                     callback = done;
-                    testRunner.nextTick(function () {
+                    testRunner.setImmediate(function () {
                         callback.called = true;
                         callback();
                     });
@@ -1389,7 +1396,7 @@
 
             var context = testCase("Test", {
                 tearDown: function (done) {
-                    testRunner.nextTick(function () {
+                    testRunner.setImmediate(function () {
                         done();
                     });
                 },
@@ -1400,7 +1407,7 @@
                 assert(listener.calledOnce);
             }));
 
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 assert(!listener.called);
             });
         },
@@ -1411,7 +1418,7 @@
 
             var context = testCase("Test", {
                 tearDown: function (done) {
-                    testRunner.nextTick(done(function () {
+                    testRunner.setImmediate(done(function () {
                         var error = new Error("Oops");
                         error.name = "AssertionError";
                         throw error;
@@ -1432,7 +1439,7 @@
 
             var context = testCase("Test", {
                 tearDown: function (done) {
-                    testRunner.nextTick(done(function () {
+                    testRunner.setImmediate(done(function () {
                         throw new Error("Oops");
                     }));
                 },
@@ -1482,7 +1489,7 @@
             this.runner.on("test:async", listener);
 
             var context = testCase("Test", {
-                tearDown: function (done) { testRunner.nextTick(done); },
+                tearDown: function (done) { testRunner.setImmediate(done); },
                 test: sinon.spy()
             });
 
@@ -1496,26 +1503,25 @@
             this.runner.on("test:async", listener);
 
             var context = testCase("Test", {
-                setUp: function (done) { done(); },
-                tearDown: function (done) { done(); },
-                test: function (done) { done(); }
+                setUp: function (done) { testRunner.setImmediate(done); },
+                tearDown: function (done) { testRunner.setImmediate(done); },
+                test: function (done) { testRunner.setImmediate(done); }
             });
 
             this.runner.runSuite([context]).then(done(function () {
-                assert(listener.calledOnce);
+                assert.equals(listener.callCount, 1);
             }));
         },
 
         "does not emit test:async after test failure": function (done) {
-            var listeners = [sinon.spy(), sinon.spy()];
-            this.runner.on("test:async", listeners[0]);
-            this.runner.on("test:failure", listeners[1]);
-            var runner = this.runner;
+            var onAsync = sinon.spy(), onFailure = sinon.spy();
+            this.runner.on("test:async", onAsync);
+            this.runner.on("test:failure", onFailure);
 
             var context = testCase("Test", {
                 setUp: function () {},
-                tearDown: function (done) { done(); },
                 test: function (done) {
+                    assert(done); // avoid unused variable warning
                     var e = new Error();
                     e.name = "AssertionError";
                     throw e;
@@ -1523,8 +1529,8 @@
             });
 
             this.runner.runSuite([context]).then(done(function () {
-                assert(listeners[1].calledOnce);
-                assert(!listeners[0].called);
+                assert(onFailure.calledOnce);
+                refute(onAsync.called);
             }));
         },
 
@@ -1534,7 +1540,7 @@
             this.runner.on("test:deferred", listeners[1]);
             var runner = this.runner;
             var context = testCase("Test", {
-                tearDown: function (done) { testRunner.nextTick(done); },
+                tearDown: function (done) { testRunner.setImmediate(done); },
                 "//test": function () {}
             });
 
@@ -1821,7 +1827,7 @@
 
             var context = testCase("Test Assertions", {
                 test1: function (done) {
-                    testRunner.nextTick(done(function () {
+                    testRunner.setImmediate(done(function () {
                         runner.assertionPass();
                         runner.assertionPass();
                     }));
@@ -2486,7 +2492,7 @@
                 assert.match(listener.args[0][0].message, /Damnit/);
             }), 25);
 
-            this.runSuite([context]);
+            this.runSuite([context], sinon.spy());
         }
     });
 
@@ -2567,7 +2573,7 @@
             }));
 
             refute(setUp.calledOnce);
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 doneCb();
             });
         },
@@ -2732,7 +2738,7 @@
             }));
 
             refute(listener.calledOnce);
-            testRunner.nextTick(function () {
+            testRunner.setImmediate(function () {
                 doneCb();
             });
         },
@@ -2947,7 +2953,7 @@
 
              var context = testCase("Test", {
              "should fail with regular AssertionError": function (done) {
-             testRunner.nextTick(function () {
+             testRunner.setImmediate(function () {
              throw assertionError("[assert] Failed assertion asynchronously");
              });
              }
