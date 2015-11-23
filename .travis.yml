@@ -12,14 +12,20 @@ addons:
 matrix:
   include:
     - node_js: "0.10"
-    - node_js: "0.10"
-      env: JSDOM=true
+      env: JSDOM=3
     - node_js: "0.12"
+      env: JSDOM=3
     - node_js: "4"
+      env: JSDOM=3
+    - node_js: "4"
+      env: JSDOM=7
     - node_js: "5"
+      env: JSDOM=3
+    - node_js: "5"
+      env: JSDOM=7
 before_install:
   - npm i -g npm
 install:
   - npm install --no-optional
 before_script:
-  - '[ "$JSDOM" == "" ] || npm i jsdom'
+  - 'npm i jsdom@$JSDOM'

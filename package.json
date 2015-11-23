@@ -70,7 +70,7 @@
     "platform": "1.x"
   },
   "optionalDependencies": {
-    "jsdom": "0.11.x"
+    "jsdom": "3.x"
   },
   "devDependencies": {
     "stack-filter": "1.x",
