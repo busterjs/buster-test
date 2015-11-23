@@ -59,7 +59,7 @@
         "platform": "~1.2"
     },
     "optionalDependencies": {
-        "jsdom": "~0.10"
+        "jsdom": "~3"
     },
     "devDependencies": {
         "stack-filter": "~1.0",
