@@ -2,3 +2,4 @@ todo.org
 .gitignore
 .npmignore
 node_modules
+.idea

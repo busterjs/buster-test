@@ -18,12 +18,16 @@
     "use strict";
     var assert = referee.assert;
     var refute = referee.refute;
-    var jsdom = typeof require === "function" && require("jsdom").jsdom;
+    var jsdom;
+    try {
+        jsdom = typeof require === "function" && require("jsdom").jsdom;
+    } catch (e) {
+        // do nothing, simply skip the tests
+    }
 
     function createDocument() {
         if (typeof document != "undefined") { return document; }
-        var dom = jsdom("<!DOCTYPE html><html><head></head><body></body></html>");
-        return dom.createWindow().document;
+        return jsdom("<!DOCTYPE html><html><head></head><body></body></html>");
     }
 
     function reporterSetUp(options) {
@@ -58,6 +62,11 @@
             innerHTML: "Is message",
             className: type || "log"
         });
+    }
+
+    if (typeof jsdom == "undefined" && typeof document == "undefined") {
+        console.log("No jsdom / document available - skipping tests");
+        return;
     }
 
     helper.testCase("HTMLReporterCreateTest", {
