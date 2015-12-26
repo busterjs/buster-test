@@ -62,12 +62,13 @@
     "test-debug": "node --debug-brk run-tests.js"
   },
   "dependencies": {
-    "bane": "1.x",
     "ansi-colorizer": "1.x",
-    "when": "3.x",
-    "lodash": "3.x",
     "async": "1.x",
-    "platform": "1.x"
+    "bane": "1.x",
+    "lodash": "3.x",
+    "platform": "1.x",
+    "semver-compare": "1.x",
+    "when": "3.x"
   },
   "optionalDependencies": {
     "jsdom": "3.x || 7.x"
