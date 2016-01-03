@@ -1,6 +1,6 @@
 {
   "name": "buster-test",
-  "version": "0.7.14",
+  "version": "0.8.0",
   "description": "Promised based evented xUnit and BDD style test runner for JavaScript",
   "homepage": "http://docs.busterjs.org/en/latest/modules/buster-test/",
   "author": "Christian Johansen",
