@@ -61,6 +61,9 @@
     "test": "node run-tests.js",
     "test-debug": "node --debug-brk run-tests.js"
   },
+  "engines": {
+    "node": ">= 4"
+  },
   "dependencies": {
     "ansi-colorizer": "1.x",
     "async": "1.x",
