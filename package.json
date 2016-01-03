@@ -61,21 +61,25 @@
     "test": "node run-tests.js",
     "test-debug": "node --debug-brk run-tests.js"
   },
+  "engines": {
+    "node": ">= 4"
+  },
   "dependencies": {
-    "bane": "~1.0",
-    "ansi-colorizer": "~1.0",
-    "when": "https://github.com/cujojs/when/tarball/1.8.1",
-    "lodash": "~1.0",
-    "async": "~0.1",
-    "platform": "~1.2"
+    "ansi-colorizer": "1.x",
+    "async": "1.x",
+    "bane": "1.x",
+    "lodash": "3.x",
+    "platform": "1.x",
+    "semver-compare": "1.x",
+    "when": "3.x"
   },
   "optionalDependencies": {
-    "jsdom": "~3"
+    "jsdom": "3.x || 7.x"
   },
   "devDependencies": {
-    "stack-filter": "~1.0",
-    "referee": "*",
-    "formatio": "*",
-    "sinon": "~1.4"
+    "stack-filter": "1.x",
+    "referee": "1.x",
+    "formatio": "1.x",
+    "sinon": "1.x"
   }
 }
