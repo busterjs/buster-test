@@ -7,7 +7,7 @@ Test contexts, BDD specs, test runner and reporters for Buster.JS.
 
 ## Changelog
 
-**0.8.0** (2015-Jan-03)
+**0.8.0** (2016-Jan-03)
 
 * BREAKING: updated all deps, incl. a breaking change - `when` to `v3.x`
 * BREAKING: added an engine requirement (node LTS) in `package.json` 
