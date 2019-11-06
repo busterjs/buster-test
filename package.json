@@ -68,7 +68,7 @@
     "ansi-colorizer": "1.x",
     "async": "1.x",
     "bane": "1.x",
-    "lodash": "3.x",
+    "lodash": "4.x",
     "platform": "1.x",
     "semver-compare": "1.x",
     "when": "3.x"
